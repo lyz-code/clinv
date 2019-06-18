@@ -158,9 +158,21 @@ class TestClinv(unittest.TestCase):
         self.clinv.raw_inv = {
             'ec2': self.boto_describe_instances['Reservations']
         }
+        self.clinv.raw_data = {
+            'ec2': {
+                'i-023desldk394995ss': {
+                    'description': '',
+                    'to_destroy': False,
+                }
+            }
+        }
         self.raw_inv_path = os.path.join(
             self.inventory_dir,
             'raw_inventory.yaml',
+        )
+        self.raw_data_path = os.path.join(
+            self.inventory_dir,
+            'raw_data.yaml',
         )
         self.clinv.inv = {
             'ec2': {
@@ -256,10 +268,13 @@ class TestClinv(unittest.TestCase):
                 ][0].keys(),
             )
 
-    def test_update_inventory(self):
+    def test_update_inventory_adds_raw_data(self):
         self.ec2instance.return_value.id = 'i-023desldk394995ss'
         self.clinv._update_inventory()
 
+        desired_input = self.clinv.raw_inv['ec2'][0]['Instances'][0]
+        desired_input['description'] = ''
+        desired_input['to_destroy'] = False
         self.assertEqual(
             self.ec2instance.assert_called_with(
                 self.clinv.raw_inv['ec2'][0]['Instances'][0]
@@ -312,22 +327,29 @@ class TestClinv(unittest.TestCase):
     @patch('clinv.clinv.Clinv._save_yaml')
     def test_inventory_saving_saves_raw_inventory(self, saveMock):
         self.clinv.save_inventory()
-        self.assertEqual(
-            saveMock.assert_called_with(
-                self.raw_inv_path,
-                self.clinv.raw_inv,
-            ),
-            None,
+        self.assertTrue(
+            call(self.raw_inv_path, self.clinv.raw_inv) in saveMock.mock_calls
+        )
+
+    @patch('clinv.clinv.Clinv._save_yaml')
+    def test_inventory_saving_saves_raw_data(self, saveMock):
+        self.clinv.save_inventory()
+        self.assertTrue(
+            call(self.raw_data_path, self.clinv.raw_data)
+            in saveMock.mock_calls
         )
 
     @patch('clinv.clinv.Clinv._load_yaml')
     def test_inventory_loading_loads_raw_inventory(self, loadMock):
         self.clinv.load_inventory()
-        self.assertEqual(
-            loadMock.assert_called_with(self.raw_inv_path),
-            None,
-        )
+        self.assertTrue(call(self.raw_inv_path) in loadMock.mock_calls)
         self.assertEqual(self.clinv.raw_inv, loadMock())
+
+    @patch('clinv.clinv.Clinv._load_yaml')
+    def test_data_loading_loads_raw_data(self, loadMock):
+        self.clinv.load_data()
+        self.assertTrue(call(self.raw_data_path) in loadMock.mock_calls)
+        self.assertEqual(self.clinv.raw_data, loadMock())
 
     def test_search_ec2_by_name(self):
         instances = self.clinv._search_ec2('inst_name')
@@ -396,3 +418,85 @@ class TestClinv(unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
+
+    def test_unassigned_ec2_prints_instances(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser-01': {
+                    'aws': {
+                        'ec2': [
+                            'i-xxxxxxxxxxxxxxxxx'
+                        ],
+                    },
+                },
+            },
+            'ec2': {
+                'i-023desldk394995ss': []
+            },
+        }
+        self.clinv._unassigned_ec2()
+        print_calls = (
+            call('i-023desldk394995ss: inst_name'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    def test_unassigned_services_prints_instances(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {
+                    'services': ['ser-01'],
+                },
+            },
+            'services': {
+                'ser-02': {'name': 'Service 2'},
+                },
+        }
+        self.clinv._unassigned_services()
+        print_calls = (
+            call('ser-02: Service 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    def test_unassigned_informations_prints_instances(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {
+                    'informations': ['inf-01'],
+                },
+            },
+            'informations': {
+                'inf-02': {'name': 'Information 2'},
+                },
+        }
+        self.clinv._unassigned_informations()
+        print_calls = (
+            call('inf-02: Information 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    @patch('clinv.clinv.Clinv._unassigned_ec2')
+    def test_general_unassigned_can_use_ec2_resource(self, unassignMock):
+        self.clinv.unassigned('ec2')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._unassigned_services')
+    def test_general_unassigned_can_use_service_resource(self, unassignMock):
+        self.clinv.unassigned('services')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._unassigned_informations')
+    def test_general_unassigned_can_use_informations_resource(
+        self,
+        unassignMock,
+    ):
+        self.clinv.unassigned('informations')
+        self.assertTrue(unassignMock.called)

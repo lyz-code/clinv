@@ -28,13 +28,22 @@ def main():
     load_logger()
 
     clinv = Clinv(args.data_path)
-    if args.subcommand == 'search':
-        clinv.load_inventory()
-        clinv._update_inventory()
-        clinv.print_search(args.search_string)
-    elif args.subcommand == 'generate':
+    if args.subcommand not in ['generate', 'search', 'unassigned']:
+        return
+
+    if args.subcommand == 'generate':
         clinv._update_raw_inventory()
+        clinv.load_data()
+        clinv._update_inventory()
         clinv.save_inventory()
+    else:
+        clinv.load_inventory()
+        clinv.load_data()
+        clinv._update_inventory()
+        if args.subcommand == 'search':
+            clinv.print_search(args.search_string)
+        elif args.subcommand == 'unassigned':
+            clinv.unassigned(args.resource_type)
 
 
 if __name__ == "__main__":

@@ -35,6 +35,13 @@ class Clinv():
             self.inventory_dir,
             'raw_inventory.yaml',
         )
+        self.raw_data_path = os.path.join(
+            self.inventory_dir,
+            'raw_data.yaml',
+        )
+        self.raw_data = {
+            'ec2': {},
+        }
 
     def _update_raw_inventory(self):
         self.raw_inv = {
@@ -108,8 +115,19 @@ class Clinv():
         }
         for resource in self.raw_inv['ec2']:
             for instance in resource['Instances']:
-                ec2_instance = EC2Instance(instance)
-                self.inv['ec2'][ec2_instance.id] = ec2_instance
+                instance_id = instance['InstanceId']
+                try:
+                    self.raw_data['ec2'][instance_id]
+                except KeyError:
+                    self.raw_data['ec2'][instance_id] = {
+                        'description': '',
+                        'to_destroy': False,
+                    }
+                for key, value in \
+                        self.raw_data['ec2'][instance_id].items():
+                    instance[key] = value
+
+                self.inv['ec2'][instance_id] = EC2Instance(instance)
 
     def _save_yaml(self, yaml_path, dictionary):
         'Save variable to yaml'
@@ -119,6 +137,7 @@ class Clinv():
 
     def save_inventory(self):
         self._save_yaml(self.raw_inv_path, self.raw_inv)
+        self._save_yaml(self.raw_data_path, self.raw_data)
 
     def _load_yaml(self, yaml_path):
         'Load YAML to variable'
@@ -135,6 +154,13 @@ class Clinv():
 
     def load_inventory(self):
         self.raw_inv = self._load_yaml(self.raw_inv_path)
+
+    def load_data(self):
+        self.raw_data = self._load_yaml(self.raw_data_path)
+        if self.raw_data is None:
+            self.raw_data = {
+                'ec2': {},
+            }
 
     def _search_ec2(self, search_string):
         result = []
@@ -170,3 +196,48 @@ class Clinv():
         print('Type: EC2 instances')
         for instance in instances:
             instance.print()
+
+    def _unassigned_ec2(self):
+        all_assigned_instances = []
+        for service_id, service in self.raw_data['services'].items():
+            for instance in service['aws']['ec2']:
+                all_assigned_instances.append(instance)
+
+        for instance_id, instance in self.inv['ec2'].items():
+            if instance_id not in all_assigned_instances:
+                print('{}: {}'.format(instance.id, instance.name))
+
+    def _unassigned_services(self):
+        all_assigned_services = []
+        for project_id, project in self.raw_data['projects'].items():
+            try:
+                for service in project['services']:
+                    all_assigned_services.append(service)
+            except TypeError:
+                pass
+
+        for service_id, service in self.raw_data['services'].items():
+            if service_id not in all_assigned_services:
+                print('{}: {}'.format(service_id, service['name']))
+
+    def _unassigned_informations(self):
+        all_assigned_informations = []
+        for project_id, project in self.raw_data['projects'].items():
+            try:
+                for information in project['informations']:
+                    all_assigned_informations.append(information)
+            except TypeError:
+                pass
+
+        for information_id, information in \
+                self.raw_data['informations'].items():
+            if information_id not in all_assigned_informations:
+                print('{}: {}'.format(information_id, information['name']))
+
+    def unassigned(self, resource_type):
+        if resource_type == 'ec2':
+            self._unassigned_ec2()
+        elif resource_type == 'services':
+            self._unassigned_services()
+        elif resource_type == 'informations':
+            self._unassigned_informations()

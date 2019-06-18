@@ -29,9 +29,13 @@ def load_parser():
 
     subparser.add_parser('generate')
 
-    # group = parser.add_mutually_exclusive_group()
-    # group.add_argument("-v", "--verbose", action="count")
-    # group.add_argument("-q", "--quiet", action="store_true")
+    unassigned_parser = subparser.add_parser('unassigned')
+    unassigned_parser.add_argument(
+        "resource_type",
+        type=str,
+        help='String used to search',
+        choices=['ec2', 'services', 'informations'],
+    )
 
     argcomplete.autocomplete(parser)
     return parser
