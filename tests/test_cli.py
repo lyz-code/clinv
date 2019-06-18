@@ -8,15 +8,15 @@ class TestArgparse(unittest.TestCase):
     def setUp(self):
         self.parser = load_parser()
 
-    def test_can_specify_inventory_path(self):
-        parsed = self.parser.parse_args(['-i', '/tmp/inventory.yaml'])
-        self.assertEqual(parsed.inventory_path, '/tmp/inventory.yaml')
+    def test_can_specify_data_path(self):
+        parsed = self.parser.parse_args(['-d', '/tmp/inventory.yaml'])
+        self.assertEqual(parsed.data_path, '/tmp/inventory.yaml')
 
-    def test_default_inventory_path(self):
+    def test_default_data_path(self):
         parsed = self.parser.parse_args([])
         self.assertEqual(
-            parsed.inventory_path,
-            '~/.local/share/clinv/inventory.yaml',
+            parsed.data_path,
+            '~/.local/share/clinv',
         )
 
     def test_can_specify_search_subcommand(self):

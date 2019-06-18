@@ -28,8 +28,8 @@ class EC2Instance():
         private_ips = []
         try:
             for interface in self.instance['NetworkInterfaces']:
-                for association in interface['PrivateIpAddresses']:
-                    private_ips.append(association['PrivateIpAddress'])
+                for address in interface['PrivateIpAddresses']:
+                    private_ips.append(address['PrivateIpAddress'])
         except KeyError:
             pass
         return private_ips

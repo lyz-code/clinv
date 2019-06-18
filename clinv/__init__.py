@@ -27,12 +27,13 @@ def main():
     args = parser.parse_args()
     load_logger()
 
-    clinv = Clinv(args.inventory_path)
+    clinv = Clinv(args.data_path)
     if args.subcommand == 'search':
         clinv.load_inventory()
-        clinv.print_ec2(args.search_string)
+        clinv._update_inventory()
+        clinv.print_search(args.search_string)
     elif args.subcommand == 'generate':
-        clinv._fetch_ec2()
+        clinv._update_raw_inventory()
         clinv.save_inventory()
 
 

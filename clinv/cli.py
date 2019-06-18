@@ -12,10 +12,10 @@ def load_parser():
     )
 
     parser.add_argument(
-        "-i",
-        "--inventory_path",
+        "-d",
+        "--data_path",
         type=str,
-        default='~/.local/share/clinv/inventory.yaml',
+        default='~/.local/share/clinv',
         help='Path to the inventory',
     )
     subparser = parser.add_subparsers(dest='subcommand', help='subcommands')

@@ -18,6 +18,7 @@
 
 # Program to maintain an inventory of assets.
 
+from clinv.aws import EC2Instance
 from yaml import YAMLError
 import boto3
 import logging
@@ -34,38 +35,81 @@ class Clinv():
             self.inventory_dir,
             'raw_inventory.yaml',
         )
+
+    def _update_raw_inventory(self):
         self.raw_inv = {
             'ec2': [],
         }
+        self.raw_inv['ec2'] = \
+            self.ec2.describe_instances()['Reservations']
 
-    def _fetch_ec2(self):
-        self.raw_inv['ec2'] = self.ec2.describe_instances()['Reservations']
+        prune_keys = [
+            'AmiLaunchIndex',
+            'Architecture',
+            'BlockDeviceMappings',
+            'CapacityReservationSpecification',
+            'ClientToken',
+            'CpuOptions',
+            'EbsOptimized',
+            'HibernationOptions',
+            'Hypervisor',
+            'ImageId',
+            'KeyName',
+            'LaunchTime',
+            'Monitoring',
+            'Placement',
+            'PrivateDnsName',
+            'PrivateIpAddress',
+            'ProductCodes',
+            'PublicDnsName',
+            'PublicIpAddress',
+            'RootDeviceName',
+            'RootDeviceType',
+            'SourceDestCheck',
+            'StateTransitionReason',
+            'SubnetId',
+            'VirtualizationType',
+        ]
+        network_prune_keys = [
+            'Association',
+            'Attachment',
+            'Description',
+            'Groups',
+            'InterfaceType',
+            'Ipv6Addresses',
+            'MacAddress',
+            'NetworkInterfaceId',
+            'OwnerId',
+            'PrivateDnsName',
+            'PrivateIpAddress',
+            'SourceDestCheck',
+            'Status',
+            'SubnetId',
+            'VpcId',
+        ]
+
         for resource in self.raw_inv['ec2']:
-            resource['assigned_service'] = False
-            resource['exposed_services'] = []
+            for instance in resource['Instances']:
+                for prune_key in prune_keys:
+                    try:
+                        instance.pop(prune_key)
+                    except KeyError:
+                        pass
+                for interface in instance['NetworkInterfaces']:
+                    for prune_key in network_prune_keys:
+                        try:
+                            interface.pop(prune_key)
+                        except KeyError:
+                            pass
 
-    def _search_ec2(self, search_string):
-        for ec2_resource in self.raw_inv['ec2']:
-            for instance in ec2_resource['Instances']:
-                # Search by id
-                if instance['InstanceId'] == search_string:
-                    return instance
-
-                # Search by name
-                if self._get_ec2_instance_name(instance) == search_string:
-                    return instance
-
-                # Search by public IP
-                if search_string in self._get_ec2_public_ip(instance):
-                    return instance
-
-                # Search by private IP
-                if search_string in self._get_ec2_private_ip(instance):
-                    return instance
-
-                # Search by security groups
-                if search_string in self._get_ec2_security_groups(instance):
-                    return instance
+    def _update_inventory(self):
+        self.inv = {
+            'ec2': {},
+        }
+        for resource in self.raw_inv['ec2']:
+            for instance in resource['Instances']:
+                ec2_instance = EC2Instance(instance)
+                self.inv['ec2'][ec2_instance.id] = ec2_instance
 
     def _save_yaml(self, yaml_path, dictionary):
         'Save variable to yaml'
@@ -92,63 +136,37 @@ class Clinv():
     def load_inventory(self):
         self.raw_inv = self._load_yaml(self.raw_inv_path)
 
-    def _get_ec2_instance_name(self, instance):
-        try:
-            for tag in instance['Tags']:
-                if tag['Key'] == 'Name':
-                    return tag['Value']
-        except KeyError:
-            pass
-        except TypeError:
-            pass
+    def _search_ec2(self, search_string):
+        result = []
+        for instance_id, instance in self.inv['ec2'].items():
+            # Search by id
+            if instance.id == search_string:
+                result.append(instance)
 
-    def _get_ec2_security_groups(self, instance):
-        try:
-            return [security_group['GroupId']
-                    for security_group in instance['SecurityGroups']
-                    ]
-        except KeyError:
-            pass
+            # Search by name
+            if instance.name == search_string:
+                result.append(instance)
 
-    def _get_ec2_private_ip(self, instance):
-        private_ips = []
-        try:
-            for interface in instance['NetworkInterfaces']:
-                for association in interface['PrivateIpAddresses']:
-                    private_ips.append(association['PrivateIpAddress'])
-        except KeyError:
-            pass
-        return private_ips
+            # Search by public IP
+            if search_string in instance.public_ips:
+                result.append(instance)
 
-    def _get_ec2_state(self, instance):
-        try:
-            return instance['State']['Name']
-        except KeyError:
-            pass
+            # Search by private IP
+            if search_string in instance.private_ips:
+                result.append(instance)
 
-    def _get_ec2_public_ip(self, instance):
-        public_ips = []
-        try:
-            for interface in instance['NetworkInterfaces']:
-                for association in interface['PrivateIpAddresses']:
-                    public_ips.append(association['Association']['PublicIp'])
-        except KeyError:
-            pass
-        return public_ips
+            # Search by security groups
+            if search_string in instance.security_groups:
+                result.append(instance)
+        return result
 
-    def print_ec2(self, search_string):
-        instance = self._search_ec2(search_string)
+    def print_search(self, search_string):
+        instances = self._search_ec2(search_string)
 
-        if instance is None:
+        if instances == []:
             print('I found nothing with that search_string')
             return
 
-        print('Type: EC2 instance')
-        print('Name: {}'.format(self._get_ec2_instance_name(instance)))
-        print('ID: {}'.format(instance['InstanceId']))
-        print('State: {}'.format(self._get_ec2_state(instance)))
-        print('SecurityGroups: {}'.format(
-            ', '.join(self._get_ec2_security_groups(instance))
-        ))
-        print('PrivateIP: {}'.format(self._get_ec2_private_ip(instance)))
-        print('PublicIP: {}'.format(self._get_ec2_public_ip(instance)))
+        print('Type: EC2 instances')
+        for instance in instances:
+            instance.print()

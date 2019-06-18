@@ -24,15 +24,16 @@ class TestMain(unittest.TestCase):
     def test_search_subcommand(self, clinvMock, parserMock):
         parserMock.return_value.parse_args.return_value.subcommand = 'search'
         parserMock.return_value.parse_args.return_value.search_string = 'inst'
-        parserMock.return_value.parse_args.return_value.inventory_path = 'path'
+        parserMock.return_value.parse_args.return_value.data_path = 'path'
         main()
         self.assertEqual(
             clinvMock.assert_called_with('path'),
             None,
         )
         self.assertTrue(clinvMock.return_value.load_inventory.called)
+        self.assertTrue(clinvMock.return_value._update_inventory.called)
         self.assertEqual(
-            clinvMock.return_value.print_ec2.assert_called_with('inst'),
+            clinvMock.return_value.print_search.assert_called_with('inst'),
             None,
         )
 
@@ -41,5 +42,5 @@ class TestMain(unittest.TestCase):
     def test_generate_subcommand(self, clinvMock, parserMock):
         parserMock.return_value.parse_args.return_value.subcommand = 'generate'
         main()
-        self.assertTrue(clinvMock.return_value._fetch_ec2.called)
+        self.assertTrue(clinvMock.return_value._update_raw_inventory.called)
         self.assertTrue(clinvMock.return_value.save_inventory.called)
