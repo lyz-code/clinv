@@ -123,6 +123,7 @@ class Clinv():
                     self.raw_data['ec2'][instance_id] = {
                         'description': '',
                         'to_destroy': False,
+                        'environment': 'production',
                     }
                 for key, value in \
                         self.raw_data['ec2'][instance_id].items():
@@ -171,7 +172,8 @@ class Clinv():
                 result.append(instance)
 
             # Search by name
-            if re.match(search_string, instance.name):
+            if instance.name is not None and \
+                    re.match(search_string, instance.name, re.IGNORECASE):
                 result.append(instance)
 
             # Search by public IP
@@ -187,22 +189,67 @@ class Clinv():
                 result.append(instance)
         return result
 
-    def print_search(self, search_string):
-        instances = self._search_ec2(search_string)
+    def _search_raw_data_resource(self, resource_type, search_string):
+        try:
+            return [
+                resource_id
+                for resource_id, resource
+                in self.raw_data[resource_type].items()
+                if re.match(search_string, resource['name'], re.IGNORECASE)
+            ]
+        except KeyError:
+            return []
 
-        if instances == []:
+    def _search_projects(self, search_string):
+        return self._search_raw_data_resource('projects', search_string)
+
+    def _search_services(self, search_string):
+        return self._search_raw_data_resource('services', search_string)
+
+    def _search_informations(self, search_string):
+        return self._search_raw_data_resource('informations', search_string)
+
+    def print_search(self, search_string):
+        pro_ids = self._search_projects(search_string)
+
+        if pro_ids != []:
+            print('Type: Projects')
+            self._print_raw_data_resources('projects', pro_ids)
+
+        ser_ids = self._search_services(search_string)
+
+        if ser_ids != []:
+            print('\nType: Services')
+            self._print_raw_data_resources('services', ser_ids)
+
+        inf_ids = self._search_informations(search_string)
+
+        if inf_ids != []:
+            print('\nType: Informations')
+            self._print_raw_data_resources('informations', inf_ids)
+
+        ec2_instances = self._search_ec2(search_string)
+
+        if ec2_instances != []:
+            print('\nType: EC2 instances')
+            for instance in ec2_instances:
+                instance.print()
+
+        if ec2_instances == [] and \
+                pro_ids == [] and \
+                ser_ids == [] and \
+                inf_ids == []:
             print('I found nothing with that search_string')
             return
-
-        print('Type: EC2 instances')
-        for instance in instances:
-            instance.print()
 
     def _unassigned_ec2(self):
         all_assigned_instances = []
         for service_id, service in self.raw_data['services'].items():
-            for instance in service['aws']['ec2']:
-                all_assigned_instances.append(instance)
+            try:
+                for instance in service['aws']['ec2']:
+                    all_assigned_instances.append(instance)
+            except TypeError:
+                pass
 
         for instance_id, instance in self.inv['ec2'].items():
             if instance_id not in all_assigned_instances:
@@ -242,3 +289,39 @@ class Clinv():
             self._unassigned_services()
         elif resource_type == 'informations':
             self._unassigned_informations()
+
+    def _list_informations(self):
+        self._list_raw_data_resource('informations')
+
+    def _list_services(self):
+        self._list_raw_data_resource('services')
+
+    def _list_projects(self):
+        self._list_raw_data_resource('projects')
+
+    def _list_raw_data_resource(self, resource_type):
+        self._print_raw_data_resources(
+            resource_type,
+            self.raw_data[resource_type].keys()
+        )
+
+    def _print_raw_data_resources(self, resource_type, resource_ids):
+        for resource_id in sorted(resource_ids):
+            print('{}: {}'.format(
+                resource_id,
+                self.raw_data[resource_type][resource_id]['name'],
+            ))
+
+    def _list_ec2(self):
+        for instance_id, instance in self.inv['ec2'].items():
+            print('{}: {}'.format(instance.id, instance.name))
+
+    def list(self, resource_type):
+        if resource_type == 'ec2':
+            self._list_ec2()
+        elif resource_type == 'services':
+            self._list_services()
+        elif resource_type == 'informations':
+            self._list_informations()
+        elif resource_type == 'projects':
+            self._list_projects()

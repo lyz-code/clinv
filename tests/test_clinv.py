@@ -275,6 +275,7 @@ class TestClinv(unittest.TestCase):
         desired_input = self.clinv.raw_inv['ec2'][0]['Instances'][0]
         desired_input['description'] = ''
         desired_input['to_destroy'] = False
+        desired_input['environment'] = 'production'
         self.assertEqual(
             self.ec2instance.assert_called_with(
                 self.clinv.raw_inv['ec2'][0]['Instances'][0]
@@ -393,8 +394,57 @@ class TestClinv(unittest.TestCase):
             [self.ec2instance()]
         )
 
+    def test_search_project_name(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {'name': 'Project 1'},
+                'pro-02': {'name': 'Project 2'},
+                },
+        }
+        instances = self.clinv._search_projects('Project 1')
+        self.assertEqual(
+            instances,
+            ['pro-01']
+        )
+
+    def test_search_service_name(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser-01': {'name': 'Service 1'},
+                'ser-02': {'name': 'Service 2'},
+                },
+        }
+        instances = self.clinv._search_services('Service 1')
+        self.assertEqual(
+            instances,
+            ['ser-01']
+        )
+
+    def test_search_information_name(self):
+        self.clinv.raw_data = {
+            'informations': {
+                'inf-01': {'name': 'Information 1'},
+                'inf-02': {'name': 'Information 2'},
+                },
+        }
+        instances = self.clinv._search_informations('Information 1')
+        self.assertEqual(
+            instances,
+            ['inf-01']
+        )
+
+    def test_search_raw_data_resource_does_not_keyerror_on_unexistent(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {'name': 'Project 1'},
+                },
+        }
+
+        result = self.clinv._search_raw_data_resource('services', 'Service 1')
+        self.assertEqual(result, [])
+
     @patch('clinv.clinv.Clinv._search_ec2')
-    def test_print_ec2_instance_information(self, searchMock):
+    def test_print_search_prints_ec2_instance_information(self, searchMock):
         searchMock.return_value = [self.ec2instance()]
         self.clinv.print_search('inst_name')
         self.assertEqual(
@@ -402,7 +452,7 @@ class TestClinv(unittest.TestCase):
             None,
         )
         print_calls = (
-            call('Type: EC2 instances'),
+            call('\nType: EC2 instances'),
         )
 
         for print_call in print_calls:
@@ -426,6 +476,57 @@ class TestClinv(unittest.TestCase):
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
 
+    def test_print_search_prints_project_information(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {'name': 'Project 1'},
+                'pro-02': {'name': 'Project 2'},
+                },
+        }
+        self.clinv.print_search('Project 1')
+        print_calls = (
+            call('Type: Projects'),
+            call('pro-01: Project 1'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(2, len(self.print.mock_calls))
+
+    def test_print_search_prints_services_information(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser-01': {'name': 'Service 1'},
+                'ser-02': {'name': 'Service 2'},
+                },
+        }
+        self.clinv.print_search('Service 1')
+        print_calls = (
+            call('\nType: Services'),
+            call('ser-01: Service 1'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(2, len(self.print.mock_calls))
+
+    def test_print_search_prints_informations_information(self):
+        self.clinv.raw_data = {
+            'informations': {
+                'inf-01': {'name': 'Information 1'},
+                'inf-02': {'name': 'Information 2'},
+                },
+        }
+        self.clinv.print_search('Information 1')
+        print_calls = (
+            call('\nType: Informations'),
+            call('inf-01: Information 1'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(2, len(self.print.mock_calls))
+
     def test_unassigned_ec2_prints_instances(self):
         self.clinv.raw_data = {
             'services': {
@@ -434,6 +535,28 @@ class TestClinv(unittest.TestCase):
                         'ec2': [
                             'i-xxxxxxxxxxxxxxxxx'
                         ],
+                    },
+                },
+            },
+            'ec2': {
+                'i-023desldk394995ss': []
+            },
+        }
+        self.clinv._unassigned_ec2()
+        print_calls = (
+            call('i-023desldk394995ss: inst_name'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    def test_unassigned_ec2_does_not_fail_on_empty_service(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser-01': {
+                    'aws': {
+                        'ec2': None
                     },
                 },
             },
@@ -470,11 +593,51 @@ class TestClinv(unittest.TestCase):
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
 
+    def test_unassigned_services_does_not_fail_on_empty_project(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {
+                    'services': None,
+                },
+            },
+            'services': {
+                'ser-02': {'name': 'Service 2'},
+                },
+        }
+        self.clinv._unassigned_services()
+        print_calls = (
+            call('ser-02: Service 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
     def test_unassigned_informations_prints_instances(self):
         self.clinv.raw_data = {
             'projects': {
                 'pro-01': {
                     'informations': ['inf-01'],
+                },
+            },
+            'informations': {
+                'inf-02': {'name': 'Information 2'},
+                },
+        }
+        self.clinv._unassigned_informations()
+        print_calls = (
+            call('inf-02: Information 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    def test_unassigned_informations_does_not_fail_on_empty_project(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {
+                    'informations': None,
                 },
             },
             'informations': {
@@ -506,4 +669,85 @@ class TestClinv(unittest.TestCase):
         unassignMock,
     ):
         self.clinv.unassigned('informations')
+        self.assertTrue(unassignMock.called)
+
+    def test_list_informations_prints_instances(self):
+        self.clinv.raw_data = {
+            'informations': {
+                'inf-01': {'name': 'Information 1'},
+                'inf-02': {'name': 'Information 2'},
+                },
+        }
+        self.clinv._list_informations()
+        print_calls = (
+            call('inf-01: Information 1'),
+            call('inf-02: Information 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(2, len(self.print.mock_calls))
+
+    def test_list_services_prints_instances(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser-01': {'name': 'Service 1'},
+                'ser-02': {'name': 'Service 2'},
+                },
+        }
+        self.clinv._list_services()
+        print_calls = (
+            call('ser-01: Service 1'),
+            call('ser-02: Service 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(2, len(self.print.mock_calls))
+
+    def test_list_projects_prints_instances(self):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro-01': {'name': 'Project 1'},
+                'pro-02': {'name': 'Project 2'},
+                },
+        }
+        self.clinv._list_projects()
+        print_calls = (
+            call('pro-01: Project 1'),
+            call('pro-02: Project 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(2, len(self.print.mock_calls))
+
+    def test_list_ec2_prints_instances(self):
+        self.clinv._list_ec2()
+        print_calls = (
+            call('i-023desldk394995ss: inst_name'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    @patch('clinv.clinv.Clinv._list_ec2')
+    def test_general_list_can_use_ec2_resource(self, unassignMock):
+        self.clinv.list('ec2')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._list_services')
+    def test_general_list_can_use_service_resource(self, unassignMock):
+        self.clinv.list('services')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._list_informations')
+    def test_general_list_can_use_informations_resource(self, unassignMock):
+        self.clinv.list('informations')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._list_projects')
+    def test_general_list_can_use_projects_resource(self, unassignMock):
+        self.clinv.list('projects')
         self.assertTrue(unassignMock.called)

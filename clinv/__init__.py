@@ -28,7 +28,12 @@ def main():
     load_logger()
 
     clinv = Clinv(args.data_path)
-    if args.subcommand not in ['generate', 'search', 'unassigned']:
+    if args.subcommand not in [
+        'generate',
+        'search',
+        'unassigned',
+        'list',
+    ]:
         return
 
     if args.subcommand == 'generate':
@@ -44,6 +49,8 @@ def main():
             clinv.print_search(args.search_string)
         elif args.subcommand == 'unassigned':
             clinv.unassigned(args.resource_type)
+        elif args.subcommand == 'list':
+            clinv.list(args.resource_type)
 
 
 if __name__ == "__main__":

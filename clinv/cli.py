@@ -8,7 +8,7 @@ def load_parser():
 
     # Argparse
     parser = argparse.ArgumentParser(
-        description="Command line asset inventory"
+        description="DevSecOps command line asset inventory"
     )
 
     parser.add_argument(
@@ -37,6 +37,13 @@ def load_parser():
         choices=['ec2', 'services', 'informations'],
     )
 
+    list_parser = subparser.add_parser('list')
+    list_parser.add_argument(
+        "resource_type",
+        type=str,
+        help='String used to search',
+        choices=['ec2', 'services', 'informations', 'projects'],
+    )
     argcomplete.autocomplete(parser)
     return parser
 

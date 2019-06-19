@@ -40,6 +40,16 @@ class TestMain(unittest.TestCase):
 
     @patch('clinv.load_parser')
     @patch('clinv.Clinv', autospect=True)
+    def test_generate_subcommand(self, clinvMock, parserMock):
+        parserMock.return_value.parse_args.return_value.subcommand = 'generate'
+        main()
+        self.assertTrue(clinvMock.return_value._update_raw_inventory.called)
+        self.assertTrue(clinvMock.return_value.load_data.called)
+        self.assertTrue(clinvMock.return_value._update_inventory.called)
+        self.assertTrue(clinvMock.return_value.save_inventory.called)
+
+    @patch('clinv.load_parser')
+    @patch('clinv.Clinv', autospect=True)
     def test_unassigned_subcommand(self, clinvMock, parserMock):
         parserMock.return_value.parse_args.return_value.subcommand = \
             'unassigned'
@@ -55,10 +65,15 @@ class TestMain(unittest.TestCase):
 
     @patch('clinv.load_parser')
     @patch('clinv.Clinv', autospect=True)
-    def test_generate_subcommand(self, clinvMock, parserMock):
-        parserMock.return_value.parse_args.return_value.subcommand = 'generate'
+    def test_list_subcommand(self, clinvMock, parserMock):
+        parserMock.return_value.parse_args.return_value.subcommand = \
+            'list'
+        parserMock.return_value.parse_args.return_value.resource_type = 'ec2'
         main()
-        self.assertTrue(clinvMock.return_value._update_raw_inventory.called)
+        self.assertTrue(clinvMock.return_value.load_inventory.called)
         self.assertTrue(clinvMock.return_value.load_data.called)
         self.assertTrue(clinvMock.return_value._update_inventory.called)
-        self.assertTrue(clinvMock.return_value.save_inventory.called)
+        self.assertEqual(
+            clinvMock.return_value.list.assert_called_with('ec2'),
+            None,
+        )

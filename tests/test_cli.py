@@ -43,6 +43,20 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'informations')
 
+    def test_can_specify_list_ec2_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'ec2'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'ec2')
+
+    def test_can_specify_list_services_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'services'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'services')
+
+    def test_can_specify_list_informations_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'informations'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'informations')
 
 class TestLogger(unittest.TestCase):
 
