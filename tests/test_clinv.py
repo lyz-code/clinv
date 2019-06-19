@@ -358,6 +358,13 @@ class TestClinv(unittest.TestCase):
             [self.ec2instance()]
         )
 
+    def test_search_ec2_by_regexp_on_name(self):
+        instances = self.clinv._search_ec2('.*name')
+        self.assertEqual(
+            instances,
+            [self.ec2instance()]
+        )
+
     def test_search_ec2_by_id(self):
         instances = self.clinv._search_ec2('i-023desldk394995ss')
         self.assertEqual(

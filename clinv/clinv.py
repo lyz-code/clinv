@@ -23,6 +23,7 @@ from yaml import YAMLError
 import boto3
 import logging
 import os
+import re
 import yaml
 
 
@@ -166,11 +167,11 @@ class Clinv():
         result = []
         for instance_id, instance in self.inv['ec2'].items():
             # Search by id
-            if instance.id == search_string:
+            if re.match(search_string, instance.id):
                 result.append(instance)
 
             # Search by name
-            if instance.name == search_string:
+            if re.match(search_string, instance.name):
                 result.append(instance)
 
             # Search by public IP
