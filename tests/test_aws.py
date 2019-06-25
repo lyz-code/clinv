@@ -124,7 +124,7 @@ class TestEC2Instance(unittest.TestCase):
             ],
             'SourceDestCheck': True,
             'State': {'Code': 16, 'Name': 'running'},
-            'StateTransitionReason': '',
+            'StateTransitionReason': 'reason',
             'SubnetId': 'subnet-sfsdwf12',
             'Tags': [
                 {'Key': 'Name', 'Value': 'inst_name'}
@@ -185,6 +185,9 @@ class TestEC2Instance(unittest.TestCase):
     def test_get_type(self):
         self.assertEqual(self.ec2.type, 'c4.4xlarge')
 
+    def test_get_state_transition_reason(self):
+        self.assertEqual(self.ec2.state_transition, 'reason')
+
     def test_print_ec2_instance_information(self):
         self.ec2.print()
         print_calls = (
@@ -200,3 +203,21 @@ class TestEC2Instance(unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(7, len(self.print.mock_calls))
+
+    def test_print_ec2_reason_if_stopped(self):
+        self.raw_instance['State']['Name'] = 'stopped'
+        self.ec2.print()
+        print_calls = (
+            call('- Name: inst_name'),
+            call('  ID: i-023desldk394995ss'),
+            call('  State: stopped'),
+            call('  State Reason: reason'),
+            call('  Type: c4.4xlarge'),
+            call("  SecurityGroups: ['sg-f2234gf6', 'sg-cwfccs17']"),
+            call("  PrivateIP: ['142.33.2.113']"),
+            call("  PublicIP: ['32.312.444.22']"),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(8, len(self.print.mock_calls))

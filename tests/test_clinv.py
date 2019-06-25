@@ -229,7 +229,6 @@ class TestClinv(unittest.TestCase):
             'RootDeviceName',
             'RootDeviceType',
             'SourceDestCheck',
-            'StateTransitionReason',
             'SubnetId',
             'VirtualizationType',
         ]

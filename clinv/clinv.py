@@ -74,7 +74,6 @@ class Clinv():
             'RootDeviceName',
             'RootDeviceType',
             'SourceDestCheck',
-            'StateTransitionReason',
             'SubnetId',
             'VirtualizationType',
         ]

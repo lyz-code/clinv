@@ -66,10 +66,19 @@ class EC2Instance():
         except KeyError:
             pass
 
+    @property
+    def state_transition(self):
+        try:
+            return self.instance['StateTransitionReason']
+        except KeyError:
+            pass
+
     def print(self):
         print('- Name: {}'.format(self.name))
         print('  ID: {}'.format(self.id))
         print('  State: {}'.format(self.state))
+        if self.state != 'running':
+            print('  State Reason: {}'.format(self.state_transition))
         print('  Type: {}'.format(self.type))
         print('  SecurityGroups: {}'.format(self.security_groups))
         print('  PrivateIP: {}'.format(self.private_ips))
