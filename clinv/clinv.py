@@ -166,38 +166,53 @@ class Clinv():
     def _search_ec2(self, search_string):
         result = []
         for instance_id, instance in self.inv['ec2'].items():
-            # Search by id
-            if re.match(search_string, instance.id):
-                result.append(instance)
-
-            # Search by name
-            if instance.name is not None and \
-                    re.match(search_string, instance.name, re.IGNORECASE):
-                result.append(instance)
-
-            # Search by public IP
-            if search_string in instance.public_ips:
-                result.append(instance)
-
-            # Search by private IP
-            if search_string in instance.private_ips:
-                result.append(instance)
-
-            # Search by security groups
-            if search_string in instance.security_groups:
+            if instance.search(search_string) is True:
                 result.append(instance)
         return result
 
-    def _search_raw_data_resource(self, resource_type, search_string):
+    def _match_dictionary_field(self, resource, search_string, field):
         try:
-            return [
-                resource_id
-                for resource_id, resource
-                in self.raw_data[resource_type].items()
-                if re.match(search_string, resource['name'], re.IGNORECASE)
-            ]
+            if re.match(search_string, str(resource[field]), re.IGNORECASE):
+                return True
         except KeyError:
-            return []
+            pass
+        return False
+
+    def _search_raw_data_resource(self, resource_type, search_string):
+        result = []
+        try:
+            self.raw_data[resource_type]
+        except KeyError:
+            return result
+
+        for resource_id, resource in self.raw_data[resource_type].items():
+            # Search by name
+            if self._match_dictionary_field(
+                resource,
+                search_string,
+                'name',
+            ):
+                result.append(resource_id)
+                continue
+
+            # Search by aliases
+            if self._match_dictionary_field(
+                resource,
+                search_string,
+                'aliases',
+            ):
+                result.append(resource_id)
+                continue
+
+            # Search by description
+            if self._match_dictionary_field(
+                resource,
+                search_string,
+                'description',
+            ):
+                result.append(resource_id)
+                continue
+        return result
 
     def _search_projects(self, search_string):
         return self._search_raw_data_resource('projects', search_string)
@@ -243,27 +258,27 @@ class Clinv():
 
     def _unassigned_ec2(self):
         all_assigned_instances = []
-        for service_id, service in self.raw_data['services'].items():
+        for service_id, service in sorted(self.raw_data['services'].items()):
             try:
                 for instance in service['aws']['ec2']:
                     all_assigned_instances.append(instance)
             except TypeError:
                 pass
 
-        for instance_id, instance in self.inv['ec2'].items():
+        for instance_id, instance in sorted(self.inv['ec2'].items()):
             if instance_id not in all_assigned_instances:
                 print('{}: {}'.format(instance.id, instance.name))
 
     def _unassigned_services(self):
         all_assigned_services = []
-        for project_id, project in self.raw_data['projects'].items():
+        for project_id, project in sorted(self.raw_data['projects'].items()):
             try:
                 for service in project['services']:
                     all_assigned_services.append(service)
             except TypeError:
                 pass
 
-        for service_id, service in self.raw_data['services'].items():
+        for service_id, service in sorted(self.raw_data['services'].items()):
             if service_id not in all_assigned_services:
                 print('{}: {}'.format(service_id, service['name']))
 
@@ -277,7 +292,7 @@ class Clinv():
                 pass
 
         for information_id, information in \
-                self.raw_data['informations'].items():
+                sorted(self.raw_data['informations'].items()):
             if information_id not in all_assigned_informations:
                 print('{}: {}'.format(information_id, information['name']))
 

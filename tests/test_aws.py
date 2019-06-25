@@ -130,7 +130,8 @@ class TestEC2Instance(unittest.TestCase):
                 {'Key': 'Name', 'Value': 'inst_name'}
             ],
             'VirtualizationType': 'hvm',
-            'VpcId': 'vpc-31084921'
+            'VpcId': 'vpc-31084921',
+            'description': 'This is in the description of the instance',
         }
         self.ec2 = EC2Instance(self.raw_instance)
 
@@ -188,6 +189,12 @@ class TestEC2Instance(unittest.TestCase):
     def test_get_state_transition_reason(self):
         self.assertEqual(self.ec2.state_transition, 'reason')
 
+    def test_get_description(self):
+        self.assertEqual(
+            self.ec2.description,
+            'This is in the description of the instance',
+        )
+
     def test_print_ec2_instance_information(self):
         self.ec2.print()
         print_calls = (
@@ -221,3 +228,24 @@ class TestEC2Instance(unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(8, len(self.print.mock_calls))
+
+    def test_search_ec2_by_name(self):
+        self.assertTrue(self.ec2.search('inst_name'))
+
+    def test_search_ec2_by_regexp_on_name(self):
+        self.assertTrue(self.ec2.search('.*name'))
+
+    def test_search_ec2_by_id(self):
+        self.assertTrue(self.ec2.search('i-023desldk394995ss'))
+
+    def test_search_ec2_by_public_ip(self):
+        self.assertTrue(self.ec2.search('32.312.444.22'))
+
+    def test_search_ec2_by_private_ip(self):
+        self.assertTrue(self.ec2.search('142.33.2.113'))
+
+    def test_search_ec2_by_security_group(self):
+        self.assertTrue(self.ec2.search('sg-f2234gf6'))
+
+    def test_search_ec2_by_description(self):
+        self.assertTrue(self.ec2.search('.*in the description.*'))

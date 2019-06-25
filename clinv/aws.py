@@ -1,3 +1,5 @@
+import re
+
 
 class EC2Instance():
     def __init__(self, instance):
@@ -54,22 +56,23 @@ class EC2Instance():
 
     @property
     def id(self):
-        try:
-            return self.instance['InstanceId']
-        except KeyError:
-            pass
+        return self._get_field('InstanceId')
 
     @property
     def type(self):
-        try:
-            return self.instance['InstanceType']
-        except KeyError:
-            pass
+        return self._get_field('InstanceType')
 
     @property
     def state_transition(self):
+        return self._get_field('StateTransitionReason')
+
+    @property
+    def description(self):
+        return self._get_field('description')
+
+    def _get_field(self, key):
         try:
-            return self.instance['StateTransitionReason']
+            return self.instance[key]
         except KeyError:
             pass
 
@@ -83,3 +86,31 @@ class EC2Instance():
         print('  SecurityGroups: {}'.format(self.security_groups))
         print('  PrivateIP: {}'.format(self.private_ips))
         print('  PublicIP: {}'.format(self.public_ips))
+
+    def search(self, search_string):
+        # Search by id
+        if re.match(search_string, self.id):
+            return True
+
+        # Search by name
+        if self.name is not None and \
+                re.match(search_string, self.name, re.IGNORECASE):
+            return True
+
+        # Search by description
+        if re.match(search_string, self.description, re.IGNORECASE):
+            return True
+
+        # Search by public IP
+        if search_string in self.public_ips:
+            return True
+
+        # Search by private IP
+        if search_string in self.private_ips:
+            return True
+
+        # Search by security groups
+        if search_string in self.security_groups:
+            return True
+
+        return False

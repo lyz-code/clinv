@@ -34,10 +34,11 @@ it imports the following resources:
 
 `clinv search search_string` will case insensitively match:
 
-* Project names
-* Service names
-* Information names
-* EC2 properties (id, name, ips, security group ids)
+* Project names, aliases and descriptions.
+* Service names, aliases and descriptions.
+* Information names, aliases and descriptions.
+* EC2 properties (id, name, private ips, public ips, descriptions and security
+  group ids).
 
 And will print the matching information.
 
