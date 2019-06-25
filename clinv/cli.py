@@ -44,6 +44,23 @@ def load_parser():
         help='String used to search',
         choices=['ec2', 'services', 'informations', 'projects'],
     )
+
+    export_parser = subparser.add_parser('export')
+    export_parser.add_argument(
+        "export_format",
+        type=str,
+        nargs='?',
+        help='Format to export',
+        choices=['ods'],
+        default='ods',
+    )
+    export_parser.add_argument(
+        "-f",
+        "--export_path",
+        type=str,
+        help='Path to export',
+        default='~/.local/share/clinv/inventory.ods',
+    )
     argcomplete.autocomplete(parser)
     return parser
 

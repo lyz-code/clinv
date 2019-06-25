@@ -29,28 +29,29 @@ def main():
 
     clinv = Clinv(args.data_path)
     if args.subcommand not in [
+        'export',
         'generate',
+        'list',
         'search',
         'unassigned',
-        'list',
     ]:
         return
 
     if args.subcommand == 'generate':
         clinv._update_raw_inventory()
         clinv.load_data()
-        clinv._update_inventory()
         clinv.save_inventory()
     else:
         clinv.load_inventory()
         clinv.load_data()
-        clinv._update_inventory()
         if args.subcommand == 'search':
             clinv.print_search(args.search_string)
         elif args.subcommand == 'unassigned':
             clinv.unassigned(args.resource_type)
         elif args.subcommand == 'list':
             clinv.list(args.resource_type)
+        elif args.subcommand == 'export':
+            clinv.export(args.export_format, args.export_path)
 
 
 if __name__ == "__main__":

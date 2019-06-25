@@ -351,6 +351,12 @@ class TestClinv(unittest.TestCase):
         self.assertTrue(call(self.raw_data_path) in loadMock.mock_calls)
         self.assertEqual(self.clinv.raw_data, loadMock())
 
+    @patch('clinv.clinv.Clinv._load_yaml')
+    @patch('clinv.clinv.Clinv._update_inventory')
+    def test_data_loading_updates_dictionary(self, updateMock, loadMock):
+        self.clinv.load_data()
+        self.assertTrue(updateMock.called)
+
     def test_search_ec2_returns_instances(self):
         self.ec2instance.return_value.search.return_value = True
         instances = self.clinv._search_ec2('inst_name')
@@ -742,3 +748,7 @@ class TestClinv(unittest.TestCase):
     def test_general_list_can_use_projects_resource(self, unassignMock):
         self.clinv.list('projects')
         self.assertTrue(unassignMock.called)
+
+    def test_export(self):
+        # cli and init done
+        self.assertTrue(False)

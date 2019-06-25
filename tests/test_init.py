@@ -6,74 +6,85 @@ from clinv import main
 
 class TestMain(unittest.TestCase):
 
-    @patch('clinv.load_parser')
-    def test_main_loads_parser(self, parserMock):
-        parserMock.parse_args = True
-        main()
-        self.assertTrue(parserMock.called)
+    def setUp(self):
+        self.parser_patch = patch('clinv.load_parser', autospect=True)
+        self.parser = self.parser_patch.start()
+        self.parser_args = self.parser.return_value.parse_args.return_value
 
-    @patch('clinv.load_parser')
+        self.clinv_patch = patch('clinv.Clinv', autospect=True)
+        self.clinv = self.clinv_patch.start()
+
+    def tearDown(self):
+        self.parser_patch.stop()
+        self.clinv_patch.stop()
+
+    def test_main_loads_parser(self):
+        self.parser.parse_args = True
+        main()
+        self.assertTrue(self.parser.called)
+
     @patch('clinv.load_logger')
-    def test_main_loads_logger(self, loggerMock, parserMock):
-        parserMock.parse_args = True
+    def test_main_loads_logger(self, loggerMock):
+        self.parser.parse_args = True
         main()
         self.assertTrue(loggerMock.called)
 
-    @patch('clinv.load_parser')
-    @patch('clinv.Clinv', autospect=True)
-    def test_search_subcommand(self, clinvMock, parserMock):
-        parserMock.return_value.parse_args.return_value.subcommand = 'search'
-        parserMock.return_value.parse_args.return_value.search_string = 'inst'
-        parserMock.return_value.parse_args.return_value.data_path = 'path'
+    def test_search_subcommand(self):
+        self.parser_args.subcommand = 'search'
+        self.parser_args.search_string = 'inst'
+        self.parser_args.data_path = 'path'
         main()
         self.assertEqual(
-            clinvMock.assert_called_with('path'),
+            self.clinv.assert_called_with('path'),
             None,
         )
-        self.assertTrue(clinvMock.return_value.load_inventory.called)
-        self.assertTrue(clinvMock.return_value.load_data.called)
-        self.assertTrue(clinvMock.return_value._update_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_data.called)
         self.assertEqual(
-            clinvMock.return_value.print_search.assert_called_with('inst'),
+            self.clinv.return_value.print_search.assert_called_with('inst'),
             None,
         )
 
-    @patch('clinv.load_parser')
-    @patch('clinv.Clinv', autospect=True)
-    def test_generate_subcommand(self, clinvMock, parserMock):
-        parserMock.return_value.parse_args.return_value.subcommand = 'generate'
+    def test_generate_subcommand(self):
+        self.parser_args.subcommand = 'generate'
         main()
-        self.assertTrue(clinvMock.return_value._update_raw_inventory.called)
-        self.assertTrue(clinvMock.return_value.load_data.called)
-        self.assertTrue(clinvMock.return_value._update_inventory.called)
-        self.assertTrue(clinvMock.return_value.save_inventory.called)
+        self.assertTrue(self.clinv.return_value._update_raw_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.clinv.return_value.save_inventory.called)
 
-    @patch('clinv.load_parser')
-    @patch('clinv.Clinv', autospect=True)
-    def test_unassigned_subcommand(self, clinvMock, parserMock):
-        parserMock.return_value.parse_args.return_value.subcommand = \
-            'unassigned'
-        parserMock.return_value.parse_args.return_value.resource_type = 'ec2'
+    def test_unassigned_subcommand(self):
+        self.parser_args.subcommand = 'unassigned'
+        self.parser_args.resource_type = 'ec2'
         main()
-        self.assertTrue(clinvMock.return_value.load_inventory.called)
-        self.assertTrue(clinvMock.return_value.load_data.called)
-        self.assertTrue(clinvMock.return_value._update_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_data.called)
         self.assertEqual(
-            clinvMock.return_value.unassigned.assert_called_with('ec2'),
+            self.clinv.return_value.unassigned.assert_called_with('ec2'),
             None,
         )
 
-    @patch('clinv.load_parser')
-    @patch('clinv.Clinv', autospect=True)
-    def test_list_subcommand(self, clinvMock, parserMock):
-        parserMock.return_value.parse_args.return_value.subcommand = \
-            'list'
-        parserMock.return_value.parse_args.return_value.resource_type = 'ec2'
+    def test_list_subcommand(self):
+        self.parser_args.subcommand = 'list'
+        self.parser_args.resource_type = 'ec2'
         main()
-        self.assertTrue(clinvMock.return_value.load_inventory.called)
-        self.assertTrue(clinvMock.return_value.load_data.called)
-        self.assertTrue(clinvMock.return_value._update_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_data.called)
         self.assertEqual(
-            clinvMock.return_value.list.assert_called_with('ec2'),
+            self.clinv.return_value.list.assert_called_with('ec2'),
+            None,
+        )
+
+    def test_export_subcommand(self):
+        self.parser_args.subcommand = 'export'
+        self.parser_args.export_format = 'ods'
+        self.parser_args.export_path = 'file.ods'
+        main()
+        self.assertTrue(self.clinv.return_value.load_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertEqual(
+            self.clinv.return_value.export.assert_called_with(
+                'ods',
+                'file.ods',
+            ),
             None,
         )

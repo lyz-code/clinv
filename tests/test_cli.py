@@ -58,6 +58,31 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'list')
         self.assertEqual(parsed.resource_type, 'informations')
 
+    def test_can_specify_export_subcommand(self):
+        parsed = self.parser.parse_args(['export'])
+        self.assertEqual(parsed.subcommand, 'export')
+
+    def test_export_has_default_format(self):
+        parsed = self.parser.parse_args(['export'])
+        self.assertEqual(parsed.export_format, 'ods')
+
+    def test_can_specify_export_format(self):
+        parsed = self.parser.parse_args(['export', 'ods'])
+        self.assertEqual(parsed.subcommand, 'export')
+        self.assertEqual(parsed.export_format, 'ods')
+
+    def test_export_has_default_file(self):
+        parsed = self.parser.parse_args(['export'])
+        self.assertEqual(
+            parsed.export_path,
+            '~/.local/share/clinv/inventory.ods'
+        )
+
+    def test_export_can_specify_file_path(self):
+        parsed = self.parser.parse_args(['export', '-f', 'file.ods'])
+        self.assertEqual(parsed.export_path, 'file.ods')
+
+
 class TestLogger(unittest.TestCase):
 
     def setUp(self):

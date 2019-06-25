@@ -162,6 +162,7 @@ class Clinv():
             self.raw_data = {
                 'ec2': {},
             }
+        self._update_inventory()
 
     def _search_ec2(self, search_string):
         result = []
