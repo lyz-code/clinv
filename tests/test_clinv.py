@@ -21,9 +21,21 @@ class TestClinv(unittest.TestCase):
         self.print_patch = patch('clinv.clinv.print', autospect=True)
         self.print = self.print_patch.start()
         self.ec2instance_patch = patch(
-            'clinv.clinv.EC2Instance', autospect=True
+            'clinv.clinv.EC2', autospect=True
         )
         self.ec2instance = self.ec2instance_patch.start()
+        self.project_patch = patch(
+            'clinv.clinv.Project', autospect=True
+        )
+        self.project = self.project_patch.start()
+        self.service_patch = patch(
+            'clinv.clinv.Service', autospect=True
+        )
+        self.service = self.service_patch.start()
+        self.information_patch = patch(
+            'clinv.clinv.Information', autospect=True
+        )
+        self.information = self.information_patch.start()
 
         self.clinv = Clinv(self.inventory_dir)
         self.boto_describe_instances = {
@@ -167,7 +179,22 @@ class TestClinv(unittest.TestCase):
                     'description': '',
                     'to_destroy': False,
                 }
-            }
+            },
+            'projects': {
+                'pro_01': {
+                    'name': 'project 1',
+                },
+            },
+            'services': {
+                'ser_01': {
+                    'name': 'service 1',
+                },
+            },
+            'informations': {
+                'inf_01': {
+                    'name': 'information 1',
+                },
+            },
         }
         self.raw_inv_path = os.path.join(
             self.inventory_dir,
@@ -180,7 +207,16 @@ class TestClinv(unittest.TestCase):
         self.clinv.inv = {
             'ec2': {
                 'i-023desldk394995ss': self.ec2instance.return_value
-            }
+            },
+            'projects': {
+                'pro_01': self.project.return_value
+            },
+            'services': {
+                'ser_01': self.service.return_value
+            },
+            'informations': {
+                'inf_01': self.information.return_value
+            },
         }
         self.ec2instance.return_value.name = 'inst_name'
         self.ec2instance.return_value.id = 'i-023desldk394995ss'
@@ -193,6 +229,9 @@ class TestClinv(unittest.TestCase):
         self.logging_patch.stop()
         self.print_patch.stop()
         self.ec2instance_patch.stop()
+        self.project_patch.stop()
+        self.service_patch.stop()
+        self.information_patch.stop()
         shutil.rmtree(self.tmp)
 
     @patch('clinv.clinv.Clinv.regions', new_callable=PropertyMock)
@@ -287,7 +326,7 @@ class TestClinv(unittest.TestCase):
 
         self.assertTrue(ec2Mock.called)
 
-    def test_update_inventory_adds_raw_data(self):
+    def test_update_inventory_adds_ec2_instances(self):
         self.ec2instance.return_value.id = 'i-023desldk394995ss'
         self.clinv._update_inventory()
 
@@ -299,13 +338,58 @@ class TestClinv(unittest.TestCase):
         desired_input['region'] = 'us-east-1'
         self.assertEqual(
             self.ec2instance.assert_called_with(
-                self.clinv.raw_inv['ec2']['us-east-1'][0]['Instances'][0]
+                {
+                    'i-023desldk394995ss': self.clinv.raw_inv['ec2']
+                    ['us-east-1'][0]['Instances'][0]
+                },
             ),
             None,
         )
         self.assertEqual(
             self.clinv.inv['ec2']['i-023desldk394995ss'],
             self.ec2instance()
+        )
+
+    def test_update_inventory_adds_project_instances(self):
+        self.clinv._update_inventory()
+
+        self.assertEqual(
+            self.project.assert_called_with(
+                self.clinv.raw_data['projects']
+            ),
+            None,
+        )
+        self.assertEqual(
+            self.clinv.inv['projects']['pro_01'],
+            self.project.return_value
+        )
+
+    def test_update_inventory_adds_service_instances(self):
+        self.clinv._update_inventory()
+
+        self.assertEqual(
+            self.service.assert_called_with(
+                self.clinv.raw_data['services']
+            ),
+            None,
+        )
+        self.assertEqual(
+            self.clinv.inv['services']['ser_01'],
+            self.service.return_value
+        )
+
+    def test_update_inventory_adds_information_instances(self):
+        self.clinv._update_inventory()
+
+        self.assertEqual(
+            self.information.assert_called_with(
+                self.clinv.raw_data['informations']
+            ),
+            None,
+        )
+        self.assertEqual(
+            self.clinv.inv['informations']['inf_01'],
+            self.information.return_value
         )
 
     def test_yaml_saving(self):
@@ -388,79 +472,28 @@ class TestClinv(unittest.TestCase):
             [self.ec2instance()]
         )
 
-    def test_search_project_name(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {'name': 'Project 1'},
-                'pro_02': {'name': 'Project 2'},
-                },
-        }
-        instances = self.clinv._search_projects('Project 1')
+    def test_search_projects_returns_instances(self):
+        self.project.return_value.search.return_value = True
+        instances = self.clinv._search_projects('inst_name')
         self.assertEqual(
             instances,
-            ['pro_01']
+            [self.project.return_value]
         )
 
-    def test_search_service_name(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {'name': 'Service 1'},
-                'ser_02': {'name': 'Service 2'},
-                },
-        }
-        instances = self.clinv._search_services('Service 1')
+    def test_search_services_returns_instances(self):
+        self.service.return_value.search.return_value = True
+        instances = self.clinv._search_services('inst_name')
         self.assertEqual(
             instances,
-            ['ser_01']
+            [self.service.return_value]
         )
 
-    def test_search_information_name(self):
-        self.clinv.raw_data = {
-            'informations': {
-                'inf_01': {'name': 'Information 1'},
-                'inf_02': {'name': 'Information 2'},
-                },
-        }
-        instances = self.clinv._search_informations('Information 1')
+    def test_search_informations_returns_instances(self):
+        self.information.return_value.search.return_value = True
+        instances = self.clinv._search_informations('inst_name')
         self.assertEqual(
             instances,
-            ['inf_01']
-        )
-
-    def test_search_raw_data_resource_does_not_keyerror_on_unexistent(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {'name': 'Project 1'},
-                },
-        }
-
-        result = self.clinv._search_raw_data_resource('services', 'Service 1')
-        self.assertEqual(result, [])
-
-    def test_search_raw_data_resource_search_on_aliases(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {'aliases': 'Project 1'},
-                },
-        }
-
-        result = self.clinv._search_raw_data_resource('projects', 'Project 1')
-        self.assertEqual(
-            result,
-            ['pro_01']
-        )
-
-    def test_search_raw_data_resource_search_on_description(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {'description': 'Project 1'},
-                },
-        }
-
-        result = self.clinv._search_raw_data_resource('projects', 'Project 1')
-        self.assertEqual(
-            result,
-            ['pro_01']
+            [self.information.return_value]
         )
 
     @patch('clinv.clinv.Clinv._search_ec2')
@@ -481,8 +514,10 @@ class TestClinv(unittest.TestCase):
         self.assertTrue(self.ec2instance.return_value.print.called)
 
     @patch('clinv.clinv.Clinv._search_ec2')
-    def test_print_nothing_found(self, searchMock):
+    @patch('clinv.clinv.Clinv._search_projects')
+    def test_print_nothing_found(self, projectsMock, searchMock):
         searchMock.return_value = []
+        projectsMock.return_value = []
         self.clinv.print_search('inst_name')
         self.assertEqual(
             searchMock.assert_called_with('inst_name'),
@@ -496,56 +531,56 @@ class TestClinv(unittest.TestCase):
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
 
-    def test_print_search_prints_project_information(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {'name': 'Project 1'},
-                'pro_02': {'name': 'Project 2'},
-                },
-        }
-        self.clinv.print_search('Project 1')
+    @patch('clinv.clinv.Clinv._search_projects')
+    def test_print_search_prints_projects_information(self, searchMock):
+        searchMock.return_value = [self.project()]
+        self.clinv.print_search('inst_name')
+        self.assertEqual(
+            searchMock.assert_called_with('inst_name'),
+            None,
+        )
         print_calls = (
             call('Type: Projects'),
-            call('pro_01: Project 1'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(2, len(self.print.mock_calls))
+        self.assertEqual(1, len(self.print.mock_calls))
+        self.assertTrue(self.project.return_value.print.called)
 
-    def test_print_search_prints_services_information(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {'name': 'Service 1'},
-                'ser_02': {'name': 'Service 2'},
-                },
-        }
-        self.clinv.print_search('Service 1')
+    @patch('clinv.clinv.Clinv._search_services')
+    def test_print_search_prints_services_information(self, searchMock):
+        searchMock.return_value = [self.service()]
+        self.clinv.print_search('inst_name')
+        self.assertEqual(
+            searchMock.assert_called_with('inst_name'),
+            None,
+        )
         print_calls = (
             call('\nType: Services'),
-            call('ser_01: Service 1'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(2, len(self.print.mock_calls))
+        self.assertEqual(1, len(self.print.mock_calls))
+        self.assertTrue(self.service.return_value.print.called)
 
-    def test_print_search_prints_informations_information(self):
-        self.clinv.raw_data = {
-            'informations': {
-                'inf_01': {'name': 'Information 1'},
-                'inf_02': {'name': 'Information 2'},
-                },
-        }
-        self.clinv.print_search('Information 1')
+    @patch('clinv.clinv.Clinv._search_informations')
+    def test_print_search_prints_informations_information(self, searchMock):
+        searchMock.return_value = [self.information()]
+        self.clinv.print_search('inst_name')
+        self.assertEqual(
+            searchMock.assert_called_with('inst_name'),
+            None,
+        )
         print_calls = (
             call('\nType: Informations'),
-            call('inf_01: Information 1'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(2, len(self.print.mock_calls))
+        self.assertEqual(1, len(self.print.mock_calls))
+        self.assertTrue(self.information.return_value.print.called)
 
     def test_unassigned_ec2_prints_instances(self):
         self.clinv.raw_data = {
@@ -593,85 +628,55 @@ class TestClinv(unittest.TestCase):
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
 
-    def test_unassigned_services_prints_instances(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {
-                    'services': ['ser_01'],
-                },
-            },
-            'services': {
-                'ser_02': {'name': 'Service 2'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_unassigned_services_prints_instances(self, printMock):
+        self.project.return_value.informations = ['ser_02']
         self.clinv._unassigned_services()
-        print_calls = (
-            call('ser_02: Service 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['services']['ser_01']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
-
-    def test_unassigned_services_does_not_fail_on_empty_project(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {
-                    'services': None,
-                },
-            },
-            'services': {
-                'ser_02': {'name': 'Service 2'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_unassigned_services_does_not_fail_on_empty_project_services(
+        self,
+        printMock,
+    ):
+        self.project.return_value.services = None
         self.clinv._unassigned_services()
-        print_calls = (
-            call('ser_02: Service 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['services']['ser_01']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
-
-    def test_unassigned_informations_prints_instances(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {
-                    'informations': ['inf_01'],
-                },
-            },
-            'informations': {
-                'inf_02': {'name': 'Information 2'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_unassigned_informations_prints_instances(self, printMock):
+        self.project.return_value.informations = ['inf_02']
         self.clinv._unassigned_informations()
-        print_calls = (
-            call('inf_02: Information 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['informations']['inf_01']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
-
-    def test_unassigned_informations_does_not_fail_on_empty_project(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {
-                    'informations': None,
-                },
-            },
-            'informations': {
-                'inf_02': {'name': 'Information 2'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_unassigned_informations_does_not_fail_on_empty_project(
+        self,
+        printMock,
+    ):
+        self.project.return_value.informations = None
         self.clinv._unassigned_informations()
-        print_calls = (
-            call('inf_02: Information 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['informations']['inf_01']]
+            ),
+            None,
         )
-
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
 
     @patch('clinv.clinv.Clinv._unassigned_ec2')
     def test_general_unassigned_can_use_ec2_resource(self, unassignMock):
@@ -691,68 +696,35 @@ class TestClinv(unittest.TestCase):
         self.clinv.unassigned('informations')
         self.assertTrue(unassignMock.called)
 
-    def test_list_informations_prints_instances(self):
-        self.clinv.raw_data = {
-            'informations': {
-                'inf_01': {'name': 'Information 1'},
-                'inf_02': {'name': 'Information 2'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_list_informations_prints_instances(self, printMock):
         self.clinv._list_informations()
-        print_calls = (
-            call('inf_01: Information 1'),
-            call('inf_02: Information 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['informations']['inf_01']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(2, len(self.print.mock_calls))
-
-    def test_list_services_prints_instances(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {'name': 'Service 1', 'state': 'active'},
-                'ser_02': {'name': 'Service 2', 'state': 'active'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_list_services_prints_instances(self, printMock):
         self.clinv._list_services()
-        print_calls = (
-            call('ser_01: Service 1'),
-            call('ser_02: Service 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['services']['ser_01']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(2, len(self.print.mock_calls))
-
-    def test_list_services_handles_services_without_state(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {'name': 'Service 1'},
-                },
-        }
-        with self.assertRaisesRegex(
-            KeyError,
-            "ser_01 doesn't have the state defined",
-        ):
-            self.clinv._list_services()
-
-    def test_list_projects_prints_instances(self):
-        self.clinv.raw_data = {
-            'projects': {
-                'pro_01': {'name': 'Project 1'},
-                'pro_02': {'name': 'Project 2'},
-                },
-        }
+    @patch('clinv.clinv.Clinv._print_resources')
+    def test_list_projects_prints_instances(self, printMock):
         self.clinv._list_projects()
-        print_calls = (
-            call('pro_01: Project 1'),
-            call('pro_02: Project 2'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['projects']['pro_01']]
+            ),
+            None,
         )
-
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(2, len(self.print.mock_calls))
 
     def test_list_ec2_prints_instances(self):
         self.clinv._list_ec2()
