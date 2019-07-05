@@ -200,7 +200,7 @@ class TestClinv(unittest.TestCase):
         self.boto.client.return_value.describe_instances.return_value = \
             self.boto_describe_instances
 
-        self.clinv._update_raw_inventory()
+        self.clinv._update_raw_ec2()
         self.assertEqual(
             self.clinv.raw_inv['ec2'],
             expected_ec2_aws_resources,
@@ -253,7 +253,7 @@ class TestClinv(unittest.TestCase):
         self.boto.client.return_value.describe_instances.return_value = \
             self.boto_describe_instances
 
-        self.clinv._update_raw_inventory()
+        self.clinv._update_raw_ec2()
 
         for prune_key in prune_keys:
             self.assertTrue(
@@ -267,6 +267,15 @@ class TestClinv(unittest.TestCase):
                     'NetworkInterfaces'
                 ][0].keys(),
             )
+
+    @patch('clinv.clinv.Clinv._update_raw_ec2')
+    def test_update_raw_inventory_calls_expected_resource_updates(
+        self,
+        ec2Mock,
+    ):
+        self.clinv._update_raw_inventory()
+
+        self.assertTrue(ec2Mock.called)
 
     def test_update_inventory_adds_raw_data(self):
         self.ec2instance.return_value.id = 'i-023desldk394995ss'
@@ -816,3 +825,16 @@ class TestClinv(unittest.TestCase):
             ),
             None,
         )
+
+    def test_get_regions(self):
+        self.boto.client.return_value.describe_regions.return_value = {
+            'Regions': [
+                {
+                    'RegionName': 'us-east-1'
+                },
+                {
+                    'RegionName': 'eu-west-1'
+                },
+            ]
+        }
+        self.assertEqual(self.clinv.regions, ['us-east-1', 'eu-west-1'])

@@ -47,7 +47,7 @@ class Clinv():
             'ec2': {},
         }
 
-    def _update_raw_inventory(self):
+    def _update_raw_ec2(self):
         self.raw_inv = {
             'ec2': [],
         }
@@ -111,6 +111,9 @@ class Clinv():
                             interface.pop(prune_key)
                         except KeyError:
                             pass
+
+    def _update_raw_inventory(self):
+        self._update_raw_ec2()
 
     def _update_inventory(self):
         self.inv = {
@@ -408,3 +411,11 @@ class Clinv():
             bookdict=book,
             dest_file_name=os.path.expanduser(export_path),
         )
+
+    @property
+    def regions(self):
+        ec2 = boto3.client('ec2')
+        return [
+            region['RegionName']
+            for region in ec2.describe_regions()['Regions']
+        ]
