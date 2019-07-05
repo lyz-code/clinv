@@ -19,10 +19,13 @@
 # Program to maintain an inventory of assets.
 
 from clinv.aws import EC2Instance
+from collections import OrderedDict
+from operator import itemgetter
 from yaml import YAMLError
 import boto3
 import logging
 import os
+import pyexcel
 import re
 import yaml
 
@@ -224,6 +227,13 @@ class Clinv():
     def _search_informations(self, search_string):
         return self._search_raw_data_resource('informations', search_string)
 
+    def _print_raw_data_resources(self, resource_type, resource_ids):
+        for resource_id in sorted(resource_ids):
+            print('{}: {}'.format(
+                resource_id,
+                self.raw_data[resource_type][resource_id]['name'],
+            ))
+
     def print_search(self, search_string):
         pro_ids = self._search_projects(search_string)
 
@@ -268,7 +278,8 @@ class Clinv():
 
         for instance_id, instance in sorted(self.inv['ec2'].items()):
             if instance_id not in all_assigned_instances:
-                print('{}: {}'.format(instance.id, instance.name))
+                if instance.state != 'terminated':
+                    print('{}: {}'.format(instance.id, instance.name))
 
     def _unassigned_services(self):
         all_assigned_services = []
@@ -305,27 +316,29 @@ class Clinv():
         elif resource_type == 'informations':
             self._unassigned_informations()
 
-    def _list_informations(self):
-        self._list_raw_data_resource('informations')
-
-    def _list_services(self):
-        self._list_raw_data_resource('services')
-
-    def _list_projects(self):
-        self._list_raw_data_resource('projects')
-
     def _list_raw_data_resource(self, resource_type):
         self._print_raw_data_resources(
             resource_type,
             self.raw_data[resource_type].keys()
         )
 
-    def _print_raw_data_resources(self, resource_type, resource_ids):
-        for resource_id in sorted(resource_ids):
-            print('{}: {}'.format(
-                resource_id,
-                self.raw_data[resource_type][resource_id]['name'],
-            ))
+    def _list_informations(self):
+        self._list_raw_data_resource('informations')
+
+    def _list_projects(self):
+        self._list_raw_data_resource('projects')
+
+    def _list_services(self):
+        not_terminated_service_ids = []
+        for service_id, service in self.raw_data['services'].items():
+            try:
+                if service['state'] != 'terminated':
+                    not_terminated_service_ids.append(service_id)
+            except KeyError:
+                raise KeyError(
+                    "{} doesn't have the state defined".format(service_id)
+                )
+        self._print_raw_data_resources('services', not_terminated_service_ids)
 
     def _list_ec2(self):
         for instance_id, instance in self.inv['ec2'].items():
@@ -340,3 +353,58 @@ class Clinv():
             self._list_informations()
         elif resource_type == 'projects':
             self._list_projects()
+
+    def export(self, export_path):
+        # Create ec2 sheet
+        exported_ec2_headers = [
+            'ID',
+            'Name',
+            'Services',
+            'To destroy',
+            'Responsible',
+            'Comments'
+        ]
+
+        # Fill up content
+        exported_ec2_data = []
+        for instance_id, instance in self.inv['ec2'].items():
+            related_services = {
+                service_id: service
+                for service_id, service in self.raw_data['services'].items()
+                for ec2_instance in service['aws']['ec2']
+                if ec2_instance == instance_id
+            }
+
+            exported_ec2_data.append(
+                [
+                    instance_id,
+                    instance.name,
+                    ', '.join(
+                        [
+                            service['name']
+                            for service_id, service in related_services.items()
+                        ]
+                    ),
+                    instance._get_field('to_destroy'),
+                    ', '.join(set(
+                        [
+                            service['responsible']
+                            for service_id, service in related_services.items()
+                        ]
+                    )),
+                    instance.description,
+                ]
+            )
+        # Sort by name
+        exported_ec2_data = sorted(exported_ec2_data, key=itemgetter(1))
+        exported_ec2_data.insert(0, exported_ec2_headers)
+
+        # Create ods book
+
+        book = OrderedDict()
+        book.update({'EC2 Instances': exported_ec2_data})
+
+        pyexcel.save_book_as(
+            bookdict=book,
+            dest_file_name=os.path.expanduser(export_path),
+        )

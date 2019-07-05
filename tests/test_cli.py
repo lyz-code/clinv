@@ -62,15 +62,6 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['export'])
         self.assertEqual(parsed.subcommand, 'export')
 
-    def test_export_has_default_format(self):
-        parsed = self.parser.parse_args(['export'])
-        self.assertEqual(parsed.export_format, 'ods')
-
-    def test_can_specify_export_format(self):
-        parsed = self.parser.parse_args(['export', 'ods'])
-        self.assertEqual(parsed.subcommand, 'export')
-        self.assertEqual(parsed.export_format, 'ods')
-
     def test_export_has_default_file(self):
         parsed = self.parser.parse_args(['export'])
         self.assertEqual(
@@ -79,7 +70,7 @@ class TestArgparse(unittest.TestCase):
         )
 
     def test_export_can_specify_file_path(self):
-        parsed = self.parser.parse_args(['export', '-f', 'file.ods'])
+        parsed = self.parser.parse_args(['export', 'file.ods'])
         self.assertEqual(parsed.export_path, 'file.ods')
 
 

@@ -141,6 +141,10 @@ class TestEC2Instance(unittest.TestCase):
     def test_get_instance_name(self):
         self.assertEqual(self.ec2.name, 'inst_name')
 
+    def test_get_instance_name_return_null_if_empty(self):
+        self.raw_instance.pop('Tags', None)
+        self.assertEqual(self.ec2.name, 'none')
+
     def test_get_security_groups(self):
         self.assertEqual(
             self.ec2.security_groups,

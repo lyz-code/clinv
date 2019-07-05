@@ -47,17 +47,9 @@ def load_parser():
 
     export_parser = subparser.add_parser('export')
     export_parser.add_argument(
-        "export_format",
+        "export_path",
         type=str,
         nargs='?',
-        help='Format to export',
-        choices=['ods'],
-        default='ods',
-    )
-    export_parser.add_argument(
-        "-f",
-        "--export_path",
-        type=str,
         help='Path to export',
         default='~/.local/share/clinv/inventory.ods',
     )

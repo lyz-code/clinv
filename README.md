@@ -23,12 +23,24 @@ configured.
 `clinv` will make all the operations on your local inventory. To sync what's
 in your AWS account with your local inventory, execute `clinv generate`.
 
+## Export
+
+`clinv export` will create an ods file with the inventory in `~/.local/share/clinv/inventory.ods`
+
 ## Generate
 
 `clinv generate` uses boto3 to update what is in your AWS inventory, right now
 it imports the following resources:
 
 * EC2 instances
+
+## List
+
+`clinv list resource_type` will show a list of id and names of the selected
+resource type.
+
+In the case of services, it will only display the ones that doesn't have a `state
+== terminated`.
 
 ## Search
 
@@ -43,11 +55,6 @@ it imports the following resources:
 And will print the matching information.
 
 The search_string can be a regular expression.
-
-## List
-
-`clinv list resource_type` will show a list of id and names of the selected
-resource type.
 
 ## Unassigned
 

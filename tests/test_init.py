@@ -76,14 +76,12 @@ class TestMain(unittest.TestCase):
 
     def test_export_subcommand(self):
         self.parser_args.subcommand = 'export'
-        self.parser_args.export_format = 'ods'
         self.parser_args.export_path = 'file.ods'
         main()
         self.assertTrue(self.clinv.return_value.load_inventory.called)
         self.assertTrue(self.clinv.return_value.load_data.called)
         self.assertEqual(
             self.clinv.return_value.export.assert_called_with(
-                'ods',
                 'file.ods',
             ),
             None,

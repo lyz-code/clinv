@@ -15,6 +15,7 @@ class EC2Instance():
             pass
         except TypeError:
             pass
+        return 'none'
 
     @property
     def security_groups(self):

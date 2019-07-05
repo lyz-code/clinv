@@ -1,4 +1,5 @@
 from clinv.clinv import Clinv
+from collections import OrderedDict
 from dateutil.tz import tzutc
 from unittest.mock import patch, call
 from yaml import YAMLError
@@ -688,8 +689,8 @@ class TestClinv(unittest.TestCase):
     def test_list_services_prints_instances(self):
         self.clinv.raw_data = {
             'services': {
-                'ser_01': {'name': 'Service 1'},
-                'ser_02': {'name': 'Service 2'},
+                'ser_01': {'name': 'Service 1', 'state': 'active'},
+                'ser_02': {'name': 'Service 2', 'state': 'active'},
                 },
         }
         self.clinv._list_services()
@@ -701,6 +702,18 @@ class TestClinv(unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(2, len(self.print.mock_calls))
+
+    def test_list_services_handles_services_without_state(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser_01': {'name': 'Service 1'},
+                },
+        }
+        with self.assertRaisesRegex(
+            KeyError,
+            "ser_01 doesn't have the state defined",
+        ):
+            self.clinv._list_services()
 
     def test_list_projects_prints_instances(self):
         self.clinv.raw_data = {
@@ -749,6 +762,57 @@ class TestClinv(unittest.TestCase):
         self.clinv.list('projects')
         self.assertTrue(unassignMock.called)
 
-    def test_export(self):
-        # cli and init done
-        self.assertTrue(False)
+    @patch('clinv.clinv.pyexcel')
+    def test_export_generates_ods(self, pyexcelMock):
+        self.clinv.raw_data = {
+            'projects': {
+                'pro_01': {
+                    'name': 'Project 1',
+                    'services': ['ser_01']
+                },
+                'pro_02': {'name': 'Project 2'},
+            },
+            'services': {
+                'ser_01': {
+                    'name': 'Service 1',
+                    'responsible': 'Person 1',
+                    'aws': {
+                        'ec2': ['i-023desldk394995ss']
+                    },
+                },
+            },
+        }
+        ec2_exported_data = [
+            [
+                'ID',
+                'Name',
+                'Services',
+                'To destroy',
+                'Responsible',
+                'Comments',
+            ],
+            [
+                'i-023desldk394995ss',
+                'inst_name',
+                'Service 1',
+                False,
+                'Person 1',
+                'Test instance',
+             ]
+        ]
+        expected_book = OrderedDict()
+        expected_book.update({'EC2 Instances': ec2_exported_data})
+
+        self.ec2instance.return_value.name = 'inst_name'
+        self.ec2instance.return_value.id = 'i-023desldk394995ss'
+        self.ec2instance.return_value._get_field.return_value = False
+        self.ec2instance.return_value.description = 'Test instance'
+
+        self.clinv.export('file.ods')
+        self.assertEqual(
+            pyexcelMock.save_book_as.assert_called_with(
+                bookdict=expected_book,
+                dest_file_name='file.ods',
+            ),
+            None,
+        )

@@ -51,7 +51,7 @@ def main():
         elif args.subcommand == 'list':
             clinv.list(args.resource_type)
         elif args.subcommand == 'export':
-            clinv.export(args.export_format, args.export_path)
+            clinv.export(args.export_path)
 
 
 if __name__ == "__main__":
