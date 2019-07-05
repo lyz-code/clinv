@@ -33,7 +33,6 @@ import yaml
 class Clinv():
     def __init__(self, inventory_dir):
         self.log = logging.getLogger('main')
-        self.ec2 = boto3.client('ec2')
         self.inventory_dir = inventory_dir
         self.raw_inv_path = os.path.join(
             self.inventory_dir,
@@ -49,10 +48,12 @@ class Clinv():
 
     def _update_raw_ec2(self):
         self.raw_inv = {
-            'ec2': [],
+            'ec2': {},
         }
-        self.raw_inv['ec2'] = \
-            self.ec2.describe_instances()['Reservations']
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            self.raw_inv['ec2'][region] = \
+                ec2.describe_instances()['Reservations']
 
         prune_keys = [
             'AmiLaunchIndex',
@@ -98,19 +99,20 @@ class Clinv():
             'VpcId',
         ]
 
-        for resource in self.raw_inv['ec2']:
-            for instance in resource['Instances']:
-                for prune_key in prune_keys:
-                    try:
-                        instance.pop(prune_key)
-                    except KeyError:
-                        pass
-                for interface in instance['NetworkInterfaces']:
-                    for prune_key in network_prune_keys:
+        for region in self.raw_inv['ec2'].keys():
+            for resource in self.raw_inv['ec2'][region]:
+                for instance in resource['Instances']:
+                    for prune_key in prune_keys:
                         try:
-                            interface.pop(prune_key)
+                            instance.pop(prune_key)
                         except KeyError:
                             pass
+                    for interface in instance['NetworkInterfaces']:
+                        for prune_key in network_prune_keys:
+                            try:
+                                interface.pop(prune_key)
+                            except KeyError:
+                                pass
 
     def _update_raw_inventory(self):
         self._update_raw_ec2()
@@ -119,22 +121,25 @@ class Clinv():
         self.inv = {
             'ec2': {},
         }
-        for resource in self.raw_inv['ec2']:
-            for instance in resource['Instances']:
-                instance_id = instance['InstanceId']
-                try:
-                    self.raw_data['ec2'][instance_id]
-                except KeyError:
-                    self.raw_data['ec2'][instance_id] = {
-                        'description': '',
-                        'to_destroy': False,
-                        'environment': 'production',
-                    }
-                for key, value in \
-                        self.raw_data['ec2'][instance_id].items():
-                    instance[key] = value
 
-                self.inv['ec2'][instance_id] = EC2Instance(instance)
+        for region in self.raw_inv['ec2'].keys():
+            for resource in self.raw_inv['ec2'][region]:
+                for instance in resource['Instances']:
+                    instance_id = instance['InstanceId']
+                    try:
+                        self.raw_data['ec2'][instance_id]
+                    except KeyError:
+                        self.raw_data['ec2'][instance_id] = {
+                            'description': '',
+                            'to_destroy': 'tbd',
+                            'environment': 'tbd',
+                            'region': region,
+                        }
+                    for key, value in \
+                            self.raw_data['ec2'][instance_id].items():
+                        instance[key] = value
+
+                    self.inv['ec2'][instance_id] = EC2Instance(instance)
 
     def _save_yaml(self, yaml_path, dictionary):
         'Save variable to yaml'

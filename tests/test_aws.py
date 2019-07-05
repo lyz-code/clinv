@@ -132,6 +132,7 @@ class TestEC2Instance(unittest.TestCase):
             'VirtualizationType': 'hvm',
             'VpcId': 'vpc-31084921',
             'description': 'This is in the description of the instance',
+            'region': 'us-east-1',
         }
         self.ec2 = EC2Instance(self.raw_instance)
 
@@ -199,6 +200,12 @@ class TestEC2Instance(unittest.TestCase):
             'This is in the description of the instance',
         )
 
+    def test_get_region(self):
+        self.assertEqual(
+            self.ec2.region,
+            'us-east-1',
+        )
+
     def test_print_ec2_instance_information(self):
         self.ec2.print()
         print_calls = (
@@ -253,3 +260,6 @@ class TestEC2Instance(unittest.TestCase):
 
     def test_search_ec2_by_description(self):
         self.assertTrue(self.ec2.search('.*in the description.*'))
+
+    def test_search_ec2_by_region(self):
+        self.assertTrue(self.ec2.search('us-east-1'))

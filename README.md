@@ -30,7 +30,7 @@ in your AWS account with your local inventory, execute `clinv generate`.
 ## Generate
 
 `clinv generate` uses boto3 to update what is in your AWS inventory, right now
-it imports the following resources:
+it imports the following resources from all the regions:
 
 * EC2 instances
 
@@ -49,8 +49,8 @@ In the case of services, it will only display the ones that doesn't have a `stat
 * Project names, aliases and descriptions.
 * Service names, aliases and descriptions.
 * Information names, aliases and descriptions.
-* EC2 properties (id, name, private ips, public ips, descriptions and security
-  group ids).
+* EC2 properties (id, name, private ips, public ips, descriptions, regions and
+  security group ids).
 
 And will print the matching information.
 

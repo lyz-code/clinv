@@ -71,6 +71,10 @@ class EC2Instance():
     def description(self):
         return self._get_field('description')
 
+    @property
+    def region(self):
+        return self._get_field('region')
+
     def _get_field(self, key):
         try:
             return self.instance[key]
@@ -112,6 +116,10 @@ class EC2Instance():
 
         # Search by security groups
         if search_string in self.security_groups:
+            return True
+
+        # Search by region
+        if re.match(search_string, self.region):
             return True
 
         return False

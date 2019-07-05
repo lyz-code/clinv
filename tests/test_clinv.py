@@ -1,7 +1,7 @@
 from clinv.clinv import Clinv
 from collections import OrderedDict
 from dateutil.tz import tzutc
-from unittest.mock import patch, call
+from unittest.mock import patch, call, PropertyMock
 from yaml import YAMLError
 import datetime
 import os
@@ -157,7 +157,9 @@ class TestClinv(unittest.TestCase):
             ]
         }
         self.clinv.raw_inv = {
-            'ec2': self.boto_describe_instances['Reservations']
+            'ec2': {
+                'us-east-1': self.boto_describe_instances['Reservations']
+            }
         }
         self.clinv.raw_data = {
             'ec2': {
@@ -193,10 +195,15 @@ class TestClinv(unittest.TestCase):
         self.ec2instance_patch.stop()
         shutil.rmtree(self.tmp)
 
-    def test_aws_resources_ec2_populated_by_boto(self):
-        expected_ec2_aws_resources = [
-            dict(self.boto_describe_instances['Reservations'][0]),
-        ]
+    @patch('clinv.clinv.Clinv.regions', new_callable=PropertyMock)
+    def test_aws_resources_ec2_populated_by_boto(self, regionsMock):
+        regionsMock.return_value = ['us-east-1']
+
+        expected_ec2_aws_resources = {
+            'us-east-1': [
+                dict(self.boto_describe_instances['Reservations'][0]),
+            ],
+        }
         self.boto.client.return_value.describe_instances.return_value = \
             self.boto_describe_instances
 
@@ -206,7 +213,9 @@ class TestClinv(unittest.TestCase):
             expected_ec2_aws_resources,
         )
 
-    def test_short_ec2_inventory_created(self):
+    @patch('clinv.clinv.Clinv.regions', new_callable=PropertyMock)
+    def test_short_ec2_inventory_created(self, regionsMock):
+        regionsMock.return_value = ['us-east-1']
         prune_keys = [
             'AmiLaunchIndex',
             'Architecture',
@@ -258,12 +267,13 @@ class TestClinv(unittest.TestCase):
         for prune_key in prune_keys:
             self.assertTrue(
                 prune_key not in
-                self.clinv.raw_inv['ec2'][0]['Instances'][0].keys(),
+                self.clinv.raw_inv['ec2']['us-east-1'][0]['Instances'][0].keys(
+                ),
             )
         for prune_key in network_prune_keys:
             self.assertTrue(
                 prune_key not in
-                self.clinv.raw_inv['ec2'][0]['Instances'][0][
+                self.clinv.raw_inv['ec2']['us-east-1'][0]['Instances'][0][
                     'NetworkInterfaces'
                 ][0].keys(),
             )
@@ -281,13 +291,15 @@ class TestClinv(unittest.TestCase):
         self.ec2instance.return_value.id = 'i-023desldk394995ss'
         self.clinv._update_inventory()
 
-        desired_input = self.clinv.raw_inv['ec2'][0]['Instances'][0]
+        desired_input = \
+            self.clinv.raw_inv['ec2']['us-east-1'][0]['Instances'][0]
         desired_input['description'] = ''
-        desired_input['to_destroy'] = False
-        desired_input['environment'] = 'production'
+        desired_input['to_destroy'] = 'tbd'
+        desired_input['environment'] = 'tbd'
+        desired_input['region'] = 'us-east-1'
         self.assertEqual(
             self.ec2instance.assert_called_with(
-                self.clinv.raw_inv['ec2'][0]['Instances'][0]
+                self.clinv.raw_inv['ec2']['us-east-1'][0]['Instances'][0]
             ),
             None,
         )
@@ -356,7 +368,8 @@ class TestClinv(unittest.TestCase):
         self.assertEqual(self.clinv.raw_inv, loadMock())
 
     @patch('clinv.clinv.Clinv._load_yaml')
-    def test_data_loading_loads_raw_data(self, loadMock):
+    @patch('clinv.clinv.Clinv._update_inventory')
+    def test_data_loading_loads_raw_data(self, updateMock, loadMock):
         self.clinv.load_data()
         self.assertTrue(call(self.raw_data_path) in loadMock.mock_calls)
         self.assertEqual(self.clinv.raw_data, loadMock())
