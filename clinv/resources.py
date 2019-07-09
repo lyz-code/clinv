@@ -105,7 +105,35 @@ class Service(ClinvActiveResource):
         super().__init__(raw_data)
 
 
-class EC2(ClinvGenericResource):
+class ClinvAWSResource(ClinvGenericResource):
+    def __init__(self, raw_data):
+        super().__init__(raw_data)
+
+    @property
+    def region(self):
+        return self._get_field('region')
+
+    def search(self, search_string):
+        # Perform the ClinvGenericResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by security groups
+        if search_string in self.security_groups:
+            return True
+
+        # Search by region
+        if re.match(search_string, self.region):
+            return True
+
+        # Search by type
+        if re.match(search_string, self.type):
+            return True
+
+        return False
+
+
+class EC2(ClinvAWSResource):
     def __init__(self, raw_data):
         super().__init__(raw_data)
 
@@ -167,10 +195,6 @@ class EC2(ClinvGenericResource):
     def state_transition(self):
         return self._get_field('StateTransitionReason')
 
-    @property
-    def region(self):
-        return self._get_field('region')
-
     def print(self):
         print('- Name: {}'.format(self.name))
         print('  ID: {}'.format(self.id))
@@ -183,8 +207,7 @@ class EC2(ClinvGenericResource):
         print('  PublicIP: {}'.format(self.public_ips))
 
     def search(self, search_string):
-
-        # Perform the ClinvGenericResource searches
+        # Perform the ClinvAWSResource searches
         if super().search(search_string):
             return True
 
@@ -207,6 +230,22 @@ class EC2(ClinvGenericResource):
         return False
 
 
-class RDS(ClinvGenericResource):
+class RDS(ClinvAWSResource):
     def __init__(self, raw_data):
         super().__init__(raw_data)
+
+    @property
+    def name(self):
+        return self._get_field('DBInstanceIdentifier')
+
+    @property
+    def state(self):
+        return self._get_field('DBInstanceStatus')
+
+    @property
+    def security_groups(self):
+        return self._get_field('DBSecurityGroups')
+
+    @property
+    def type(self):
+        return self._get_field('DBInstanceClass')

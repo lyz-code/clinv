@@ -28,10 +28,20 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['generate'])
         self.assertEqual(parsed.subcommand, 'generate')
 
+    def test_unassigned_subcommand_defaults_to_all(self):
+        parsed = self.parser.parse_args(['unassigned'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'all')
+
     def test_can_specify_unassigned_ec2_subcommand(self):
         parsed = self.parser.parse_args(['unassigned', 'ec2'])
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'ec2')
+
+    def test_can_specify_unassigned_rds_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'rds'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'rds')
 
     def test_can_specify_unassigned_services_subcommand(self):
         parsed = self.parser.parse_args(['unassigned', 'services'])

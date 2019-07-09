@@ -38,7 +38,7 @@ def main():
         return
 
     if args.subcommand == 'generate':
-        clinv._update_raw_inventory()
+        clinv._fetch_aws_inventory()
         clinv.load_data()
         clinv.save_inventory()
     else:

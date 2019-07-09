@@ -49,8 +49,8 @@ In the case of services, it will only display the ones that doesn't have a `stat
 * Project names, aliases and descriptions.
 * Service names, aliases and descriptions.
 * Information names, aliases and descriptions.
-* EC2 properties (id, name, private ips, public ips, descriptions, regions and
-  security group ids).
+* EC2 and RDS properties (id, name, instance_type, private ips, public ips,
+  descriptions, regions and security group ids).
 
 And will print the matching information.
 

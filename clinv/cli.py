@@ -33,8 +33,10 @@ def load_parser():
     unassigned_parser.add_argument(
         "resource_type",
         type=str,
+        nargs='?',
         help='String used to search',
-        choices=['ec2', 'services', 'informations'],
+        choices=['all', 'ec2', 'rds', 'services', 'informations'],
+        default='all'
     )
 
     list_parser = subparser.add_parser('list')

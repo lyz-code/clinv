@@ -48,7 +48,7 @@ class TestMain(unittest.TestCase):
     def test_generate_subcommand(self):
         self.parser_args.subcommand = 'generate'
         main()
-        self.assertTrue(self.clinv.return_value._update_raw_inventory.called)
+        self.assertTrue(self.clinv.return_value._fetch_aws_inventory.called)
         self.assertTrue(self.clinv.return_value.load_data.called)
         self.assertTrue(self.clinv.return_value.save_inventory.called)
 

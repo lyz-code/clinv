@@ -397,20 +397,20 @@ class TestClinv(unittest.TestCase):
         self.boto.client.return_value.describe_instances.return_value = \
             self.boto_ec2_describe_instances
 
-        self.clinv._update_raw_ec2()
+        self.clinv._fetch_ec2_inventory()
         self.assertEqual(
             self.clinv.raw_inv['ec2'],
             expected_ec2_aws_resources,
         )
 
-    @patch('clinv.clinv.Clinv._update_raw_rds')
-    @patch('clinv.clinv.Clinv._update_raw_ec2')
-    def test_update_raw_inventory_calls_expected_resource_updates(
+    @patch('clinv.clinv.Clinv._fetch_rds_inventory')
+    @patch('clinv.clinv.Clinv._fetch_ec2_inventory')
+    def test_fetch_aws_inventory_calls_expected_resource_updates(
         self,
         ec2Mock,
         rdsMock,
     ):
-        self.clinv._update_raw_inventory()
+        self.clinv._fetch_aws_inventory()
 
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
@@ -442,7 +442,7 @@ class TestClinv(unittest.TestCase):
 
     def test_update_inventory_adds_rds_instances(self):
         self.clinv.raw_data = {}
-        self.ec2instance.return_value.id = 'db-YDFL2'
+        self.rdsinstance.return_value.id = 'db-YDFL2'
         self.clinv._update_inventory()
 
         desired_input = \
@@ -742,6 +742,58 @@ class TestClinv(unittest.TestCase):
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
 
+    def test_unassigned_rds_prints_instances(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser_01': {
+                    'aws': {
+                        'rds': [
+                            'i-xxxxxxxxxxxxxxxxx'
+                        ],
+                    },
+                },
+            },
+            'rds': {
+                'db-YDFL2': []
+            },
+        }
+        self.rdsinstance.return_value.id = 'db-YDFL2'
+        self.rdsinstance.return_value.name = 'resource_name'
+
+        self.clinv._unassigned_rds()
+        print_calls = (
+            call('db-YDFL2: resource_name'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
+    def test_unassigned_rds_does_not_fail_on_empty_service(self):
+        self.clinv.raw_data = {
+            'services': {
+                'ser_01': {
+                    'aws': {
+                        'rds': None
+                    },
+                },
+            },
+            'ec2': {
+                'db-YDFL2': []
+            },
+        }
+        self.rdsinstance.return_value.id = 'db-YDFL2'
+        self.rdsinstance.return_value.name = 'resource_name'
+
+        self.clinv._unassigned_rds()
+        print_calls = (
+            call('db-YDFL2: resource_name'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+
     @patch('clinv.clinv.Clinv._print_resources')
     def test_unassigned_services_prints_instances(self, printMock):
         self.project.return_value.informations = ['ser_02']
@@ -795,6 +847,11 @@ class TestClinv(unittest.TestCase):
     @patch('clinv.clinv.Clinv._unassigned_ec2')
     def test_general_unassigned_can_use_ec2_resource(self, unassignMock):
         self.clinv.unassigned('ec2')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._unassigned_rds')
+    def test_general_unassigned_can_use_rds_resource(self, unassignMock):
+        self.clinv.unassigned('rds')
         self.assertTrue(unassignMock.called)
 
     @patch('clinv.clinv.Clinv._unassigned_services')
@@ -952,7 +1009,7 @@ class TestClinv(unittest.TestCase):
         self.assertEqual(self.clinv.regions, ['us-east-1', 'eu-west-1'])
 
     @patch('clinv.clinv.Clinv.regions', new_callable=PropertyMock)
-    def test_raw_inventory_populated_by_rds_resources(self, regionsMock):
+    def test_fetch_rds_inventory_populated_by_rds_resources(self, regionsMock):
         regionsMock.return_value = ['us-east-1']
         self.clinv.raw_inv = {'rds': {}}
 
@@ -1020,7 +1077,7 @@ class TestClinv(unittest.TestCase):
         self.boto.client.return_value.describe_db_instances.return_value = \
             self.boto_rds_describe_instances
 
-        self.clinv._update_raw_rds()
+        self.clinv._fetch_rds_inventory()
         self.assertEqual(
             self.clinv.raw_inv['rds'],
             expected_rds_aws_resources,

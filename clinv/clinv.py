@@ -49,7 +49,7 @@ class Clinv():
             'rds': {},
         }
 
-    def _update_raw_ec2(self):
+    def _fetch_ec2_inventory(self):
         for region in self.regions:
             ec2 = boto3.client('ec2', region_name=region)
             self.raw_inv['ec2'][region] = \
@@ -112,7 +112,7 @@ class Clinv():
                             except KeyError:
                                 pass
 
-    def _update_raw_rds(self):
+    def _fetch_rds_inventory(self):
         for region in self.regions:
             rds = boto3.client('rds', region_name=region)
             self.raw_inv['rds'][region] = \
@@ -146,20 +146,11 @@ class Clinv():
                     except KeyError:
                         pass
 
-    def _update_raw_inventory(self):
-        self._update_raw_ec2()
-        self._update_raw_rds()
+    def _fetch_aws_inventory(self):
+        self._fetch_ec2_inventory()
+        self._fetch_rds_inventory()
 
-    def _update_inventory(self):
-        self.inv = {
-            'ec2': {},
-            'rds': {},
-            'projects': {},
-            'services': {},
-            'informations': {},
-        }
-
-        # Update ec2 inventory
+    def _update_ec2_inventory(self):
         try:
             self.raw_data['ec2']
         except KeyError:
@@ -188,7 +179,7 @@ class Clinv():
                         }
                     )
 
-        # Update rds inventory
+    def _update_rds_inventory(self):
         try:
             self.raw_data['rds']
         except KeyError:
@@ -216,45 +207,35 @@ class Clinv():
                     }
                 )
 
-        # Update projects
+    def _update_active_inventory(self, resource_type):
         try:
-            self.raw_data['projects']
+            self.raw_data[resource_type]
         except KeyError:
-            self.raw_data['projects'] = {}
+            self.raw_data[resource_type] = {}
 
-        for project_id, project_data in self.raw_data['projects'].items():
-            self.inv['projects'][project_id] = Project(
-                {
-                    project_id: project_data
-                }
-            )
+        for resource_id, resource_data in self.raw_data[resource_type].items():
+            if resource_type == 'projects':
+                resource = Project({resource_id: resource_data})
+            elif resource_type == 'services':
+                resource = Service({resource_id: resource_data})
+            elif resource_type == 'informations':
+                resource = Information({resource_id: resource_data})
+            self.inv[resource_type][resource_id] = resource
 
-        # Update services
-        try:
-            self.raw_data['services']
-        except KeyError:
-            self.raw_data['services'] = {}
+    def _update_inventory(self):
+        self.inv = {
+            'ec2': {},
+            'rds': {},
+            'projects': {},
+            'services': {},
+            'informations': {},
+        }
 
-        for service_id, service_data in self.raw_data['services'].items():
-            self.inv['services'][service_id] = Service(
-                {
-                    service_id: service_data
-                }
-            )
-
-        # Update informations
-        try:
-            self.raw_data['informations']
-        except KeyError:
-            self.raw_data['informations'] = {}
-
-        for information_id, information_data in \
-                self.raw_data['informations'].items():
-            self.inv['informations'][information_id] = Information(
-                {
-                    information_id: information_data
-                }
-            )
+        self._update_ec2_inventory()
+        self._update_rds_inventory()
+        self._update_active_inventory('projects')
+        self._update_active_inventory('informations')
+        self._update_active_inventory('services')
 
     def _save_yaml(self, yaml_path, dictionary):
         'Save variable to yaml'
@@ -348,19 +329,25 @@ class Clinv():
             print('I found nothing with that search_string')
             return
 
-    def _unassigned_ec2(self):
+    def _unassigned_aws_resource(self, resource_type):
         all_assigned_instances = []
-        for service_id, service in sorted(self.raw_data['services'].items()):
+        for service_id, service in sorted(self.inv['services'].items()):
             try:
-                for instance in service['aws']['ec2']:
+                for instance in service.raw['aws'][resource_type]:
                     all_assigned_instances.append(instance)
             except TypeError:
                 pass
 
-        for instance_id, instance in sorted(self.inv['ec2'].items()):
+        for instance_id, instance in sorted(self.inv[resource_type].items()):
             if instance_id not in all_assigned_instances:
                 if instance.state != 'terminated':
                     print('{}: {}'.format(instance.id, instance.name))
+
+    def _unassigned_ec2(self):
+        self._unassigned_aws_resource('ec2')
+
+    def _unassigned_rds(self):
+        self._unassigned_aws_resource('rds')
 
     def _unassigned_services(self):
         all_assigned_services = []
@@ -396,6 +383,8 @@ class Clinv():
     def unassigned(self, resource_type):
         if resource_type == 'ec2':
             self._unassigned_ec2()
+        elif resource_type == 'rds':
+            self._unassigned_rds()
         elif resource_type == 'services':
             self._unassigned_services()
         elif resource_type == 'informations':
