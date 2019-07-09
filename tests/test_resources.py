@@ -1,4 +1,4 @@
-from clinv.resources import EC2, Project, Service, Information
+from clinv.resources import EC2, RDS, Project, Service, Information
 from dateutil.tz import tzutc
 from unittest.mock import patch, call
 import datetime
@@ -216,6 +216,9 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
+
+    def test_get_instance_responsible(self):
+        self.assertEqual(self.resource.responsible, 'responsible@clinv.com')
 
 
 class TestEC2(ClinvGenericResourceTests, unittest.TestCase):
@@ -460,3 +463,142 @@ class TestEC2(ClinvGenericResourceTests, unittest.TestCase):
 
     def test_search_ec2_by_region(self):
         self.assertTrue(self.resource.search('us-east-1'))
+
+
+@unittest.skip('Not yet')
+class TestRDS(ClinvGenericResourceTests, unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.id = 'i-01'
+        self.raw = {
+            'i-01': {
+                'AmiLaunchIndex': 0,
+                'Architecture': 'x86_64',
+                'BlockDeviceMappings': [
+                    {
+                        'DeviceName': '/dev/sda1',
+                        'Ebs': {
+                            'AttachTime': datetime.datetime(
+                                2018, 5, 10, 2, 58, 4,
+                                tzinfo=tzutc()
+                            ),
+                            'DeleteOnTermination': True,
+                            'Status': 'attached',
+                            'VolumeId': 'vol-02257f9299430042f'
+                        }
+                    }
+                ],
+                'CapacityReservationSpecification': {
+                    'CapacityReservationPreference': 'open'
+                },
+                'ClientToken': '',
+                'CpuOptions': {
+                    'CoreCount': 8,
+                    'ThreadsPerCore': 2
+                },
+                'EbsOptimized': True,
+                'HibernationOptions': {'Configured': False},
+                'Hypervisor': 'xen',
+                'ImageId': 'ami-ffcsssss',
+                'InstanceId': 'i-01',
+                'InstanceType': 'c4.4xlarge',
+                'KeyName': 'ssh_keypair',
+                'LaunchTime': datetime.datetime(
+                    2018, 5, 10, 7, 13, 17, tzinfo=tzutc()
+                ),
+                'Monitoring': {'State': 'enabled'},
+                'NetworkInterfaces': [
+                    {
+                        'Association': {
+                            'IpOwnerId': '585394229490',
+                            'PublicDnsName': 'ec2.aws.com',
+                            'PublicIp': '32.312.444.22'
+                        },
+                        'Attachment': {
+                            'AttachTime': datetime.datetime(
+                                2018, 5, 10, 2, 58, 3,
+                                tzinfo=tzutc()
+                            ),
+                            'AttachmentId': 'eni-032346',
+                            'DeleteOnTermination': True,
+                            'DeviceIndex': 0,
+                            'Status': 'attached'
+                        },
+                        'Description': 'Primary ni',
+                        'Groups': [
+                            {
+                                'GroupId': 'sg-f2234gf6',
+                                'GroupName': 'sg-1'
+                            },
+                            {
+                                'GroupId': 'sg-cwfccs17',
+                                'GroupName': 'sg-2'
+                            }
+                        ],
+                        'InterfaceType': 'interface',
+                        'Ipv6Addresses': [],
+                        'MacAddress': '0a:ff:ff:ff:ff:aa',
+                        'NetworkInterfaceId': 'eni-3fssaw0a',
+                        'OwnerId': '583949112399',
+                        'PrivateDnsName': 'ipec2.internal',
+                        'PrivateIpAddress': '142.33.2.113',
+                        'PrivateIpAddresses': [
+                            {
+                                'Association': {
+                                    'IpOwnerId': '584460090',
+                                    'PublicDnsName': 'ec2.com',
+                                    'PublicIp': '32.312.444.22'
+                                },
+                                'Primary': True,
+                                'PrivateDnsName': 'ecernal',
+                                'PrivateIpAddress':
+                                    '142.33.2.113',
+                            }
+                        ],
+                        'SourceDestCheck': True,
+                        'Status': 'in-use',
+                        'SubnetId': 'subnet-3ssaafs1',
+                        'VpcId': 'vpc-fs12f872'
+                    }
+                ],
+                'Placement': {
+                    'AvailabilityZone': 'eu-east-1a',
+                    'GroupName': '',
+                    'Tenancy': 'default'
+                },
+                'PrivateDnsName': 'ip-112.ec2.internal',
+                'PrivateIpAddress': '142.33.2.113',
+                'ProductCodes': [],
+                'PublicDnsName': 'ec2.com',
+                'PublicIpAddress': '32.312.444.22',
+                'RootDeviceName': '/dev/sda1',
+                'RootDeviceType': 'ebs',
+                'SecurityGroups': [
+                    {
+                        'GroupId': 'sg-f2234gf6',
+                        'GroupName': 'sg-1'
+                    },
+                    {
+                        'GroupId': 'sg-cwfccs17',
+                        'GroupName': 'sg-2'
+                    }
+                ],
+                'SourceDestCheck': True,
+                'State': {'Code': 16, 'Name': 'running'},
+                'StateTransitionReason': 'reason',
+                'SubnetId': 'subnet-sfsdwf12',
+                'Tags': [
+                    {'Key': 'Name', 'Value': 'inst_name'}
+                ],
+                'VirtualizationType': 'hvm',
+                'VpcId': 'vpc-31084921',
+                'description': 'This is in the description of the instance',
+                'region': 'us-east-1',
+            }
+        }
+        self.resource = EC2(self.raw)
+
+    def tearDown(self):
+        super().tearDown()

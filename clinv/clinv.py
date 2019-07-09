@@ -18,7 +18,7 @@
 
 # Program to maintain an inventory of assets.
 
-from clinv.resources import EC2, Project, Service, Information
+from clinv.resources import EC2, RDS, Project, Service, Information
 from collections import OrderedDict
 from operator import itemgetter
 from yaml import YAMLError
@@ -44,11 +44,12 @@ class Clinv():
         self.raw_data = {
             'ec2': {},
         }
-
-    def _update_raw_ec2(self):
         self.raw_inv = {
             'ec2': {},
+            'rds': {},
         }
+
+    def _update_raw_ec2(self):
         for region in self.regions:
             ec2 = boto3.client('ec2', region_name=region)
             self.raw_inv['ec2'][region] = \
@@ -64,9 +65,7 @@ class Clinv():
             'EbsOptimized',
             'HibernationOptions',
             'Hypervisor',
-            'ImageId',
             'KeyName',
-            'LaunchTime',
             'Monitoring',
             'Placement',
             'PrivateDnsName',
@@ -113,18 +112,59 @@ class Clinv():
                             except KeyError:
                                 pass
 
+    def _update_raw_rds(self):
+        for region in self.regions:
+            rds = boto3.client('rds', region_name=region)
+            self.raw_inv['rds'][region] = \
+                rds.describe_db_instances()['DBInstances']
+
+        prune_keys = [
+            'CopyTagsToSnapshot',
+            'DBParameterGroups',
+            'DbInstancePort',
+            'DomainMemberships',
+            'EnhancedMonitoringResourceArn',
+            'IAMDatabaseAuthenticationEnabled',
+            'LicenseModel',
+            'MonitoringInterval',
+            'MonitoringRoleArn',
+            'OptionGroupMemberships',
+            'PendingModifiedValues',
+            'PerformanceInsightsEnabled',
+            'PerformanceInsightsKMSKeyId',
+            'PerformanceInsightsRetentionPeriod',
+            'ReadReplicaDBInstanceIdentifiers',
+            'StorageType',
+            'VpcSecurityGroups',
+        ]
+
+        for region in self.raw_inv['rds'].keys():
+            for resource in self.raw_inv['rds'][region]:
+                for prune_key in prune_keys:
+                    try:
+                        resource.pop(prune_key)
+                    except KeyError:
+                        pass
+
     def _update_raw_inventory(self):
         self._update_raw_ec2()
+        self._update_raw_rds()
 
     def _update_inventory(self):
         self.inv = {
             'ec2': {},
+            'rds': {},
             'projects': {},
             'services': {},
             'informations': {},
         }
 
         # Update ec2 inventory
+        try:
+            self.raw_data['ec2']
+        except KeyError:
+            self.raw_data['ec2'] = {}
+
         for region in self.raw_inv['ec2'].keys():
             for resource in self.raw_inv['ec2'][region]:
                 for instance in resource['Instances']:
@@ -148,7 +188,40 @@ class Clinv():
                         }
                     )
 
+        # Update rds inventory
+        try:
+            self.raw_data['rds']
+        except KeyError:
+            self.raw_data['rds'] = {}
+
+        for region in self.raw_inv['rds'].keys():
+            for resource in self.raw_inv['rds'][region]:
+                resource_id = resource['DbiResourceId']
+                try:
+                    self.raw_data['rds'][resource_id]
+                except KeyError:
+                    self.raw_data['rds'][resource_id] = {
+                        'description': '',
+                        'to_destroy': 'tbd',
+                        'environment': 'tbd',
+                        'region': region,
+                    }
+                for key, value in \
+                        self.raw_data['rds'][resource_id].items():
+                    resource[key] = value
+
+                self.inv['rds'][resource_id] = RDS(
+                    {
+                        resource_id: resource
+                    }
+                )
+
         # Update projects
+        try:
+            self.raw_data['projects']
+        except KeyError:
+            self.raw_data['projects'] = {}
+
         for project_id, project_data in self.raw_data['projects'].items():
             self.inv['projects'][project_id] = Project(
                 {
@@ -157,6 +230,11 @@ class Clinv():
             )
 
         # Update services
+        try:
+            self.raw_data['services']
+        except KeyError:
+            self.raw_data['services'] = {}
+
         for service_id, service_data in self.raw_data['services'].items():
             self.inv['services'][service_id] = Service(
                 {
@@ -165,6 +243,11 @@ class Clinv():
             )
 
         # Update informations
+        try:
+            self.raw_data['informations']
+        except KeyError:
+            self.raw_data['informations'] = {}
+
         for information_id, information_data in \
                 self.raw_data['informations'].items():
             self.inv['informations'][information_id] = Information(
@@ -360,18 +443,22 @@ class Clinv():
             'Services',
             'To destroy',
             'Responsible',
+            'Region',
             'Comments'
         ]
 
         # Fill up content
         exported_ec2_data = []
         for instance_id, instance in self.inv['ec2'].items():
-            related_services = {
-                service_id: service
-                for service_id, service in self.raw_data['services'].items()
-                for ec2_instance in service['aws']['ec2']
-                if ec2_instance == instance_id
-            }
+            related_services = {}
+            for service_id, service in self.inv['services'].items():
+                try:
+                    service.raw['aws']['ec2']
+                except TypeError:
+                    continue
+                for ec2_instance in service.raw['aws']['ec2']:
+                    if ec2_instance == instance_id:
+                        related_services[service_id] = service
 
             exported_ec2_data.append(
                 [
@@ -379,20 +466,22 @@ class Clinv():
                     instance.name,
                     ', '.join(
                         [
-                            service['name']
+                            service.name
                             for service_id, service in related_services.items()
                         ]
                     ),
                     instance._get_field('to_destroy'),
                     ', '.join(set(
                         [
-                            service['responsible']
+                            service.responsible
                             for service_id, service in related_services.items()
                         ]
                     )),
+                    instance.region,
                     instance.description,
                 ]
             )
+
         # Sort by name
         exported_ec2_data = sorted(exported_ec2_data, key=itemgetter(1))
         exported_ec2_data.insert(0, exported_ec2_headers)

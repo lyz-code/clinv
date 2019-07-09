@@ -63,6 +63,10 @@ class ClinvActiveResource(ClinvGenericResource):
     def state(self):
         return self._get_field('state')
 
+    @property
+    def responsible(self):
+        return self._get_field('responsible')
+
 
 class Project(ClinvActiveResource):
     def __init__(self, raw_data):
@@ -201,3 +205,8 @@ class EC2(ClinvGenericResource):
             return True
 
         return False
+
+
+class RDS(ClinvGenericResource):
+    def __init__(self, raw_data):
+        super().__init__(raw_data)
