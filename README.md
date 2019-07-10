@@ -5,7 +5,7 @@
 # Install
 
 ```bash
-git clone https://github/jstxu/clinv
+git clone https://git.digitales.cslabrecha.org/lyz/clinv
 cd clinv
 virtualenv -p python3 clinv
 source clinv/bin/activate
@@ -103,8 +103,8 @@ projects:
     - inf-01
     - inf-02
     links:
-      homepage: https://github.com/jstxu/clinv
-      docs: https://github.com/jstxu/clinv
+      homepage: https://git.digitales.cslabrecha.org/lyz/clinv
+      docs: https://git.digitales.cslabrecha.org/lyz/clinv
     services:
     - ser-01
     - ser-02
@@ -123,7 +123,7 @@ informations:
     name: Clinv source code
     description: Clinv source code
     personal_data: false
-    responsible: jstxu
+    responsible: lyz
 ```
 
 ### Services
@@ -142,7 +142,7 @@ services:
       - i-xxxxxxxxxxxx
     endpoints:
       - https://www.thispagedoesnot.exist
-    responsible: jstxu
+    responsible: lyz
     informations:
     authentication:
       method: sso
