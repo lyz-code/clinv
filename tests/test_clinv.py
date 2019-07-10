@@ -839,15 +839,30 @@ class TestClinv(unittest.TestCase):
             None,
         )
 
-    def test_list_ec2_prints_instances(self):
+    @patch('clinv.clinv.Clinv._short_print_resources')
+    def test_list_ec2_prints_instances(self, printMock):
         self.clinv._list_ec2()
-        print_calls = (
-            call('i-023desldk394995ss: resource_name'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['ec2']['i-023desldk394995ss']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
+    @patch('clinv.clinv.Clinv._short_print_resources')
+    def test_list_rds_prints_instances(self, printMock):
+        self.clinv._list_rds()
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['rds']['db-YDFL2']]
+            ),
+            None,
+        )
+
+    @patch('clinv.clinv.Clinv._list_rds')
+    def test_general_list_can_use_rds_resource(self, unassignMock):
+        self.clinv.list('rds')
+        self.assertTrue(unassignMock.called)
 
     @patch('clinv.clinv.Clinv._list_ec2')
     def test_general_list_can_use_ec2_resource(self, unassignMock):

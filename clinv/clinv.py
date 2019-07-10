@@ -41,9 +41,6 @@ class Clinv():
             self.inventory_dir,
             'raw_data.yaml',
         )
-        self.raw_data = {
-            'ec2': {},
-        }
         self.raw_inv = {
             'ec2': {},
             'rds': {},
@@ -398,6 +395,24 @@ class Clinv():
             self._unassigned_informations()
 
     def _list_resources(self, resource_type):
+        """
+        Do aggregation of data to return a sorted list of the resources of type
+        resource_type.
+
+        Parameters:
+            resource_type (str): Type of clinv resource to be processed.
+                It must be one of [
+                    'ec2',
+                    'rds',
+                    'services',
+                    'informations',
+                    'projects',
+                ]
+
+        Returns:
+            list: Resources of the selected type
+        """
+
         return [
             resource
             for resource_id, resource
@@ -405,12 +420,37 @@ class Clinv():
         ]
 
     def _list_informations(self):
+        """
+        Do aggregation of data to print a list of the Information entries in
+        the inventory.
+
+        Returns:
+            stdout: Prints the list of informations in the inventory.
+        """
+
         self._short_print_resources(self._list_resources('informations'))
 
     def _list_projects(self):
+        """
+        Do aggregation of data to print a list of the Project entries in the
+        inventory.
+
+        Returns:
+            stdout: Prints the list of projects in the inventory.
+        """
+
         self._short_print_resources(self._list_resources('projects'))
 
     def _list_services(self):
+        """
+        Do aggregation of data to print a list of the Service entries in the
+        inventory.
+
+        Returns:
+            stdout: Prints the list of non terminated services in the
+            inventory.
+        """
+
         not_terminated_service_ids = []
         for service_id, service in sorted(self.inv['services'].items()):
             if service.state != 'terminated':
@@ -418,8 +458,26 @@ class Clinv():
         self._short_print_resources(not_terminated_service_ids)
 
     def _list_ec2(self):
-        for instance_id, instance in self.inv['ec2'].items():
-            print('{}: {}'.format(instance.id, instance.name))
+        """
+        Do aggregation of data to print a list of the EC2 entries in the
+        inventory.
+
+        Returns:
+            stdout: Prints the list of EC2 in the inventory.
+        """
+
+        self._short_print_resources(self._list_resources('ec2'))
+
+    def _list_rds(self):
+        """
+        Do aggregation of data to print a list of the RDS entries in the
+        inventory.
+
+        Returns:
+            stdout: Prints the list of RDS in the inventory.
+        """
+
+        self._short_print_resources(self._list_resources('rds'))
 
     def list(self, resource_type):
         """
@@ -442,6 +500,8 @@ class Clinv():
 
         if resource_type == 'ec2':
             self._list_ec2()
+        elif resource_type == 'rds':
+            self._list_rds()
         elif resource_type == 'services':
             self._list_services()
         elif resource_type == 'informations':
