@@ -697,42 +697,6 @@ class TestClinv(unittest.TestCase):
         self.assertTrue(self.information.return_value.print.called)
 
     def test_unassigned_ec2_prints_instances(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {
-                    'aws': {
-                        'ec2': [
-                            'i-xxxxxxxxxxxxxxxxx'
-                        ],
-                    },
-                },
-            },
-            'ec2': {
-                'i-023desldk394995ss': []
-            },
-        }
-        self.clinv._unassigned_ec2()
-        print_calls = (
-            call('i-023desldk394995ss: inst_name'),
-        )
-
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
-
-    def test_unassigned_ec2_does_not_fail_on_empty_service(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {
-                    'aws': {
-                        'ec2': None
-                    },
-                },
-            },
-            'ec2': {
-                'i-023desldk394995ss': []
-            },
-        }
         self.clinv._unassigned_ec2()
         print_calls = (
             call('i-023desldk394995ss: inst_name'),
@@ -743,45 +707,6 @@ class TestClinv(unittest.TestCase):
         self.assertEqual(1, len(self.print.mock_calls))
 
     def test_unassigned_rds_prints_instances(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {
-                    'aws': {
-                        'rds': [
-                            'i-xxxxxxxxxxxxxxxxx'
-                        ],
-                    },
-                },
-            },
-            'rds': {
-                'db-YDFL2': []
-            },
-        }
-        self.rdsinstance.return_value.id = 'db-YDFL2'
-        self.rdsinstance.return_value.name = 'resource_name'
-
-        self.clinv._unassigned_rds()
-        print_calls = (
-            call('db-YDFL2: resource_name'),
-        )
-
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
-
-    def test_unassigned_rds_does_not_fail_on_empty_service(self):
-        self.clinv.raw_data = {
-            'services': {
-                'ser_01': {
-                    'aws': {
-                        'rds': None
-                    },
-                },
-            },
-            'ec2': {
-                'db-YDFL2': []
-            },
-        }
         self.rdsinstance.return_value.id = 'db-YDFL2'
         self.rdsinstance.return_value.name = 'resource_name'
 
@@ -866,6 +791,23 @@ class TestClinv(unittest.TestCase):
     ):
         self.clinv.unassigned('informations')
         self.assertTrue(unassignMock.called)
+
+    @patch('clinv.clinv.Clinv._unassigned_rds')
+    @patch('clinv.clinv.Clinv._unassigned_ec2')
+    @patch('clinv.clinv.Clinv._unassigned_services')
+    @patch('clinv.clinv.Clinv._unassigned_informations')
+    def test_general_unassigned_can_test_all(
+        self,
+        informationsMock,
+        servicesMock,
+        ec2Mock,
+        rdsMock,
+    ):
+        self.clinv.unassigned('all')
+        self.assertTrue(informationsMock.called)
+        self.assertTrue(servicesMock.called)
+        self.assertTrue(ec2Mock.called)
+        self.assertTrue(rdsMock.called)
 
     @patch('clinv.clinv.Clinv._print_resources')
     def test_list_informations_prints_instances(self, printMock):

@@ -337,6 +337,8 @@ class Clinv():
                     all_assigned_instances.append(instance)
             except TypeError:
                 pass
+            except KeyError:
+                pass
 
         for instance_id, instance in sorted(self.inv[resource_type].items()):
             if instance_id not in all_assigned_instances:
@@ -381,7 +383,12 @@ class Clinv():
         self._print_resources(unassigned_informations)
 
     def unassigned(self, resource_type):
-        if resource_type == 'ec2':
+        if resource_type == 'all':
+            self._unassigned_ec2()
+            self._unassigned_rds()
+            self._unassigned_services()
+            self._unassigned_informations()
+        elif resource_type == 'ec2':
             self._unassigned_ec2()
         elif resource_type == 'rds':
             self._unassigned_rds()
