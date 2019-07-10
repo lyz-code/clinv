@@ -33,6 +33,7 @@ class ClinvGenericResource():
     Public methods:
         search: Search in the resource data if a string matches.
         short_print: Print the id and name of the resource.
+        state: Returns the state of the resource.
 
     Public properties:
         description: Returns the description of the resource.
@@ -170,6 +171,17 @@ class ClinvGenericResource():
 
         return self._get_field('name', 'str')
 
+    @property
+    def state(self):
+        """
+        Do aggregation of data to return the state of the resource.
+
+        Returns:
+            str: State of the resource.
+        """
+
+        return self._get_field('state', 'str')
+
     def search(self, search_string):
         """
         Search in the resource data to see if the search_string matches.
@@ -221,7 +233,6 @@ class ClinvActiveResource(ClinvGenericResource):
     attributes the Project, Service and Information resources.
 
     Public properties:
-        state: Returns the state of the resource.
         responsible: Returns the person responsible of the resource.
     """
 
@@ -231,17 +242,6 @@ class ClinvActiveResource(ClinvGenericResource):
         """
 
         super().__init__(raw_data)
-
-    @property
-    def state(self):
-        """
-        Do aggregation of data to return the state of the resource.
-
-        Returns:
-            str: State of the resource.
-        """
-
-        return self._get_field('state', 'str')
 
     @property
     def responsible(self):
@@ -340,6 +340,9 @@ class Information(ClinvActiveResource):
     """
     Extends the ClinvActiveResource class to add specific properties and
     methods for the information assets stored in the inventory.
+
+    Public properties:
+        personal_data: Returns if the information contains personal data.
     """
 
     def __init__(self, raw_data):
@@ -348,12 +351,28 @@ class Information(ClinvActiveResource):
         """
 
         super().__init__(raw_data)
+
+    @property
+    def personal_data(self):
+        """
+        Do aggregation of data to return if the information contains
+        personal data.
+
+        Returns:
+            bool: If the information contains personal data.
+        """
+
+        return self._get_field('personal_data')
 
 
 class Service(ClinvActiveResource):
     """
     Extends the ClinvActiveResource class to add specific properties and
     methods for the service assets stored in the inventory.
+
+    Public properties:
+        access: Returns the level of exposure of the service.
+        informations: Returns a list of information ids used by the service.
     """
 
     def __init__(self, raw_data):
@@ -362,6 +381,30 @@ class Service(ClinvActiveResource):
         """
 
         super().__init__(raw_data)
+
+    @property
+    def access(self):
+        """
+        Do aggregation of data to return the level of exposition of the
+        resource.
+
+        Returns:
+            str: Access of the resource.
+        """
+
+        return self._get_field('access', 'str')
+
+    @property
+    def informations(self):
+        """
+        Do aggregation of data to return the Information resource ids used
+        by this service.
+
+        Returns:
+            list: of information ids.
+        """
+
+        return self._get_field('informations', 'list')
 
 
 class ClinvAWSResource(ClinvGenericResource):

@@ -127,6 +127,9 @@ class ClinvActiveResourceTests(ClinvGenericResourceTests):
         * self.raw as a dictionary with the data of the resource
         * self.id as a string with the resource id'''
 
+    def test_get_instance_responsible(self):
+        self.assertEqual(self.resource.responsible, 'responsible@clinv.com')
+
 
 class TestProject(ClinvActiveResourceTests, unittest.TestCase):
     def setUp(self):
@@ -143,6 +146,7 @@ class TestProject(ClinvActiveResourceTests, unittest.TestCase):
                 'links': {
                     'homepage': 'www.homepage.com'
                 },
+                'responsible': 'responsible@clinv.com',
                 'members': {
                     'developers': [
                         'developer_1',
@@ -207,6 +211,9 @@ class TestInformation(ClinvActiveResourceTests, unittest.TestCase):
     def tearDown(self):
         super().tearDown()
 
+    def test_get_access(self):
+        self.assertEqual(self.resource.personal_data, True)
+
 
 class TestService(ClinvActiveResourceTests, unittest.TestCase):
     def setUp(self):
@@ -249,8 +256,11 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
     def tearDown(self):
         super().tearDown()
 
-    def test_get_instance_responsible(self):
-        self.assertEqual(self.resource.responsible, 'responsible@clinv.com')
+    def test_get_access(self):
+        self.assertEqual(self.resource.access, 'public')
+
+    def test_get_informations(self):
+        self.assertEqual(self.resource.informations, ['inf_01'])
 
 
 class ClinvAWSResourceTests(ClinvGenericResourceTests):
