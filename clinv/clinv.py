@@ -293,34 +293,34 @@ class Clinv():
     def _search_informations(self, search_string):
         return self._search_in_resources('informations', search_string)
 
-    def _print_resources(self, resource_list):
+    def _short_print_resources(self, resource_list):
         for resource in resource_list:
-            resource.print()
+            resource.short_print()
 
     def print_search(self, search_string):
         projects = self._search_projects(search_string)
 
         if projects != []:
             print('Type: Projects')
-            self._print_resources(projects)
+            self._short_print_resources(projects)
 
         services = self._search_services(search_string)
 
         if services != []:
             print('\nType: Services')
-            self._print_resources(services)
+            self._short_print_resources(services)
 
         informations = self._search_informations(search_string)
 
         if informations != []:
             print('\nType: Informations')
-            self._print_resources(informations)
+            self._short_print_resources(informations)
 
         ec2_instances = self._search_ec2(search_string)
 
         if ec2_instances != []:
             print('\nType: EC2 instances')
-            self._print_resources(ec2_instances)
+            self._short_print_resources(ec2_instances)
 
         if ec2_instances == [] and \
                 projects == [] and \
@@ -364,7 +364,7 @@ class Clinv():
         for service_id, service in sorted(self.inv['services'].items()):
             if service_id not in all_assigned_services:
                 unassigned_services.append(service)
-        self._print_resources(unassigned_services)
+        self._short_print_resources(unassigned_services)
 
     def _unassigned_informations(self):
         all_assigned_informations = []
@@ -380,7 +380,7 @@ class Clinv():
                 sorted(self.inv['informations'].items()):
             if information_id not in all_assigned_informations:
                 unassigned_informations.append(information)
-        self._print_resources(unassigned_informations)
+        self._short_print_resources(unassigned_informations)
 
     def unassigned(self, resource_type):
         if resource_type == 'all':
@@ -405,23 +405,41 @@ class Clinv():
         ]
 
     def _list_informations(self):
-        self._print_resources(self._list_resources('informations'))
+        self._short_print_resources(self._list_resources('informations'))
 
     def _list_projects(self):
-        self._print_resources(self._list_resources('projects'))
+        self._short_print_resources(self._list_resources('projects'))
 
     def _list_services(self):
         not_terminated_service_ids = []
         for service_id, service in sorted(self.inv['services'].items()):
             if service.state != 'terminated':
                 not_terminated_service_ids.append(service)
-        self._print_resources(not_terminated_service_ids)
+        self._short_print_resources(not_terminated_service_ids)
 
     def _list_ec2(self):
         for instance_id, instance in self.inv['ec2'].items():
             print('{}: {}'.format(instance.id, instance.name))
 
     def list(self, resource_type):
+        """
+        Do aggregation of data to print a list of the selected resource entries
+        in the inventory.
+
+        Parameters:
+            resource_type (str): Type of clinv resource to be processed.
+                It must be one of [
+                    'ec2',
+                    'rds',
+                    'services',
+                    'informations',
+                    'projects',
+                ]
+
+        Returns:
+            stdout: Prints the list of items of that resource in the inventory.
+        """
+
         if resource_type == 'ec2':
             self._list_ec2()
         elif resource_type == 'services':
@@ -431,9 +449,46 @@ class Clinv():
         elif resource_type == 'projects':
             self._list_projects()
 
-    def export(self, export_path):
-        # Create ec2 sheet
-        exported_ec2_headers = [
+    def _export_ec2(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the EC2 resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        return self._export_aws_resource('ec2')
+
+    def _export_rds(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the RDS resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        return self._export_aws_resource('rds')
+
+    def _export_aws_resource(self, resource_type):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for an AWS type of resource.
+
+        Parameters:
+            resource_type (str): Type of AWS resource to be processed.
+                It must be one of ['ec2', 'rds']
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        # Create spreadsheet headers
+        exported_headers = [
             'ID',
             'Name',
             'Services',
@@ -444,19 +499,21 @@ class Clinv():
         ]
 
         # Fill up content
-        exported_ec2_data = []
-        for instance_id, instance in self.inv['ec2'].items():
+        exported_data = []
+        for instance_id, instance in self.inv[resource_type].items():
             related_services = {}
             for service_id, service in self.inv['services'].items():
                 try:
-                    service.raw['aws']['ec2']
+                    service.raw['aws'][resource_type]
                 except TypeError:
                     continue
-                for ec2_instance in service.raw['aws']['ec2']:
-                    if ec2_instance == instance_id:
+                except KeyError:
+                    continue
+                for service_resource_id in service.raw['aws'][resource_type]:
+                    if service_resource_id == instance_id:
                         related_services[service_id] = service
 
-            exported_ec2_data.append(
+            exported_data.append(
                 [
                     instance_id,
                     instance.name,
@@ -479,13 +536,39 @@ class Clinv():
             )
 
         # Sort by name
-        exported_ec2_data = sorted(exported_ec2_data, key=itemgetter(1))
-        exported_ec2_data.insert(0, exported_ec2_headers)
+        exported_data = sorted(exported_data, key=itemgetter(1))
+        exported_data.insert(0, exported_headers)
+
+        return exported_data
+
+    def export(self, export_path):
+        """
+        Method to export the clinv inventory to ods.
+
+        It generates the information needed to fill up a spreadsheet for a
+        selected resource.
+
+        Parameters:
+            resource_type (str): Type of AWS resource to be processed.
+                It must be one of ['ec2', 'rds']
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        exported_ec2_data = self._export_ec2()
+        exported_rds_data = self._export_rds()
 
         # Create ods book
 
         book = OrderedDict()
-        book.update({'EC2 Instances': exported_ec2_data})
+        book.update(
+            {
+                'EC2 Instances': exported_ec2_data,
+                'RDS Instances': exported_rds_data,
+            }
+        )
 
         pyexcel.save_book_as(
             bookdict=book,

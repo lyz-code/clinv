@@ -182,6 +182,10 @@ And then run the tests
 tox
 ```
 
+# Collaborators
+
+This project is being developed with the help of [ICIJ](www.icij.org)
+
 # Authors
 
-jstxu
+lyz

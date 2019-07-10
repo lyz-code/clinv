@@ -77,16 +77,8 @@ class ClinvGenericResourceTests(object):
     def test_get_resource_state(self):
         self.assertEqual(self.resource.state, 'active')
 
-
-class ClinvActiveResourceTests(ClinvGenericResourceTests):
-
-    '''Must be combined with a unittest.TestCase that defines:
-        * self.resource as a ClinvActiveResource subclass instance
-        * self.raw as a dictionary with the data of the resource
-        * self.id as a string with the resource id'''
-
-    def test_print_resource_information(self):
-        self.resource.print()
+    def test_short_print_resource_information(self):
+        self.resource.short_print()
         print_calls = (
             call('{}: {}'.format(self.resource.id, self.resource.name)),
         )
@@ -94,6 +86,14 @@ class ClinvActiveResourceTests(ClinvGenericResourceTests):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
+
+
+class ClinvActiveResourceTests(ClinvGenericResourceTests):
+
+    '''Must be combined with a unittest.TestCase that defines:
+        * self.resource as a ClinvActiveResource subclass instance
+        * self.raw as a dictionary with the data of the resource
+        * self.id as a string with the resource id'''
 
 
 class TestProject(ClinvActiveResourceTests, unittest.TestCase):

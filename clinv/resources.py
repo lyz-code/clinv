@@ -51,13 +51,20 @@ class ClinvGenericResource():
 
         return False
 
+    def short_print(self):
+        """
+        Do aggregation of data to print the id and name of the resource.
+
+        Returns:
+            stdout: Prints 'id: name' of the resource
+        """
+
+        print('{}: {}'.format(self.id, self.name))
+
 
 class ClinvActiveResource(ClinvGenericResource):
     def __init__(self, raw_data):
         super().__init__(raw_data)
-
-    def print(self):
-        print('{}: {}'.format(self.id, self.name))
 
     @property
     def state(self):
