@@ -449,30 +449,6 @@ class Clinv():
         elif resource_type == 'projects':
             self._list_projects()
 
-    def _export_ec2(self):
-        """
-        Do aggregation of data to return a list with the information needed to
-        fill up a spreadsheet for the EC2 resources.
-
-        Returns:
-            list: First row are the headers of the spreadsheet, followed
-            by lines of data.
-        """
-
-        return self._export_aws_resource('ec2')
-
-    def _export_rds(self):
-        """
-        Do aggregation of data to return a list with the information needed to
-        fill up a spreadsheet for the RDS resources.
-
-        Returns:
-            list: First row are the headers of the spreadsheet, followed
-            by lines of data.
-        """
-
-        return self._export_aws_resource('rds')
-
     def _export_aws_resource(self, resource_type):
         """
         Do aggregation of data to return a list with the information needed to
@@ -532,6 +508,82 @@ class Clinv():
                     )),
                     instance.region,
                     instance.description,
+                ]
+            )
+
+        # Sort by name
+        exported_data = sorted(exported_data, key=itemgetter(1))
+        exported_data.insert(0, exported_headers)
+
+        return exported_data
+
+    def _export_ec2(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the EC2 resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        return self._export_aws_resource('ec2')
+
+    def _export_rds(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the RDS resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        return self._export_aws_resource('rds')
+
+    def _export_projects(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the Project resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        # Create spreadsheet headers
+        exported_headers = [
+            'ID',
+            'Name',
+            'Aliases',
+            'Services',
+            'Informations',
+            'State',
+            'Description',
+        ]
+
+        # Fill up content
+        exported_data = []
+        for resource_id, resource in self.inv['projects'].items():
+            exported_data.append(
+                [
+                    resource_id,
+                    resource.name,
+                    resource.alias,
+                    ', '.join(
+                        [
+                            self.inv['services'][service_id].name
+                            for service_id in resource.services
+                        ]
+                    ),
+                    ', '.join(
+                        [
+                            self.inv['informations'][information_id].name
+                            for information_id in resource.informations
+                        ]
+                    ),
+                    resource.state,
+                    resource.description,
                 ]
             )
 

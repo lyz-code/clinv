@@ -955,6 +955,44 @@ class TestClinv(unittest.TestCase):
             exported_data,
         )
 
+    def test_export_projects_generates_expected_dictionary(self):
+        exported_data = [
+            [
+                'ID',
+                'Name',
+                'Aliases',
+                'Services',
+                'Informations',
+                'State',
+                'Description',
+            ],
+            [
+                'pro_01',
+                'Project 1',
+                'Alias 1',
+                'Service 1',
+                'Information 1',
+                'active',
+                'Project 1 description'
+             ]
+        ]
+
+        self.project.return_value.id = 'pro_01'
+        self.project.return_value.name = 'Project 1'
+        self.project.return_value.alias = 'Alias 1'
+        self.project.return_value.services = ['ser_01']
+        self.project.return_value.informations = ['inf_01']
+        self.project.return_value.state = 'active'
+        self.project.return_value.description = 'Project 1 description'
+
+        self.service.return_value.name = 'Service 1'
+        self.information.return_value.name = 'Information 1'
+
+        self.assertEqual(
+            self.clinv._export_projects(),
+            exported_data,
+        )
+
     @patch('clinv.clinv.pyexcel')
     @patch('clinv.clinv.Clinv._export_ec2')
     @patch('clinv.clinv.Clinv._export_rds')

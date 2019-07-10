@@ -44,6 +44,38 @@ class ClinvGenericResourceTests(object):
         ):
             self.resource._get_field('key_is_none')
 
+    def test_get_field_returns_list_when_asked_even_if_value_is_str(self):
+        self.resource.raw['key'] = 'value'
+        self.assertEqual(
+            self.resource._get_field('key', 'list'),
+            ['value']
+        )
+
+    def test_get_optional_field_returns_list_when_asked_even_if_value_is_str(
+        self
+    ):
+        self.resource.raw['key'] = 'value'
+        self.assertEqual(
+            self.resource._get_optional_field('key', 'list'),
+            ['value']
+        )
+
+    def test_get_field_returns_str_when_asked_even_if_value_is_list(self):
+        self.resource.raw['key'] = ['value1', 'value2']
+        self.assertEqual(
+            self.resource._get_field('key', 'str'),
+            'value1, value2'
+        )
+
+    def test_get_optional_field_returns_str_when_asked_even_if_value_is_list(
+        self
+    ):
+        self.resource.raw['key'] = ['value1', 'value2']
+        self.assertEqual(
+            self.resource._get_optional_field('key', 'str'),
+            'value1, value2'
+        )
+
     def test_get_optional_field_returns_expected_value(self):
         self.assertEqual(
             self.resource._get_optional_field('description'),
@@ -145,7 +177,7 @@ class TestProject(ClinvActiveResourceTests, unittest.TestCase):
         self.assertEqual(self.resource.informations, ['inf_01'])
 
     def test_get_aliases(self):
-        self.assertEqual(self.resource.aliases, 'Awesome Project')
+        self.assertEqual(self.resource.aliases, ['Awesome Project'])
 
     def test_search_by_aliases(self):
         self.assertTrue(self.resource.search('Awesome Project'))
