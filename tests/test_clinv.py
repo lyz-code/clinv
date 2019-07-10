@@ -960,7 +960,6 @@ class TestClinv(unittest.TestCase):
             [
                 'ID',
                 'Name',
-                'Aliases',
                 'Services',
                 'Informations',
                 'State',
@@ -969,7 +968,6 @@ class TestClinv(unittest.TestCase):
             [
                 'pro_01',
                 'Project 1',
-                'Alias 1',
                 'Service 1',
                 'Information 1',
                 'active',
@@ -979,7 +977,6 @@ class TestClinv(unittest.TestCase):
 
         self.project.return_value.id = 'pro_01'
         self.project.return_value.name = 'Project 1'
-        self.project.return_value.alias = 'Alias 1'
         self.project.return_value.services = ['ser_01']
         self.project.return_value.informations = ['inf_01']
         self.project.return_value.state = 'active'
@@ -996,8 +993,10 @@ class TestClinv(unittest.TestCase):
     @patch('clinv.clinv.pyexcel')
     @patch('clinv.clinv.Clinv._export_ec2')
     @patch('clinv.clinv.Clinv._export_rds')
+    @patch('clinv.clinv.Clinv._export_projects')
     def test_export_generates_expected_book(
         self,
+        projectsMock,
         rdsMock,
         ec2Mock,
         pyexcelMock,
@@ -1006,6 +1005,7 @@ class TestClinv(unittest.TestCase):
         expected_book = OrderedDict()
         expected_book.update(
             {
+                'Projects': projectsMock.return_value,
                 'EC2 Instances': ec2Mock.return_value,
                 'RDS Instances': rdsMock.return_value,
             }

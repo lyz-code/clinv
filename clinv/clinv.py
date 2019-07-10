@@ -541,6 +541,38 @@ class Clinv():
 
         return self._export_aws_resource('rds')
 
+    def _get_resource_names(self, resource_type, resource_ids):
+        """
+        Do aggregation of data to return a list with the information names.
+
+        Parameters:
+            resource_type (str): Type of resource, one of [
+                'services',
+                'informations',
+                ].
+            resource_ids (list): List of resource ids.
+
+        Return:
+            str: With the resource names separated by commas.
+        """
+
+        resource_names = []
+
+        for resource_id in resource_ids:
+            try:
+                resource_names.append(
+                    self.inv[resource_type][resource_id].name
+                )
+            except KeyError:
+                pass
+
+        if len(resource_names) == 0:
+            return None
+        elif len(resource_names) == 1:
+            return resource_names[0]
+        else:
+            return ', '.join(resource_names)
+
     def _export_projects(self):
         """
         Do aggregation of data to return a list with the information needed to
@@ -555,7 +587,6 @@ class Clinv():
         exported_headers = [
             'ID',
             'Name',
-            'Aliases',
             'Services',
             'Informations',
             'State',
@@ -569,26 +600,18 @@ class Clinv():
                 [
                     resource_id,
                     resource.name,
-                    resource.alias,
-                    ', '.join(
-                        [
-                            self.inv['services'][service_id].name
-                            for service_id in resource.services
-                        ]
-                    ),
-                    ', '.join(
-                        [
-                            self.inv['informations'][information_id].name
-                            for information_id in resource.informations
-                        ]
+                    self._get_resource_names('services', resource.services),
+                    self._get_resource_names(
+                        'informations',
+                        resource.informations
                     ),
                     resource.state,
                     resource.description,
                 ]
             )
 
-        # Sort by name
-        exported_data = sorted(exported_data, key=itemgetter(1))
+        # Sort by id
+        exported_data = sorted(exported_data, key=itemgetter(0))
         exported_data.insert(0, exported_headers)
 
         return exported_data
@@ -609,18 +632,16 @@ class Clinv():
             by lines of data.
         """
 
+        exported_project_data = self._export_projects()
         exported_ec2_data = self._export_ec2()
         exported_rds_data = self._export_rds()
 
         # Create ods book
 
         book = OrderedDict()
-        book.update(
-            {
-                'EC2 Instances': exported_ec2_data,
-                'RDS Instances': exported_rds_data,
-            }
-        )
+        book.update({'Projects': exported_project_data})
+        book.update({'EC2 Instances': exported_ec2_data})
+        book.update({'RDS Instances': exported_rds_data})
 
         pyexcel.save_book_as(
             bookdict=book,
