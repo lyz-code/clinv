@@ -839,15 +839,30 @@ class TestClinv(unittest.TestCase):
             None,
         )
 
-    def test_list_ec2_prints_instances(self):
+    @patch('clinv.clinv.Clinv._short_print_resources')
+    def test_list_ec2_prints_instances(self, printMock):
         self.clinv._list_ec2()
-        print_calls = (
-            call('i-023desldk394995ss: resource_name'),
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['ec2']['i-023desldk394995ss']]
+            ),
+            None,
         )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
+    @patch('clinv.clinv.Clinv._short_print_resources')
+    def test_list_rds_prints_instances(self, printMock):
+        self.clinv._list_rds()
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.clinv.inv['rds']['db-YDFL2']]
+            ),
+            None,
+        )
+
+    @patch('clinv.clinv.Clinv._list_rds')
+    def test_general_list_can_use_rds_resource(self, unassignMock):
+        self.clinv.list('rds')
+        self.assertTrue(unassignMock.called)
 
     @patch('clinv.clinv.Clinv._list_ec2')
     def test_general_list_can_use_ec2_resource(self, unassignMock):
@@ -990,12 +1005,82 @@ class TestClinv(unittest.TestCase):
             exported_data,
         )
 
+    def test_export_services_generates_expected_dictionary(self):
+        exported_data = [
+            [
+                'ID',
+                'Name',
+                'Access',
+                'State',
+                'Informations',
+                'Description',
+            ],
+            [
+                'ser_01',
+                'Service 1',
+                'internal',
+                'active',
+                'Information 1',
+                'Service 1 description',
+             ]
+        ]
+
+        self.service.return_value.id = 'ser_01'
+        self.service.return_value.name = 'Service 1'
+        self.service.return_value.access = 'internal'
+        self.service.return_value.informations = ['inf_01']
+        self.service.return_value.state = 'active'
+        self.service.return_value.description = 'Service 1 description'
+
+        self.information.return_value.name = 'Information 1'
+
+        self.assertEqual(
+            self.clinv._export_services(),
+            exported_data,
+        )
+
+    def test_export_informations_generates_expected_dictionary(self):
+        exported_data = [
+            [
+                'ID',
+                'Name',
+                'State',
+                'Responsible',
+                'Personal Data',
+                'Description',
+            ],
+            [
+                'inf_01',
+                'Information 1',
+                'active',
+                'Person 1',
+                True,
+                'Information 1 description',
+             ]
+        ]
+
+        self.information.return_value.id = 'inf_01'
+        self.information.return_value.name = 'Information 1'
+        self.information.return_value.state = 'active'
+        self.information.return_value.responsible = 'Person 1'
+        self.information.return_value.personal_data = True
+        self.information.return_value.description = 'Information 1 description'
+
+        self.assertEqual(
+            self.clinv._export_informations(),
+            exported_data,
+        )
+
     @patch('clinv.clinv.pyexcel')
     @patch('clinv.clinv.Clinv._export_ec2')
     @patch('clinv.clinv.Clinv._export_rds')
     @patch('clinv.clinv.Clinv._export_projects')
+    @patch('clinv.clinv.Clinv._export_services')
+    @patch('clinv.clinv.Clinv._export_informations')
     def test_export_generates_expected_book(
         self,
+        informationsMock,
+        servicesMock,
         projectsMock,
         rdsMock,
         ec2Mock,
@@ -1003,13 +1088,11 @@ class TestClinv(unittest.TestCase):
     ):
 
         expected_book = OrderedDict()
-        expected_book.update(
-            {
-                'Projects': projectsMock.return_value,
-                'EC2 Instances': ec2Mock.return_value,
-                'RDS Instances': rdsMock.return_value,
-            }
-        )
+        expected_book.update({'Projects': projectsMock.return_value})
+        expected_book.update({'Services': servicesMock.return_value})
+        expected_book.update({'Informations': informationsMock.return_value})
+        expected_book.update({'EC2 Instances': ec2Mock.return_value})
+        expected_book.update({'RDS Instances': rdsMock.return_value})
 
         self.clinv.export('file.ods')
         self.assertEqual(

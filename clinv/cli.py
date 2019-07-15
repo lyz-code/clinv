@@ -44,7 +44,7 @@ def load_parser():
         "resource_type",
         type=str,
         help='String used to search',
-        choices=['ec2', 'services', 'informations', 'projects'],
+        choices=['ec2', 'rds', 'services', 'informations', 'projects'],
     )
 
     export_parser = subparser.add_parser('export')

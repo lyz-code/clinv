@@ -53,6 +53,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'informations')
 
+    def test_can_specify_list_rds_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'rds'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'rds')
+
     def test_can_specify_list_ec2_subcommand(self):
         parsed = self.parser.parse_args(['list', 'ec2'])
         self.assertEqual(parsed.subcommand, 'list')
