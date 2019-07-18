@@ -184,7 +184,7 @@ tox
 
 # Collaborators
 
-This project is being developed with the help of [ICIJ](www.icij.org)
+This project is being developed with the help of [ICIJ](https://www.icij.org)
 
 # Authors
 
