@@ -1,4 +1,13 @@
 
+0.2.0 / 2019-07-18
+=============
+
+  * Added Route53 support
+  * Added print method for the resources
+  * Added docstrings
+  * Add rds to the list report
+  * Added export of services and informations
+
 0.1.0 / 2019-07-10
 ==================
 
