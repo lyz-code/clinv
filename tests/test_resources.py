@@ -1,4 +1,4 @@
-from clinv.resources import EC2, RDS, Project, Service, Information
+from clinv.resources import EC2, RDS, Route53, Project, Service, Information
 from dateutil.tz import tzutc
 from unittest.mock import patch, call
 import datetime
@@ -121,7 +121,6 @@ class ClinvGenericResourceTests(object):
 
 
 class ClinvActiveResourceTests(ClinvGenericResourceTests):
-
     '''Must be combined with a unittest.TestCase that defines:
         * self.resource as a ClinvActiveResource subclass instance
         * self.raw as a dictionary with the data of the resource
@@ -264,7 +263,6 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
 
 
 class ClinvAWSResourceTests(ClinvGenericResourceTests):
-
     '''Must be combined with a unittest.TestCase that defines:
         * self.resource as a ClinvAWSResource subclass instance
         * self.raw as a dictionary with the data of the resource
@@ -485,8 +483,8 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
 
         self.resource.print()
         print_calls = (
-            call('- Name: resource_name'),
-            call('  ID: i-01'),
+            call('i-01'),
+            call('  Name: resource_name'),
             call('  State: running'),
             call('  Type: c4.4xlarge'),
             call("  SecurityGroups: ['sg-f2234gf6', 'sg-cwfccs17']"),
@@ -502,8 +500,8 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
         self.raw['i-01']['State']['Name'] = 'stopped'
         self.resource.print()
         print_calls = (
-            call('- Name: resource_name'),
-            call('  ID: i-01'),
+            call('i-01'),
+            call('  Name: resource_name'),
             call('  State: stopped'),
             call('  State Reason: reason'),
             call('  Type: c4.4xlarge'),
@@ -589,10 +587,157 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 'description': 'This is in the description of the instance',
                 'region': 'us-east-1',
                 'to_destroy': 'tbd',
-                'environment': 'tbd',
+                'environment': 'production',
             }
         }
         self.resource = RDS(self.raw)
 
     def tearDown(self):
         super().tearDown()
+
+    def test_print_method_works_as_expected(self):
+        self.resource.print()
+        print_calls = (
+            call('db-YDFL2'),
+            call('  Name: resource_name'),
+            call('  Type: c4.4xlarge'),
+            call('  Description: This is in the description of the instance'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(4, len(self.print.mock_calls))
+
+
+class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.id = 'hosted_zone_id-record1.clinv.org-cname'
+        self.raw = {
+            'hosted_zone_id-record1.clinv.org-cname': {
+                'Name': 'record1.clinv.org',
+                'ResourceRecords': [
+                    {
+                        'Value': '127.0.0.1'
+                    },
+                    {
+                        'Value': 'localhost'
+                    },
+                ],
+                'TTL': 172800,
+                'Type': 'CNAME',
+                'description': 'This is the description',
+                'to_destroy': 'tbd',
+                'state': 'active',
+                'hosted_zone': {
+                    'id': '/hostedzone/hosted_zone_id',
+                    'private': False,
+                    'name': 'hostedzone.org',
+                },
+            },
+        }
+        self.resource = Route53(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_name_property_works_as_expected(self):
+        '''
+        Override the parent test, as the name == id
+        '''
+
+        self.assertEqual(self.resource.name, 'record1.clinv.org')
+
+    def test_search_resource_by_regexp_on_name(self):
+        '''
+        Override the parent test, as the name == id
+        '''
+
+        self.assertTrue(self.resource.search('.*record1'))
+
+    def test_short_print_resource_information(self):
+        '''
+        Override the parent test, as the name == id
+        '''
+
+        self.resource.short_print()
+
+        self.assertEqual(
+            self.print.assert_called_with(self.resource.id),
+            None,
+        )
+
+    def test_value_property_works_as_expected(self):
+        self.assertEqual(self.resource.value, ['127.0.0.1', 'localhost'])
+
+    def test_value_property_supports_aliases(self):
+        self.raw = {
+            'record1.clinv.org': {
+                'Name': 'record1.clinv.org',
+                'AliasTarget': {
+                    'DNSName': 'aliasdns.org',
+                    'EvaluateTargetHealth': False,
+                    'HostedZoneId': 'XXXXXXXXXXXXXX'
+                },
+                'TTL': 172800,
+                'Type': 'A',
+                'description': 'This is the description',
+                'to_destroy': 'tbd',
+                'state': 'active',
+                'hosted_zone': {
+                    'id': '/hostedzone/hosted_zone_id',
+                    'private': False,
+                    'name': 'hostedzone.org',
+                },
+            },
+        }
+        self.resource = Route53(self.raw)
+        self.assertEqual(self.resource.value, ['aliasdns.org'])
+
+    def test_type_property_works_as_expected(self):
+        self.assertEqual(self.resource.type, 'CNAME')
+
+    def test_hosted_zone_property_works_as_expected(self):
+        self.assertEqual(self.resource.hosted_zone, 'hostedzone.org')
+
+    def test_hosted_zone_id_property_works_as_expected(self):
+        self.assertEqual(
+            self.resource.hosted_zone_id,
+            '/hostedzone/hosted_zone_id',
+        )
+
+    def test_access_property_works_as_expected_if_public(self):
+        self.assertEqual(self.resource.access, 'public')
+
+    def test_access_property_works_as_expected_if_private(self):
+        self.resource.raw['hosted_zone']['private'] = True
+        self.assertEqual(self.resource.access, 'private')
+
+    def test_print_method_works_as_expected(self):
+        self.resource.print()
+        print_calls = (
+            call('hosted_zone_id-record1.clinv.org-cname'),
+            call('  Name: record1.clinv.org'),
+            call('  Value:'),
+            call('    127.0.0.1'),
+            call('    localhost'),
+            call('  Type: CNAME'),
+            call('  Zone: /hostedzone/hosted_zone_id'),
+            call('  Description: This is the description'),
+            call('  Access: public'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(9, len(self.print.mock_calls))
+
+    def test_search_resource_by_regexp_on_value(self):
+        self.assertTrue(self.resource.search('.*alhost'))
+
+    def test_search_resource_by_type(self):
+        self.assertTrue(self.resource.search('CNAME'))
+
+    def test_search_resource_by_type_insensitive(self):
+        self.assertTrue(self.resource.search('cname'))

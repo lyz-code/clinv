@@ -35,7 +35,14 @@ def load_parser():
         type=str,
         nargs='?',
         help='String used to search',
-        choices=['all', 'ec2', 'rds', 'services', 'informations'],
+        choices=[
+            'all',
+            'ec2',
+            'informations',
+            'rds',
+            'route53',
+            'services',
+        ],
         default='all'
     )
 
@@ -55,6 +62,13 @@ def load_parser():
         help='Path to export',
         default='~/.local/share/clinv/inventory.ods',
     )
+
+    print_parser = subparser.add_parser('print')
+    print_parser.add_argument(
+        "resource_id",
+        type=str,
+        help='Clinv resource ID',
+    )
     argcomplete.autocomplete(parser)
     return parser
 
@@ -64,5 +78,7 @@ def load_logger():
     logging.addLevelName(logging.ERROR, "[\033[31mERROR\033[0m]")
     logging.addLevelName(logging.DEBUG, "[\033[32mDEBUG\033[0m]")
     logging.addLevelName(logging.WARNING, "[\033[33mWARNING\033[0m]")
-    logging.basicConfig(level=logging.WARNING,
-                        format="  %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="  %(levelname)s %(message)s"
+    )

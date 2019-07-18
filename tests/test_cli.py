@@ -53,6 +53,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'informations')
 
+    def test_can_specify_unassigned_route53_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'route53'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'route53')
+
     def test_can_specify_list_rds_subcommand(self):
         parsed = self.parser.parse_args(['list', 'rds'])
         self.assertEqual(parsed.subcommand, 'list')
@@ -88,6 +93,11 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['export', 'file.ods'])
         self.assertEqual(parsed.export_path, 'file.ods')
 
+    def test_can_specify_print_subcommand(self):
+        parsed = self.parser.parse_args(['print', 'resource_id'])
+        self.assertEqual(parsed.subcommand, 'print')
+        self.assertEqual(parsed.resource_id, 'resource_id')
+
 
 class TestLogger(unittest.TestCase):
 
@@ -118,7 +128,7 @@ class TestLogger(unittest.TestCase):
         )
         self.assertEqual(
             self.logging.basicConfig.assert_called_with(
-                level=logging.WARNING,
+                level=logging.INFO,
                 format="  %(levelname)s %(message)s",
             ),
             None

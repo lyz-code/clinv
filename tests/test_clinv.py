@@ -10,7 +10,11 @@ import tempfile
 import unittest
 
 
-class TestClinv(unittest.TestCase):
+class ClinvBaseTestClass(object):
+    '''
+    Base class to setup the setUp and tearDown methods for the test cases.
+    '''
+
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.inventory_dir = self.tmp
@@ -20,6 +24,21 @@ class TestClinv(unittest.TestCase):
         self.logging = self.logging_patch.start()
         self.print_patch = patch('clinv.clinv.print', autospect=True)
         self.print = self.print_patch.start()
+
+    def tearDown(self):
+        self.boto_patch.stop()
+        self.logging_patch.stop()
+        self.print_patch.stop()
+        shutil.rmtree(self.tmp)
+
+
+class TestClinv(ClinvBaseTestClass, unittest.TestCase):
+    '''
+    Monolith test class
+    '''
+
+    def setUp(self):
+        super().setUp()
         self.ec2instance_patch = patch(
             'clinv.clinv.EC2', autospect=True
         )
@@ -40,6 +59,16 @@ class TestClinv(unittest.TestCase):
             'clinv.clinv.Information', autospect=True
         )
         self.information = self.information_patch.start()
+
+        self.route53_patch = patch(
+            'clinv.clinv.Clinv._update_route53_inventory', autospect=True
+        )
+        self.route53 = self.route53_patch.start()
+
+        self.route53instance_patch = patch(
+            'clinv.clinv.Route53', autospect=True
+        )
+        self.route53instance = self.route53instance_patch.start()
 
         self.clinv = Clinv(self.inventory_dir)
         self.boto_ec2_describe_instances = {
@@ -273,6 +302,8 @@ class TestClinv(unittest.TestCase):
             'rds': {
                 'us-east-1': self.boto_rds_describe_instances['DBInstances']
             },
+            'route53': {
+            },
         }
         self.clinv.raw_data = {
             'ec2': {
@@ -282,6 +313,7 @@ class TestClinv(unittest.TestCase):
                 }
             },
             'rds': {},
+            'route53': {},
             'projects': {
                 'pro_01': {
                     'name': 'project 1',
@@ -313,6 +345,9 @@ class TestClinv(unittest.TestCase):
             'rds': {
                 'db-YDFL2': self.rdsinstance.return_value
             },
+            'route53': {
+                'record1.clinv.org': self.route53instance.return_value
+            },
             'projects': {
                 'pro_01': self.project.return_value
             },
@@ -330,15 +365,14 @@ class TestClinv(unittest.TestCase):
         self.ec2instance.return_value.security_groups = ['sg-f2234gf6']
 
     def tearDown(self):
-        self.boto_patch.stop()
-        self.logging_patch.stop()
-        self.print_patch.stop()
+        super().tearDown()
         self.ec2instance_patch.stop()
         self.rdsinstance_patch.stop()
         self.project_patch.stop()
         self.service_patch.stop()
         self.information_patch.stop()
-        shutil.rmtree(self.tmp)
+        self.route53_patch.stop()
+        self.route53instance_patch.stop()
 
     @patch('clinv.clinv.Clinv.regions', new_callable=PropertyMock)
     def test_aws_resources_ec2_populated_by_boto(self, regionsMock):
@@ -403,17 +437,20 @@ class TestClinv(unittest.TestCase):
             expected_ec2_aws_resources,
         )
 
+    @patch('clinv.clinv.Clinv._fetch_route53_inventory')
     @patch('clinv.clinv.Clinv._fetch_rds_inventory')
     @patch('clinv.clinv.Clinv._fetch_ec2_inventory')
     def test_fetch_aws_inventory_calls_expected_resource_updates(
         self,
         ec2Mock,
         rdsMock,
+        route53Mock,
     ):
         self.clinv._fetch_aws_inventory()
 
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
+        self.assertTrue(route53Mock.called)
 
     def test_update_inventory_adds_ec2_instances(self):
         self.clinv.raw_data = {}
@@ -586,6 +623,14 @@ class TestClinv(unittest.TestCase):
             [self.ec2instance()]
         )
 
+    def test_search_rds_returns_instances(self):
+        self.rdsinstance.return_value.search.return_value = True
+        instances = self.clinv._search_rds('resource_name')
+        self.assertEqual(
+            instances,
+            [self.rdsinstance()]
+        )
+
     def test_search_projects_returns_instances(self):
         self.project.return_value.search.return_value = True
         instances = self.clinv._search_projects('resource_name')
@@ -696,28 +741,35 @@ class TestClinv(unittest.TestCase):
         self.assertEqual(1, len(self.print.mock_calls))
         self.assertTrue(self.information.return_value.short_print.called)
 
-    def test_unassigned_ec2_prints_instances(self):
-        self.clinv._unassigned_ec2()
+    @patch('clinv.clinv.Clinv._search_rds')
+    def test_print_search_prints_rds_information(self, searchMock):
+        searchMock.return_value = [self.rdsinstance()]
+        self.clinv.print_search('resource_name')
+        self.assertEqual(
+            searchMock.assert_called_with('resource_name'),
+            None,
+        )
         print_calls = (
-            call('i-023desldk394995ss: resource_name'),
+            call('\nType: RDS instances'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
+        self.assertTrue(self.rdsinstance.return_value.short_print.called)
+
+    def test_unassigned_ec2_prints_instances(self):
+        self.clinv._unassigned_ec2()
+
+        self.assertTrue(self.ec2instance.return_value.print.called)
 
     def test_unassigned_rds_prints_instances(self):
         self.rdsinstance.return_value.id = 'db-YDFL2'
         self.rdsinstance.return_value.name = 'resource_name'
 
         self.clinv._unassigned_rds()
-        print_calls = (
-            call('db-YDFL2: resource_name'),
-        )
 
-        for print_call in print_calls:
-            self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(1, len(self.print.mock_calls))
+        self.assertTrue(self.rdsinstance.return_value.print.called)
 
     @patch('clinv.clinv.Clinv._short_print_resources')
     def test_unassigned_services_prints_instances(self, printMock):
@@ -792,6 +844,7 @@ class TestClinv(unittest.TestCase):
         self.clinv.unassigned('informations')
         self.assertTrue(unassignMock.called)
 
+    @patch('clinv.clinv.Clinv._unassigned_route53')
     @patch('clinv.clinv.Clinv._unassigned_rds')
     @patch('clinv.clinv.Clinv._unassigned_ec2')
     @patch('clinv.clinv.Clinv._unassigned_services')
@@ -802,12 +855,14 @@ class TestClinv(unittest.TestCase):
         servicesMock,
         ec2Mock,
         rdsMock,
+        route53Mock,
     ):
         self.clinv.unassigned('all')
         self.assertTrue(informationsMock.called)
         self.assertTrue(servicesMock.called)
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
+        self.assertTrue(route53Mock.called)
 
     @patch('clinv.clinv.Clinv._short_print_resources')
     def test_list_informations_prints_instances(self, printMock):
@@ -1074,6 +1129,7 @@ class TestClinv(unittest.TestCase):
     @patch('clinv.clinv.pyexcel')
     @patch('clinv.clinv.Clinv._export_ec2')
     @patch('clinv.clinv.Clinv._export_rds')
+    @patch('clinv.clinv.Clinv._export_route53')
     @patch('clinv.clinv.Clinv._export_projects')
     @patch('clinv.clinv.Clinv._export_services')
     @patch('clinv.clinv.Clinv._export_informations')
@@ -1082,6 +1138,7 @@ class TestClinv(unittest.TestCase):
         informationsMock,
         servicesMock,
         projectsMock,
+        route53Mock,
         rdsMock,
         ec2Mock,
         pyexcelMock,
@@ -1091,8 +1148,9 @@ class TestClinv(unittest.TestCase):
         expected_book.update({'Projects': projectsMock.return_value})
         expected_book.update({'Services': servicesMock.return_value})
         expected_book.update({'Informations': informationsMock.return_value})
-        expected_book.update({'EC2 Instances': ec2Mock.return_value})
-        expected_book.update({'RDS Instances': rdsMock.return_value})
+        expected_book.update({'EC2': ec2Mock.return_value})
+        expected_book.update({'RDS': rdsMock.return_value})
+        expected_book.update({'Route53': route53Mock.return_value})
 
         self.clinv.export('file.ods')
         self.assertEqual(
@@ -1189,4 +1247,522 @@ class TestClinv(unittest.TestCase):
         self.assertEqual(
             self.clinv.raw_inv['rds'],
             expected_rds_aws_resources,
+        )
+
+    def test_print_method(self):
+        self.clinv.print('i-023desldk394995ss')
+        self.assertTrue(self.ec2instance.return_value.print.called)
+
+
+class TestRoute53Inventory(ClinvBaseTestClass, unittest.TestCase):
+    '''
+    Test the Route53 implementation in the inventory
+    '''
+
+    def setUp(self):
+        super().setUp()
+
+        # Initialize object to test
+        self.clinv = Clinv(self.inventory_dir)
+        self.clinv.raw_data = {}
+
+        # Expected boto calls
+        self.expected_list_hosted_zones = {
+            'HostedZones': [
+                {
+                    'CallerReference': 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
+                    'Config': {
+                        'Comment': 'This is the description',
+                        'PrivateZone': False,
+                    },
+                    'Id': '/hostedzone/hosted_zone_id',
+                    'Name': 'hostedzone.org',
+                    'ResourceRecordSetCount': 1
+                },
+            ],
+            'IsTruncated': False,
+            'MaxItems': '100',
+            'ResponseMetadata': {
+                'HTTPHeaders': {
+                    'content-length': '4211',
+                    'content-type': 'text/xml',
+                    'date': 'Mon, 15 Jul 2019 13:13:51 GMT',
+                    'vary': 'accept-encoding',
+                    'x-amzn-requestid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                },
+                'HTTPStatusCode': 200,
+                'RequestId': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+                'RetryAttempts': 0,
+            },
+        }
+        self.boto.client.return_value.list_hosted_zones.return_value = \
+            self.expected_list_hosted_zones
+
+        self.expected_list_resource_record_sets = {
+            'IsTruncated': False,
+            'MaxItems': '100',
+            'ResourceRecordSets': [
+                {
+                    'Name': 'record1.clinv.org.',
+                    'ResourceRecords': [
+                        {
+                            'Value': '127.0.0.1'
+                        },
+                        {
+                            'Value': 'localhost'
+                        },
+                    ],
+                    'TTL': 172800,
+                    'Type': 'CNAME'
+                },
+            ],
+            'ResponseMetadata': {
+                'HTTPHeaders': {
+                    'content-length': '20952',
+                    'content-type': 'text/xml',
+                    'date': 'Mon, 15 Jul 2019 13:20:58 GMT',
+                    'vary': 'accept-encoding',
+                    'x-amzn-requestid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                },
+                'HTTPStatusCode': 200,
+                'RequestId': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+                'RetryAttempts': 0
+            }
+        }
+        self.boto.client.return_value.list_resource_record_sets.return_value \
+            = self.expected_list_resource_record_sets
+
+        # Expected raw_inv dictionary
+        self.clinv.raw_inv = {
+            'route53': {
+                'hosted_zones': [
+                    {
+                        'Config': {
+                            'Comment': 'This is the description',
+                            'PrivateZone': False,
+                        },
+                        'Id': '/hostedzone/hosted_zone_id',
+                        'Name': 'hostedzone.org',
+                        'ResourceRecordSetCount': 1,
+                        'records': [
+                            {
+                                'Name': 'record1.clinv.org',
+                                'ResourceRecords': [
+                                    {
+                                        'Value': '127.0.0.1'
+                                    },
+                                    {
+                                        'Value': 'localhost'
+                                    },
+                                ],
+                                'TTL': 172800,
+                                'Type': 'CNAME'
+                            },
+                        ],
+                    },
+                ],
+            },
+        }
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_fetch_route53_inventory_populated_by_route53_resources(self):
+        self.clinv.raw_inv = {'route53': {}}
+
+        expected_route53_aws_resources = {
+            'hosted_zones': [
+                {
+                    'Config': {
+                        'Comment': 'This is the description',
+                        'PrivateZone': False,
+                    },
+                    'Id': '/hostedzone/hosted_zone_id',
+                    'Name': 'hostedzone.org',
+                    'ResourceRecordSetCount': 1,
+                    'records': [
+                        {
+                            'Name': 'record1.clinv.org.',
+                            'ResourceRecords': [
+                                {
+                                    'Value': '127.0.0.1'
+                                },
+                                {
+                                    'Value': 'localhost'
+                                },
+                            ],
+                            'TTL': 172800,
+                            'Type': 'CNAME'
+                        },
+                    ],
+                },
+            ],
+        }
+
+        self.clinv._fetch_route53_inventory()
+        self.assertEqual(
+            self.clinv.raw_inv['route53'],
+            expected_route53_aws_resources,
+        )
+
+    def test_fetch_route53_inventory_supports_pagination_on_resources(self):
+        self.clinv.raw_inv = {'route53': {}}
+
+        expected_first_list_resource_record_sets = {
+            'IsTruncated': True,
+            'NextRecordName': 'record2.clinv.org',
+            'NextRecordType': 'CNAME',
+            'MaxItems': '100',
+            'ResourceRecordSets': [
+                {
+                    'Name': 'record1.clinv.org',
+                    'ResourceRecords': [
+                        {
+                            'Value': '127.0.0.1'
+                        },
+                        {
+                            'Value': 'localhost'
+                        },
+                    ],
+                    'TTL': 172800,
+                    'Type': 'CNAME'
+                },
+            ],
+            'ResponseMetadata': {
+                'HTTPHeaders': {
+                    'content-length': '20952',
+                    'content-type': 'text/xml',
+                    'date': 'Mon, 15 Jul 2019 13:20:58 GMT',
+                    'vary': 'accept-encoding',
+                    'x-amzn-requestid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                },
+                'HTTPStatusCode': 200,
+                'RequestId': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+                'RetryAttempts': 0
+            }
+        }
+        expected_second_list_resource_record_sets = {
+            'IsTruncated': False,
+            'MaxItems': '100',
+            'ResourceRecordSets': [
+                {
+                    'Name': 'record2.clinv.org',
+                    'ResourceRecords': [
+                        {
+                            'Value': '127.0.0.1'
+                        },
+                        {
+                            'Value': 'localhost'
+                        },
+                    ],
+                    'TTL': 172800,
+                    'Type': 'CNAME'
+                },
+            ],
+            'ResponseMetadata': {
+                'HTTPHeaders': {
+                    'content-length': '20952',
+                    'content-type': 'text/xml',
+                    'date': 'Mon, 15 Jul 2019 13:20:58 GMT',
+                    'vary': 'accept-encoding',
+                    'x-amzn-requestid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                },
+                'HTTPStatusCode': 200,
+                'RequestId': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+                'RetryAttempts': 0
+            }
+        }
+
+        self.boto.client.return_value.list_resource_record_sets.side_effect = [
+                expected_first_list_resource_record_sets,
+                expected_second_list_resource_record_sets,
+        ]
+
+        expected_route53_aws_resources = {
+            'hosted_zones': [
+                {
+                    'Config': {
+                        'Comment': 'This is the description',
+                        'PrivateZone': False,
+                    },
+                    'Id': '/hostedzone/hosted_zone_id',
+                    'Name': 'hostedzone.org',
+                    'ResourceRecordSetCount': 1,
+                    'records': [
+                        {
+                            'Name': 'record1.clinv.org',
+                            'ResourceRecords': [
+                                {
+                                    'Value': '127.0.0.1'
+                                },
+                                {
+                                    'Value': 'localhost'
+                                },
+                            ],
+                            'TTL': 172800,
+                            'Type': 'CNAME'
+                        },
+                        {
+                            'Name': 'record2.clinv.org',
+                            'ResourceRecords': [
+                                {
+                                    'Value': '127.0.0.1'
+                                },
+                                {
+                                    'Value': 'localhost'
+                                },
+                            ],
+                            'TTL': 172800,
+                            'Type': 'CNAME'
+                        },
+                    ],
+                },
+            ],
+        }
+
+        self.clinv._fetch_route53_inventory()
+        self.assertEqual(
+            self.clinv.raw_inv['route53'],
+            expected_route53_aws_resources,
+        )
+
+        self.assertEqual(
+            self.boto.client.return_value.list_resource_record_sets.mock_calls,
+            [
+                call(HostedZoneId='/hostedzone/hosted_zone_id'),
+                call(
+                    HostedZoneId='/hostedzone/hosted_zone_id',
+                    StartRecordName='record2.clinv.org',
+                    StartRecordType='CNAME'
+                )
+            ]
+        )
+
+    def test_update_route53_creates_empty_raw_data_key_if_unexistent(self):
+        self.clinv.raw_inv = {'route53': {'hosted_zones': {}}}
+        self.clinv._update_route53_inventory()
+        self.assertEqual(self.clinv.raw_data['route53'], {})
+
+    def test_update_route53_creates_empty_inv_key_if_unexistent(self):
+        self.clinv.raw_inv = {'route53': {'hosted_zones': {}}}
+        self.clinv._update_route53_inventory()
+        self.assertEqual(self.clinv.inv['route53'], {})
+
+    def test_update_route53_adds_route53_desired_default_raw_data(self):
+        self.clinv._update_route53_inventory()
+
+        desired_default_raw_data = {
+            'hosted_zone_id-record1.clinv.org-cname': {
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+            },
+        }
+        self.assertEqual(
+            self.clinv.raw_data['route53'],
+            desired_default_raw_data,
+        )
+
+    @patch('clinv.clinv.Route53')
+    def test_update_route53_adds_clinv_route53_resources(self, route53Mock):
+        desired_input = {
+            'hosted_zone_id-record1.clinv.org-cname': {
+                'Name': 'record1.clinv.org',
+                'ResourceRecords': [
+                    {
+                        'Value': '127.0.0.1'
+                    },
+                    {
+                        'Value': 'localhost'
+                    },
+                ],
+                'TTL': 172800,
+                'Type': 'CNAME',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'hosted_zone': {
+                    'id': '/hostedzone/hosted_zone_id',
+                    'private': False,
+                    'name': 'hostedzone.org',
+                },
+                'state': 'active',
+            },
+        }
+
+        self.clinv._update_route53_inventory()
+
+        self.assertEqual(
+            route53Mock.assert_called_with(desired_input),
+            None,
+        )
+        self.assertEqual(
+            self.clinv.inv['route53']
+            ['hosted_zone_id-record1.clinv.org-cname'],
+            route53Mock(),
+        )
+
+    @patch('clinv.clinv.Clinv._update_rds_inventory')
+    @patch('clinv.clinv.Clinv._update_ec2_inventory')
+    @patch('clinv.clinv.Clinv._update_active_inventory')
+    @patch('clinv.clinv.Clinv._update_route53_inventory')
+    def test_update_inventory_calls_update_route53(
+        self,
+        route53Mock,
+        activeMock,
+        ec2Mock,
+        rdsMock,
+    ):
+        self.clinv._update_inventory()
+
+        self.assertTrue(route53Mock.called)
+
+
+class TestRoute53Reports(ClinvBaseTestClass, unittest.TestCase):
+    '''
+    Test the Route53 reports
+    '''
+
+    def setUp(self):
+        super().setUp()
+
+        # Required mocks
+        self.route53instance_patch = patch(
+            'clinv.clinv.Route53', autospect=True
+        )
+        self.route53instance = self.route53instance_patch.start()
+        self.service_patch = patch(
+            'clinv.clinv.Service', autospect=True
+        )
+        self.service = self.service_patch.start()
+
+        # Initialize object to test
+        self.clinv = Clinv(self.inventory_dir)
+
+        self.clinv.inv = {
+            'services': {
+                'ser_01': self.service.return_value
+            },
+            'route53': {
+                'hosted_zone_id-record1.clinv.org-cname':
+                self.route53instance.return_value
+            },
+        }
+
+    def tearDown(self):
+        super().tearDown()
+        self.route53instance_patch.stop()
+        self.service_patch.stop()
+
+    def test_unassigned_route53_prints_instances(self):
+        self.route53instance.return_value.name = 'record1.clinv.org'
+        self.route53instance.return_value.type = 'CNAME'
+
+        self.clinv._unassigned_route53()
+        self.assertTrue(self.route53instance.return_value.print.called)
+
+    def test_unassigned_route53_doesnt_prints_soa(self):
+        self.route53instance.return_value.name = 'record1.clinv.org'
+        self.route53instance.return_value.type = 'SOA'
+
+        self.clinv._unassigned_route53()
+        self.assertFalse(self.route53instance.return_value.print.called)
+
+    def test_unassigned_route53_doesnt_prints_ns(self):
+        self.route53instance.return_value.name = 'record1.clinv.org'
+        self.route53instance.return_value.type = 'NS'
+
+        self.clinv._unassigned_route53()
+        self.assertFalse(self.route53instance.return_value.print.called)
+
+    @patch('clinv.clinv.Clinv._unassigned_route53')
+    def test_general_unassigned_can_use_route53_resource(self, unassignMock):
+        self.clinv.unassigned('route53')
+        self.assertTrue(unassignMock.called)
+
+    def test_search_route53_returns_instances(self):
+        self.route53instance.return_value.search.return_value = True
+        instances = self.clinv._search_route53('resource_name')
+        self.assertEqual(
+            instances,
+            [self.route53instance()]
+        )
+
+    @patch('clinv.clinv.Clinv._search_route53')
+    @patch('clinv.clinv.Clinv._search_projects')
+    @patch('clinv.clinv.Clinv._search_services')
+    @patch('clinv.clinv.Clinv._search_informations')
+    @patch('clinv.clinv.Clinv._search_rds')
+    @patch('clinv.clinv.Clinv._search_ec2')
+    def test_print_search_prints_route53_instance_information(
+        self,
+        ec2Mock,
+        rdsMock,
+        informationsMock,
+        servicesMock,
+        projectsMock,
+        route53Mock,
+    ):
+        ec2Mock.return_value = []
+        rdsMock.return_value = []
+        informationsMock.return_value = []
+        servicesMock.return_value = []
+        projectsMock.return_value = []
+        route53Mock.return_value = [self.route53instance()]
+        self.clinv.print_search('resource_name')
+        self.assertEqual(
+            route53Mock.assert_called_with('resource_name'),
+            None,
+        )
+        print_calls = (
+            call('\nType: Route53 instances'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(1, len(self.print.mock_calls))
+        self.assertTrue(self.route53instance.return_value.short_print.called)
+
+    def test_export_route53_generates_expected_dictionary(self):
+        exported_data = [
+            [
+                'ID',
+                'Name',
+                'Type',
+                'Value',
+                'Services',
+                'To destroy',
+                'Access',
+                'Description',
+            ],
+            [
+                'hosted_zone_id-record1.clinv.org-cname',
+                'record1.clinv.org',
+                'CNAME',
+                '127.0.0.1, localhost',
+                'Service 01',
+                'tbd',
+                'public',
+                'record description'
+             ]
+        ]
+
+        self.route53instance.return_value.id = \
+            'hosted_zone_id-record1.clinv.org-cname'
+        self.route53instance.return_value.name = 'record1.clinv.org'
+        self.route53instance.return_value.type = 'CNAME'
+        self.route53instance.return_value.value = ['127.0.0.1', 'localhost']
+        self.route53instance.return_value._get_field.return_value = 'tbd'
+        self.route53instance.return_value.access = 'public'
+        self.route53instance.return_value.description = 'record description'
+        self.service.return_value.raw = {
+            'aws': {
+                'route53': [
+                    'hosted_zone_id-record1.clinv.org-cname',
+                ],
+            }
+        }
+        self.service.return_value.name = 'Service 01'
+
+        self.assertEqual(
+            self.clinv._export_route53(),
+            exported_data,
         )

@@ -18,7 +18,7 @@
 
 # Program to maintain an inventory of assets.
 
-from clinv.resources import EC2, RDS, Project, Service, Information
+from clinv.resources import EC2, RDS, Route53, Project, Service, Information
 from collections import OrderedDict
 from operator import itemgetter
 from yaml import YAMLError
@@ -26,6 +26,7 @@ import boto3
 import logging
 import os
 import pyexcel
+import re
 import yaml
 
 
@@ -41,12 +42,68 @@ class Clinv():
             self.inventory_dir,
             'raw_data.yaml',
         )
-        self.raw_inv = {
-            'ec2': {},
-            'rds': {},
-        }
+        self.raw_inv = {}
+        self.inv = {}
 
     def _fetch_ec2_inventory(self):
+        """
+        Do aggregation of data to populate the raw_inv with the aws information
+        of the EC2 resources with the following structure:
+
+        self.raw_inv['ec2'] = {
+            'us-east-1': [
+                {
+                    'Groups': [],
+                    'Instances': [
+                        {
+                            'ImageId': 'ami-ffcsssss',
+                            'InstanceId': 'i-023desldk394995ss',
+                            'InstanceType': 'c4.4xlarge',
+                            'LaunchTime': datetime.datetime(
+                                2018, 5, 10, 7, 13, 17, tzinfo=tzutc()
+                            ),
+                            'NetworkInterfaces': [
+                                {
+                                    'PrivateIpAddresses': [
+                                        {
+                                            'Association': {
+                                                'IpOwnerId': '585394460090',
+                                                'PublicDnsName': 'ec2.com',
+                                                'PublicIp': '32.312.444.22'
+                                            },
+                                            'Primary': True,
+                                            'PrivateDnsName': 'ec2.nternal',
+                                            'PrivateIpAddress': '1.1.1.1',
+                                        }
+                                    ],
+                                }
+                            ],
+                            'SecurityGroups': [
+                                {
+                                    'GroupId': 'sg-f2234gf6',
+                                    'GroupName': 'sg-1'
+                                },
+                                {
+                                    'GroupId': 'sg-cwfccs17',
+                                    'GroupName': 'sg-2'
+                                }
+                            ],
+                            'State': {'Code': 16, 'Name': 'running'},
+                            'StateTransitionReason': '',
+                            'Tags': [{'Key': 'Name', 'Value': 'name'}],
+                            'VpcId': 'vpc-31084921'
+                        }
+                    ],
+                    'OwnerId': '585394460090',
+                    'ReservationId': 'r-039ed99cad2bb3da5'
+                },
+            ],
+        }
+        """
+
+        self.log.info('Fetching EC2 inventory')
+        self.raw_inv['ec2'] = {}
+
         for region in self.regions:
             ec2 = boto3.client('ec2', region_name=region)
             self.raw_inv['ec2'][region] = \
@@ -110,6 +167,76 @@ class Clinv():
                                 pass
 
     def _fetch_rds_inventory(self):
+        """
+        Do aggregation of data to populate the raw_inv with the aws information
+        of the RDS resources with the following structure:
+
+        self.raw_inv['rds'] = {
+            'us-east-1': [
+                {
+                    'AllocatedStorage': 100,
+                    'AssociatedRoles': [],
+                    'AutoMinorVersionUpgrade': True,
+                    'AvailabilityZone': 'us-east-1a',
+                    'BackupRetentionPeriod': 7,
+                    'CACertificateIdentifier': 'rds-ca-2015',
+                    'DBInstanceArn': 'arn:aws:rds:us-east-1:224119285:db:db',
+                    'DBInstanceClass': 'db.t2.micro',
+                    'DBInstanceIdentifier': 'rds-name',
+                    'DBInstanceStatus': 'available',
+                    'DBSecurityGroups': [],
+                    'DBSubnetGroup': {
+                        'DBSubnetGroupDescription': 'Created from the RDS '
+                        'Management Console',
+                        'DBSubnetGroupName': 'default-vpc-v2dcp2jh',
+                        'SubnetGroupStatus': 'Complete',
+                        'Subnets': [
+                            {
+                                'SubnetAvailabilityZone': {
+                                    'Name': 'us-east-1a'
+                                },
+                                'SubnetIdentifier': 'subnet-42sfl222',
+                                'SubnetStatus': 'Active'
+                            },
+                            {
+                                'SubnetAvailabilityZone': {
+                                    'Name': 'us-east-1e'
+                                },
+                                'SubnetIdentifier': 'subnet-42sfl221',
+                                'SubnetStatus': 'Active'
+                            },
+                        ],
+                        'VpcId': 'vpc-v2dcp2jh'},
+                    'DbiResourceId': 'db-YDFL2',
+                    'DeletionProtection': True,
+                    'Endpoint': {
+                        'Address': 'rds-name.us-east-1.rds.amazonaws.com',
+                        'HostedZoneId': '202FGHSL2JKCFW',
+                        'Port': 5521
+                    },
+                    'Engine': 'mariadb',
+                    'EngineVersion': '1.2',
+                    'InstanceCreateTime': datetime.datetime(
+                        2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
+                    ),
+                    'Iops': 1000,
+                    'LatestRestorableTime': datetime.datetime(
+                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
+                    ),
+                    'MasterUsername': 'root',
+                    'MultiAZ': True,
+                    'PreferredBackupWindow': '03:00-04:00',
+                    'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
+                    'PubliclyAccessible': False,
+                    'StorageEncrypted': True,
+                },
+            ],
+        }
+        """
+
+        self.log.info('Fetching RDS inventory')
+        self.raw_inv['rds'] = {}
+
         for region in self.regions:
             rds = boto3.client('rds', region_name=region)
             self.raw_inv['rds'][region] = \
@@ -143,11 +270,107 @@ class Clinv():
                     except KeyError:
                         pass
 
+    def _fetch_route53_inventory(self):
+        """
+        Do aggregation of data to populate the raw_inv with the aws information
+        of the route53 resources with the following structure:
+
+        self.raw_inv['route53'] = {
+            'hosted_zones': [
+                {
+                    'Config': {
+                        'Comment': 'This is the description',
+                        'PrivateZone': False,
+                    },
+                    'Id': '/hostedzone/hosted_zone_id',
+                    'Name': 'hostedzone.org',
+                    'ResourceRecordSetCount': 1,
+                    'records': [
+                        {
+                            'Name': 'record1.clinv.org',
+                            'ResourceRecords': [
+                                {
+                                    'Value': '127.0.0.1'
+                                },
+                                {
+                                    'Value': 'localhost'
+                                },
+                            ],
+                            'TTL': 172800,
+                            'Type': 'CNAME'
+                        },
+                    ],
+                },
+            ],
+        }
+        """
+
+        self.log.info('Fetching Route53 inventory')
+        route53 = boto3.client('route53')
+
+        self.raw_inv['route53'] = {}
+
+        # Fetch the hosted zones
+        self.raw_inv['route53']['hosted_zones'] = \
+            route53.list_hosted_zones()['HostedZones']
+
+        prune_keys = [
+            'CallerReference',
+        ]
+
+        for resource in self.raw_inv['route53']['hosted_zones']:
+            for prune_key in prune_keys:
+                try:
+                    resource.pop(prune_key)
+                except KeyError:
+                    pass
+
+        # Fetch the records
+        for zone in self.raw_inv['route53']['hosted_zones']:
+            raw_records = route53.list_resource_record_sets(
+                HostedZoneId=zone['Id'],
+            )
+
+            zone['records'] = raw_records['ResourceRecordSets']
+
+            while raw_records['IsTruncated']:
+                raw_records = route53.list_resource_record_sets(
+                    HostedZoneId=zone['Id'],
+                    StartRecordName=raw_records['NextRecordName'],
+                    StartRecordType=raw_records['NextRecordType'],
+                )
+                for record in raw_records['ResourceRecordSets']:
+                    zone['records'].append(record)
+
     def _fetch_aws_inventory(self):
+        """
+        Do aggregation of data to populate the raw_inv with the following AWS
+        resources:
+            * EC2
+            * RDS
+            * Route53
+
+        Related methods:
+            * _fetch_ec2_inventory
+            * _fetch_rds_inventory
+            * _fetch_route53_inventory
+        """
+
         self._fetch_ec2_inventory()
         self._fetch_rds_inventory()
+        self._fetch_route53_inventory()
 
     def _update_ec2_inventory(self):
+        """
+        Do aggregation of data to populate self.raw_data and self.inv
+        attributes with EC2 resources.
+
+        self.raw_data is populated with the raw_data.yaml information or with
+        default values.
+
+        self.inv is populated with EC2 resources.
+        """
+
         try:
             self.raw_data['ec2']
         except KeyError:
@@ -177,6 +400,16 @@ class Clinv():
                     )
 
     def _update_rds_inventory(self):
+        """
+        Do aggregation of data to populate self.raw_data and self.inv
+        attributes with RDS resources.
+
+        self.raw_data is populated with the raw_data.yaml information or with
+        default values.
+
+        self.inv is populated with RDS resources.
+        """
+
         try:
             self.raw_data['rds']
         except KeyError:
@@ -204,7 +437,78 @@ class Clinv():
                     }
                 )
 
+    def _update_route53_inventory(self):
+        """
+        Do aggregation of data to populate self.raw_data and self.inv
+        attributes with Route53 resources.
+
+        self.raw_data is populated with the raw_data.yaml information or with
+        default values.
+
+        self.inv is populated with Route53 resources.
+        """
+
+        # Initialize objects
+        try:
+            self.raw_data['route53']
+        except KeyError:
+            self.raw_data['route53'] = {}
+
+        try:
+            self.inv['route53']
+        except KeyError:
+            self.inv['route53'] = {}
+
+        # Populate self.raw_data and self.inv
+        for zone in self.raw_inv['route53']['hosted_zones']:
+            for resource in zone['records']:
+                resource_id = '{}-{}-{}'.format(
+                    re.sub(r'/hostedzone/', '', zone['Id']),
+                    re.sub(r'\.$', '', resource['Name']),
+                    resource['Type'].lower(),
+                )
+
+                # Define the default raw_data of the resource
+                try:
+                    self.raw_data['route53'][resource_id]
+                except KeyError:
+                    self.raw_data['route53'][resource_id] = {
+                        'description': 'tbd',
+                        'to_destroy': 'tbd',
+                    }
+
+                # Load the raw_data into the raw_inv resource
+                for key, value in \
+                        self.raw_data['route53'][resource_id].items():
+                    resource[key] = value
+                resource['hosted_zone'] = {
+                    'id': zone['Id'],
+                    'name': zone['Name'],
+                    'private': zone['Config']['PrivateZone'],
+                }
+                resource['state'] = 'active'
+
+                self.inv['route53'][resource_id] = Route53(
+                    {
+                        resource_id: resource
+                    }
+                )
+
     def _update_active_inventory(self, resource_type):
+        """
+        Do aggregation of data to populate self.raw_data and self.inv
+        attributes with resource_type resources.
+
+        self.raw_data is populated with the raw_data.yaml information or with
+        default values.
+
+        self.inv is populated with resource_type resources.
+
+        Parameters:
+            resource_type (str): Type of active resource to be processed.
+                It must be one of ['projects', 'services', 'informations']
+        """
+
         try:
             self.raw_data[resource_type]
         except KeyError:
@@ -230,6 +534,7 @@ class Clinv():
 
         self._update_ec2_inventory()
         self._update_rds_inventory()
+        self._update_route53_inventory()
         self._update_active_inventory('projects')
         self._update_active_inventory('informations')
         self._update_active_inventory('services')
@@ -290,6 +595,12 @@ class Clinv():
     def _search_informations(self, search_string):
         return self._search_in_resources('informations', search_string)
 
+    def _search_route53(self, search_string):
+        return self._search_in_resources('route53', search_string)
+
+    def _search_rds(self, search_string):
+        return self._search_in_resources('rds', search_string)
+
     def _short_print_resources(self, resource_list):
         for resource in resource_list:
             resource.short_print()
@@ -319,7 +630,21 @@ class Clinv():
             print('\nType: EC2 instances')
             self._short_print_resources(ec2_instances)
 
+        rds_instances = self._search_rds(search_string)
+
+        if rds_instances != []:
+            print('\nType: RDS instances')
+            self._short_print_resources(rds_instances)
+
+        route53_instances = self._search_route53(search_string)
+
+        if route53_instances != []:
+            print('\nType: Route53 instances')
+            self._short_print_resources(route53_instances)
+
         if ec2_instances == [] and \
+                route53_instances == [] and \
+                rds_instances == [] and \
                 projects == [] and \
                 services == [] and \
                 informations == []:
@@ -327,6 +652,21 @@ class Clinv():
             return
 
     def _unassigned_aws_resource(self, resource_type):
+        """
+        Do aggregation of data to print the resource_type resources that are
+        not associated to any service.
+
+        Parameters:
+            resource_type (str): Type of clinv resource to be processed.
+                It must be one of [
+                    'ec2',
+                    'rds',
+                ]
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
         all_assigned_instances = []
         for service_id, service in sorted(self.inv['services'].items()):
             try:
@@ -340,13 +680,54 @@ class Clinv():
         for instance_id, instance in sorted(self.inv[resource_type].items()):
             if instance_id not in all_assigned_instances:
                 if instance.state != 'terminated':
-                    print('{}: {}'.format(instance.id, instance.name))
+                    instance.print()
 
     def _unassigned_ec2(self):
+        """
+        Do aggregation of data to print the EC2 resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
         self._unassigned_aws_resource('ec2')
 
     def _unassigned_rds(self):
+        """
+        Do aggregation of data to print the RDS resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
         self._unassigned_aws_resource('rds')
+
+    def _unassigned_route53(self):
+        """
+        Do aggregation of data to print the Route53 resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        resource_type = 'route53'
+        all_assigned_instances = []
+        for service_id, service in sorted(self.inv['services'].items()):
+            try:
+                for instance in service.raw['aws'][resource_type]:
+                    all_assigned_instances.append(instance)
+            except TypeError:
+                pass
+            except KeyError:
+                pass
+
+        for instance_id, instance in sorted(self.inv[resource_type].items()):
+            if instance_id not in all_assigned_instances:
+                if instance.type != 'SOA' and instance.type != 'NS':
+                    instance.print()
 
     def _unassigned_services(self):
         all_assigned_services = []
@@ -381,14 +762,22 @@ class Clinv():
 
     def unassigned(self, resource_type):
         if resource_type == 'all':
+            self.log.info('Unassigned EC2')
             self._unassigned_ec2()
+            self.log.info('Unassigned RDS')
             self._unassigned_rds()
+            self.log.info('Unassigned Route53')
+            self._unassigned_route53()
+            self.log.info('Unassigned Services')
             self._unassigned_services()
+            self.log.info('Unassigned Informations')
             self._unassigned_informations()
         elif resource_type == 'ec2':
             self._unassigned_ec2()
         elif resource_type == 'rds':
             self._unassigned_rds()
+        elif resource_type == 'route53':
+            self._unassigned_route53()
         elif resource_type == 'services':
             self._unassigned_services()
         elif resource_type == 'informations':
@@ -628,6 +1017,64 @@ class Clinv():
 
         return self._export_aws_resource('rds')
 
+    def _export_route53(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the Route53 resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        # Create spreadsheet headers
+        exported_headers = [
+            'ID',
+            'Name',
+            'Type',
+            'Value',
+            'Services',
+            'To destroy',
+            'Access',
+            'Description',
+        ]
+
+        # Fill up content
+        resource_type = 'route53'
+
+        exported_data = []
+        for instance_id, instance in self.inv[resource_type].items():
+            related_services = {}
+            for service_id, service in self.inv['services'].items():
+                try:
+                    service.raw['aws'][resource_type]
+                except TypeError:
+                    continue
+                except KeyError:
+                    continue
+                for service_resource_id in service.raw['aws'][resource_type]:
+                    if service_resource_id == instance_id:
+                        related_services[service_id] = service
+
+            exported_data.append(
+                [
+                    instance.id,
+                    instance.name,
+                    instance.type,
+                    ', '.join(instance.value),
+                    self._get_resource_names('services', related_services),
+                    instance._get_field('to_destroy'),
+                    instance.access,
+                    instance.description,
+                ]
+            )
+
+        # Sort by name
+        exported_data = sorted(exported_data, key=itemgetter(1))
+        exported_data.insert(0, exported_headers)
+
+        return exported_data
+
     def _export_projects(self):
         """
         Do aggregation of data to return a list with the information needed to
@@ -771,31 +1218,12 @@ class Clinv():
         """
 
         book = OrderedDict()
-        book.update(
-            {
-                'Projects': self._export_projects()
-            }
-        )
-        book.update(
-            {
-                'Services': self._export_services()
-            }
-        )
-        book.update(
-            {
-                'Informations': self._export_informations()
-            }
-        )
-        book.update(
-            {
-                'EC2 Instances': self._export_ec2()
-            }
-        )
-        book.update(
-            {
-                'RDS Instances': self._export_rds()
-            }
-        )
+        book.update({'Projects': self._export_projects()})
+        book.update({'Services': self._export_services()})
+        book.update({'Informations': self._export_informations()})
+        book.update({'EC2': self._export_ec2()})
+        book.update({'RDS': self._export_rds()})
+        book.update({'Route53': self._export_route53()})
 
         pyexcel.save_book_as(
             bookdict=book,
@@ -809,3 +1237,19 @@ class Clinv():
             region['RegionName']
             for region in ec2.describe_regions()['Regions']
         ]
+
+    def print(self, input_resource_id):
+        """
+        Method to print the information of a clinv resource.
+
+        Parameters:
+            input_resource_id (str): id of the resource
+
+        Returns:
+            stdout: Resource information
+        """
+
+        for resource_type in self.inv:
+            for resource_id, resource in self.inv[resource_type].items():
+                if resource_id == input_resource_id:
+                    resource.print()
