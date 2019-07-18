@@ -23,10 +23,6 @@ configured.
 `clinv` will make all the operations on your local inventory. To sync what's
 in your AWS account with your local inventory, execute `clinv generate`.
 
-## Export
-
-`clinv export` will create an ods file with the inventory in `~/.local/share/clinv/inventory.ods`
-
 ## Generate
 
 `clinv generate` uses boto3 to update what is in your AWS inventory, right now
@@ -49,7 +45,7 @@ In the case of services, it will only display the ones that doesn't have a `stat
 * Project names, aliases and descriptions.
 * Service names, aliases and descriptions.
 * Information names, aliases and descriptions.
-* EC2 and RDS properties (id, name, instance_type, private ips, public ips,
+* EC2, RDS and Route53 properties (id, name, instance_type, private ips, public ips,
   descriptions, regions and security group ids).
 
 And will print the matching information.
@@ -65,6 +61,10 @@ If `resource_type` is `ec2`, it will search for instances that aren't assigned
 in a `service`.
 If `resource_type` is `service` or `information`, it will search for instances
 that aren't assigned to a `project`.
+
+## Export
+
+`clinv export` will create an ods file with the inventory in `~/.local/share/clinv/inventory.ods`
 
 # Data Files
 

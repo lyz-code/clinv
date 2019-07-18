@@ -619,8 +619,8 @@ class EC2(ClinvAWSResource):
             stdout: Prints information of the resource.
         """
 
-        print('- Name: {}'.format(self.name))
-        print('  ID: {}'.format(self.id))
+        print(self.id)
+        print('  Name: {}'.format(self.name))
         print('  State: {}'.format(self.state))
         if self.state != 'running':
             print('  State Reason: {}'.format(self.state_transition))
@@ -724,3 +724,183 @@ class RDS(ClinvAWSResource):
         """
 
         return self._get_field('DBInstanceClass', 'str')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Type: {}'.format(self.type))
+        print('  Description: {}'.format(self.description))
+
+
+class Route53(ClinvGenericResource):
+    """
+    Abstract class to extend ClinvGenericResource, it gathers method and
+    attributes for the Route53 resources.
+
+    Public properties:
+        name: Returns the name of the record.
+        value: Returns the value of the record.
+        type: Returns the type of the record.
+        hosted_zone: Returns the hosted zone name of the resource.
+        hosted_zone_id: Returns the hosted zone id of the resource.
+        private: Returns if the resource is private.
+        print: Prints the name of the resource
+        short_print: Prints information of the resource
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('Name', 'str')
+
+    @property
+    def value(self):
+        """
+        Do aggregation of data to return the value of the record.
+
+        Returns:
+            list: Value of the record set
+        """
+
+        try:
+            return [record['Value'] for record in self.raw['ResourceRecords']]
+        except KeyError:
+            return [self.raw['AliasTarget']['DNSName']]
+
+    @property
+    def type(self):
+        """
+        Do aggregation of data to return the resource type.
+
+        Returns:
+            str: Resource type.
+        """
+
+        return self._get_field('Type', 'str')
+
+    @property
+    def hosted_zone(self):
+        """
+        Do aggregation of data to return the resource hosted zone name.
+
+        Returns:
+            str: Resource hosted zone name.
+        """
+
+        return self.raw['hosted_zone']['name']
+
+    @property
+    def hosted_zone_id(self):
+        """
+        Do aggregation of data to return the resource hosted zone id.
+
+        Returns:
+            str: Resource hosted zone id.
+        """
+
+        return self.raw['hosted_zone']['id']
+
+    @property
+    def access(self):
+        """
+        Do aggregation of data to return if the resource is private.
+
+        Returns:
+            str: Returns 'public' or 'private'
+        """
+
+        if self.raw['hosted_zone']['private']:
+            return 'private'
+        else:
+            return 'public'
+
+    def short_print(self):
+        """
+        Override parent method to do aggregation of data to print the id of the
+        resource.
+
+        Is less verbose than print and describe methods.
+
+        Returns:
+            stdout: Prints 'id: name' of the resource.
+        """
+
+        print(self.id)
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Value:')
+        for value in self.value:
+            print('    {}'.format(value))
+        print('  Type: {}'.format(self.type))
+        print('  Zone: {}'.format(self.hosted_zone_id))
+        print('  Description: {}'.format(self.description))
+        print('  Access: {}'.format(self.access))
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include project specific search.
+
+        Extend to search by:
+            Record value
+            Record type
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the parent searches
+        if super().search(search_string):
+            return True
+
+        # Search by value
+        for value in self.value:
+            if re.match(search_string, value):
+                return True
+
+        # Search by type
+        if re.match(search_string, self.type, re.IGNORECASE):
+            return True
+
+        return False

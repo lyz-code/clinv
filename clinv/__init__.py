@@ -32,6 +32,7 @@ def main():
         'export',
         'generate',
         'list',
+        'print',
         'search',
         'unassigned',
     ]:
@@ -48,6 +49,8 @@ def main():
             clinv.print_search(args.search_string)
         elif args.subcommand == 'unassigned':
             clinv.unassigned(args.resource_type)
+        elif args.subcommand == 'print':
+            clinv.print(args.resource_id)
         elif args.subcommand == 'list':
             clinv.list(args.resource_type)
         elif args.subcommand == 'export':

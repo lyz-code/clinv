@@ -86,3 +86,14 @@ class TestMain(unittest.TestCase):
             ),
             None,
         )
+
+    def test_print_subcommand(self):
+        self.parser_args.subcommand = 'print'
+        self.parser_args.resource_id = 'resource_id'
+        main()
+        self.assertTrue(self.clinv.return_value.load_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertEqual(
+            self.clinv.return_value.print.assert_called_with('resource_id'),
+            None,
+        )
