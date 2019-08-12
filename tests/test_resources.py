@@ -119,6 +119,19 @@ class ClinvGenericResourceTests(object):
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(1, len(self.print.mock_calls))
 
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call(self.resource.id),
+            call('  Name: {}'.format(self.resource.name)),
+            call('  State: {}'.format(self.resource.state)),
+            call('  Description: {}'.format(self.resource.description)),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(4, len(self.print.mock_calls))
+
 
 class ClinvActiveResourceTests(ClinvGenericResourceTests):
     '''Must be combined with a unittest.TestCase that defines:
@@ -189,6 +202,22 @@ class TestProject(ClinvActiveResourceTests, unittest.TestCase):
         self.resource.raw['aliases'] = None
         self.assertFalse(self.resource.search('Awesome Project'))
 
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('pro_01'),
+            call('  Name: resource_name'),
+            call('  Aliases: Awesome Project'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Services: ser_01'),
+            call('  Informations: inf_01'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(7, len(self.print.mock_calls))
+
 
 class TestInformation(ClinvActiveResourceTests, unittest.TestCase):
     def setUp(self):
@@ -210,8 +239,22 @@ class TestInformation(ClinvActiveResourceTests, unittest.TestCase):
     def tearDown(self):
         super().tearDown()
 
-    def test_get_access(self):
+    def test_get_personal_data(self):
         self.assertEqual(self.resource.personal_data, True)
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('inf_01'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Personal Information: True'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(5, len(self.print.mock_calls))
 
 
 class TestService(ClinvActiveResourceTests, unittest.TestCase):
@@ -260,6 +303,21 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
 
     def test_get_informations(self):
         self.assertEqual(self.resource.informations, ['inf_01'])
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('ser_01'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Access: public'),
+            call('  Informations: inf_01'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(6, len(self.print.mock_calls))
 
 
 class ClinvAWSResourceTests(ClinvGenericResourceTests):
@@ -478,7 +536,7 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
     def test_get_state_transition_reason(self):
         self.assertEqual(self.resource.state_transition, 'reason')
 
-    def test_print_ec2_instance_information(self):
+    def test_print_resource_information(self):
         self.resource.raw['State']['Name'] = 'running'
 
         self.resource.print()
@@ -595,7 +653,7 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def tearDown(self):
         super().tearDown()
 
-    def test_print_method_works_as_expected(self):
+    def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
             call('db-YDFL2'),
@@ -718,7 +776,7 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
         self.resource.raw['hosted_zone']['private'] = True
         self.assertEqual(self.resource.access, 'private')
 
-    def test_print_method_works_as_expected(self):
+    def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
             call('hosted_zone_id-record1.clinv.org-cname'),
