@@ -31,6 +31,7 @@ class ClinvGenericResource():
     resources.
 
     Public methods:
+        print: Prints information of the resource
         search: Search in the resource data if a string matches.
         short_print: Print the id and name of the resource.
         state: Returns the state of the resource.
@@ -226,6 +227,21 @@ class ClinvGenericResource():
 
         print('{}: {}'.format(self.id, self.name))
 
+    def print(self):
+        """
+        Do aggregation of data to print information of the resource.
+
+        It's more verbose than short_print but less than describe.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  State: {}'.format(self.state))
+        print('  Description: {}'.format(self.description))
+
 
 class ClinvActiveResource(ClinvGenericResource):
     """
@@ -263,6 +279,9 @@ class Project(ClinvActiveResource):
 
     The projects represent the reason for a group of service and information
     assets to exist.
+
+    Public methods:
+        print: Print information of the resource.
 
     Public properties:
         aliases: Returns the aliases of the project.
@@ -335,11 +354,34 @@ class Project(ClinvActiveResource):
         if self.aliases is not None and search_string in self.aliases:
             return True
 
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Aliases: {}'.format(', '.join(self.aliases)))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state))
+        print('  Services: {}'.format(', '.join(self.services)))
+        print('  Informations: {}'.format(', '.join(self.informations)))
+
 
 class Information(ClinvActiveResource):
     """
     Extends the ClinvActiveResource class to add specific properties and
     methods for the information assets stored in the inventory.
+
+    Public methods:
+        print: Print information of the resource.
 
     Public properties:
         personal_data: Returns if the information contains personal data.
@@ -364,11 +406,32 @@ class Information(ClinvActiveResource):
 
         return self._get_field('personal_data')
 
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state))
+        print('  Personal Information: {}'.format(self.personal_data))
+
 
 class Service(ClinvActiveResource):
     """
     Extends the ClinvActiveResource class to add specific properties and
     methods for the service assets stored in the inventory.
+
+    Public methods:
+        print: Print information of the resource.
 
     Public properties:
         access: Returns the level of exposure of the service.
@@ -405,6 +468,30 @@ class Service(ClinvActiveResource):
         """
 
         return self._get_field('informations', 'list')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state))
+        print('  Access: {}'.format(self.access))
+        print('  Informations: {}'.format(', '.join(self.informations)))
+        print('  Related resources:')
+        for resource_id, resource_value in self.raw['aws'].items():
+            print('    {}:'.format(resource_id))
+            for resource_name in resource_value:
+                print('      {}'.format(resource_name))
 
 
 class ClinvAWSResource(ClinvGenericResource):
@@ -779,6 +866,18 @@ class Route53(ClinvGenericResource):
         return self._get_field('Name', 'str')
 
     @property
+    def to_destroy(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        if we want to destroy the resource.
+
+        Returns:
+            str: If we want to destroy the resource
+        """
+
+        return self._get_field('to_destroy', 'str')
+
+    @property
     def value(self):
         """
         Do aggregation of data to return the value of the record.
@@ -871,8 +970,9 @@ class Route53(ClinvGenericResource):
             print('    {}'.format(value))
         print('  Type: {}'.format(self.type))
         print('  Zone: {}'.format(self.hosted_zone_id))
-        print('  Description: {}'.format(self.description))
         print('  Access: {}'.format(self.access))
+        print('  Description: {}'.format(self.description))
+        print('  Destroy: {}'.format(self.to_destroy))
 
     def search(self, search_string):
         """
