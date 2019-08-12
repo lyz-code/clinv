@@ -313,11 +313,14 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
             call('  State: active'),
             call('  Access: public'),
             call('  Informations: inf_01'),
+            call('  Related resources:'),
+            call('    ec2:'),
+            call('      i-01'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(6, len(self.print.mock_calls))
+        self.assertEqual(9, len(self.print.mock_calls))
 
 
 class ClinvAWSResourceTests(ClinvGenericResourceTests):

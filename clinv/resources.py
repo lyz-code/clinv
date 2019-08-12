@@ -487,6 +487,11 @@ class Service(ClinvActiveResource):
         print('  State: {}'.format(self.state))
         print('  Access: {}'.format(self.access))
         print('  Informations: {}'.format(', '.join(self.informations)))
+        print('  Related resources:')
+        for resource_id, resource_value in self.raw['aws'].items():
+            print('    {}:'.format(resource_id))
+            for resource_name in resource_value:
+                print('      {}'.format(resource_name))
 
 
 class ClinvAWSResource(ClinvGenericResource):
