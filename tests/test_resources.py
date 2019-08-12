@@ -699,6 +699,9 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
     def test_type_property_works_as_expected(self):
         self.assertEqual(self.resource.type, 'CNAME')
 
+    def test_to_destroy_property_works_as_expected(self):
+        self.assertEqual(self.resource.to_destroy, 'tbd')
+
     def test_hosted_zone_property_works_as_expected(self):
         self.assertEqual(self.resource.hosted_zone, 'hostedzone.org')
 
@@ -725,13 +728,14 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
             call('    localhost'),
             call('  Type: CNAME'),
             call('  Zone: /hostedzone/hosted_zone_id'),
-            call('  Description: This is the description'),
             call('  Access: public'),
+            call('  Description: This is the description'),
+            call('  Destroy: tbd'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(9, len(self.print.mock_calls))
+        self.assertEqual(10, len(self.print.mock_calls))
 
     def test_search_resource_by_regexp_on_value(self):
         self.assertTrue(self.resource.search('.*alhost'))

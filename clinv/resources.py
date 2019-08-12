@@ -779,6 +779,18 @@ class Route53(ClinvGenericResource):
         return self._get_field('Name', 'str')
 
     @property
+    def to_destroy(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        if we want to destroy the resource.
+
+        Returns:
+            str: If we want to destroy the resource
+        """
+
+        return self._get_field('to_destroy', 'str')
+
+    @property
     def value(self):
         """
         Do aggregation of data to return the value of the record.
@@ -871,8 +883,9 @@ class Route53(ClinvGenericResource):
             print('    {}'.format(value))
         print('  Type: {}'.format(self.type))
         print('  Zone: {}'.format(self.hosted_zone_id))
-        print('  Description: {}'.format(self.description))
         print('  Access: {}'.format(self.access))
+        print('  Description: {}'.format(self.description))
+        print('  Destroy: {}'.format(self.to_destroy))
 
     def search(self, search_string):
         """
