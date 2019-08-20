@@ -40,11 +40,13 @@ def main():
 
     if args.subcommand == 'generate':
         clinv._fetch_aws_inventory()
-        clinv.load_data()
-        clinv.save_inventory()
+        clinv.load_user_data_from_file()
+        clinv._update_inventory()
+        clinv.save()
     else:
-        clinv.load_inventory()
-        clinv.load_data()
+        clinv.load_source_data_from_file()
+        clinv.load_user_data_from_file()
+        clinv._update_inventory()
         if args.subcommand == 'search':
             clinv.print_search(args.search_string)
         elif args.subcommand == 'unassigned':

@@ -38,8 +38,8 @@ class TestMain(unittest.TestCase):
             self.clinv.assert_called_with('path'),
             None,
         )
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.clinv.return_value.load_source_data_from_file.called)
+        self.assertTrue(self.clinv.return_value.load_user_data_from_file.called)
         self.assertEqual(
             self.clinv.return_value.print_search.assert_called_with('inst'),
             None,
@@ -49,15 +49,15 @@ class TestMain(unittest.TestCase):
         self.parser_args.subcommand = 'generate'
         main()
         self.assertTrue(self.clinv.return_value._fetch_aws_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
-        self.assertTrue(self.clinv.return_value.save_inventory.called)
+        self.assertTrue(self.clinv.return_value.load_user_data_from_file.called)
+        self.assertTrue(self.clinv.return_value.save.called)
 
     def test_unassigned_subcommand(self):
         self.parser_args.subcommand = 'unassigned'
         self.parser_args.resource_type = 'ec2'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.clinv.return_value.load_source_data_from_file.called)
+        self.assertTrue(self.clinv.return_value.load_user_data_from_file.called)
         self.assertEqual(
             self.clinv.return_value.unassigned.assert_called_with('ec2'),
             None,
@@ -67,8 +67,8 @@ class TestMain(unittest.TestCase):
         self.parser_args.subcommand = 'list'
         self.parser_args.resource_type = 'ec2'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.clinv.return_value.load_source_data_from_file.called)
+        self.assertTrue(self.clinv.return_value.load_user_data_from_file.called)
         self.assertEqual(
             self.clinv.return_value.list.assert_called_with('ec2'),
             None,
@@ -78,8 +78,8 @@ class TestMain(unittest.TestCase):
         self.parser_args.subcommand = 'export'
         self.parser_args.export_path = 'file.ods'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.clinv.return_value.load_source_data_from_file.called)
+        self.assertTrue(self.clinv.return_value.load_user_data_from_file.called)
         self.assertEqual(
             self.clinv.return_value.export.assert_called_with(
                 'file.ods',
@@ -91,8 +91,8 @@ class TestMain(unittest.TestCase):
         self.parser_args.subcommand = 'print'
         self.parser_args.resource_id = 'resource_id'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.clinv.return_value.load_source_data_from_file.called)
+        self.assertTrue(self.clinv.return_value.load_user_data_from_file.called)
         self.assertEqual(
             self.clinv.return_value.print.assert_called_with('resource_id'),
             None,

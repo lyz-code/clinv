@@ -1,4 +1,4 @@
-from clinv.clinv import Clinv
+from clinv.clinv import Clinv, Inventory
 from collections import OrderedDict
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
@@ -30,6 +30,120 @@ class ClinvBaseTestClass(object):
         self.logging_patch.stop()
         self.print_patch.stop()
         shutil.rmtree(self.tmp)
+
+
+class TestInventory(ClinvBaseTestClass, unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.source_data_path = os.path.join(
+            self.inventory_dir,
+            'source_data.yaml',
+        )
+        self.user_data_path = os.path.join(
+            self.inventory_dir,
+            'user_data.yaml',
+        )
+        self.source_plugins = []
+
+        self.inv = Inventory(self.inventory_dir, self.source_plugins)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_init_sets_inventory_dir(self):
+        self.assertEqual(self.inv.inventory_dir, self.inventory_dir)
+
+    def test_init_sets_source_plugins(self):
+        self.assertEqual(self.inv.source_plugins, self.source_plugins)
+
+    def test_init_sets_source_data_path(self):
+        self.assertEqual(self.inv.source_data_path, self.source_data_path)
+
+    def test_init_sets_user_data_path(self):
+        self.assertEqual(self.inv.user_data_path, self.user_data_path)
+
+    def test_yaml_saving(self):
+        save_file = os.path.join(self.tmp, 'yaml_save_test.yaml')
+        dictionary = {'a': 'b', 'c': 'd'}
+        self.inv._save_yaml(save_file, dictionary)
+        with open(save_file, 'r') as f:
+            self.assertEqual("a: b\nc: d\n", f.read())
+
+    def test_load_yaml(self):
+        with open(self.source_data_path, 'w') as f:
+            f.write('test: this is a test')
+        yaml_content = self.inv._load_yaml(self.source_data_path)
+        self.assertEqual(yaml_content['test'], 'this is a test')
+
+    @patch('clinv.clinv.os')
+    @patch('clinv.clinv.yaml')
+    def test_load_yaml_raises_error_if_wrong_format(self, yamlMock, osMock):
+        yamlMock.safe_load.side_effect = YAMLError('error')
+
+        with self.assertRaises(YAMLError):
+            self.inv._load_yaml(self.source_data_path)
+        self.assertEqual(
+            str(self.logging.getLogger.return_value.error.mock_calls),
+            str([call(YAMLError('error'))])
+        )
+
+    @patch('clinv.clinv.open')
+    def test_load_yaml_raises_error_if_file_not_found(self, openMock):
+        openMock.side_effect = FileNotFoundError()
+
+        with self.assertRaises(FileNotFoundError):
+            self.inv._load_yaml(self.source_data_path)
+        self.assertEqual(
+            str(self.logging.getLogger.return_value.error.mock_calls),
+            str([call(
+                'Error opening yaml file {}'.format(self.source_data_path)
+            )])
+        )
+
+    @patch('clinv.clinv.Inventory._load_yaml')
+    def test_loading_source_data_from_file(self, loadMock):
+        self.inv.load_source_data_from_file()
+        self.assertTrue(call(self.source_data_path) in loadMock.mock_calls)
+        self.assertEqual(self.inv.source_data, loadMock())
+
+    @patch('clinv.clinv.Inventory._load_yaml')
+    def test_data_loading_loads_user_data(self, loadMock):
+        self.inv.load_user_data_from_file()
+        self.assertTrue(call(self.user_data_path) in loadMock.mock_calls)
+        self.assertEqual(self.inv.user_data, loadMock())
+
+    @patch('clinv.clinv.Inventory._save_yaml')
+    def test_save_saves_source_data(self, saveMock):
+        self.inv.save()
+        self.assertTrue(
+            call(self.source_data_path, self.inv.source_data)
+            in saveMock.mock_calls
+        )
+
+    @patch('clinv.clinv.Inventory._save_yaml')
+    def test_save_saves_user_data(self, saveMock):
+        self.inv.save()
+        self.assertTrue(
+            call(self.user_data_path, self.inv.user_data)
+            in saveMock.mock_calls
+        )
+
+    @patch('clinv.clinv.Route53src')
+    def test_generate_source_data_loads_data_from_plugins(self, src_mock):
+        Sourcesrc = src_mock.return_value
+        Sourcesrc.id = 'source_id'
+        self.source_plugins = [Sourcesrc]
+        self.inv = Inventory(self.inventory_dir, self.source_plugins)
+
+        self.inv.generate_source_data()
+
+        self.assertEqual(
+            self.inv.source_data,
+            {
+                'source_id': Sourcesrc.generate_source_data.return_value
+            }
+        )
 
 
 class TestClinv(ClinvBaseTestClass, unittest.TestCase):
@@ -305,7 +419,7 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
             'route53': {
             },
         }
-        self.clinv.raw_data = {
+        self.clinv.user_data = {
             'ec2': {
                 'i-023desldk394995ss': {
                     'description': '',
@@ -330,14 +444,6 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
                 },
             },
         }
-        self.raw_inv_path = os.path.join(
-            self.inventory_dir,
-            'raw_inventory.yaml',
-        )
-        self.raw_data_path = os.path.join(
-            self.inventory_dir,
-            'raw_data.yaml',
-        )
         self.clinv.inv = {
             'ec2': {
                 'i-023desldk394995ss': self.ec2instance.return_value
@@ -453,7 +559,7 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
         self.assertTrue(route53Mock.called)
 
     def test_update_inventory_adds_ec2_instances(self):
-        self.clinv.raw_data = {}
+        self.clinv.user_data = {}
         self.ec2instance.return_value.id = 'i-023desldk394995ss'
         self.clinv._update_inventory()
 
@@ -478,7 +584,7 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
         )
 
     def test_update_inventory_adds_rds_instances(self):
-        self.clinv.raw_data = {}
+        self.clinv.user_data = {}
         self.rdsinstance.return_value.id = 'db-YDFL2'
         self.clinv._update_inventory()
 
@@ -506,7 +612,7 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
 
         self.assertEqual(
             self.project.assert_called_with(
-                self.clinv.raw_data['projects']
+                self.clinv.user_data['projects']
             ),
             None,
         )
@@ -520,7 +626,7 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
 
         self.assertEqual(
             self.service.assert_called_with(
-                self.clinv.raw_data['services']
+                self.clinv.user_data['services']
             ),
             None,
         )
@@ -534,7 +640,7 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
 
         self.assertEqual(
             self.information.assert_called_with(
-                self.clinv.raw_data['informations']
+                self.clinv.user_data['informations']
             ),
             None,
         )
@@ -542,78 +648,6 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
             self.clinv.inv['informations']['inf_01'],
             self.information.return_value
         )
-
-    def test_yaml_saving(self):
-        save_file = os.path.join(self.tmp, 'yaml_save_test.yaml')
-        dictionary = {'a': 'b', 'c': 'd'}
-        self.clinv._save_yaml(save_file, dictionary)
-        with open(save_file, 'r') as f:
-            self.assertEqual("a: b\nc: d\n", f.read())
-
-    def test_load_yaml(self):
-        with open(self.raw_inv_path, 'w') as f:
-            f.write('test: this is a test')
-        yaml_content = self.clinv._load_yaml(self.raw_inv_path)
-        self.assertEqual(yaml_content['test'], 'this is a test')
-
-    @patch('clinv.clinv.os')
-    @patch('clinv.clinv.yaml')
-    def test_load_yaml_raises_error_if_wrong_format(self, yamlMock, osMock):
-        yamlMock.safe_load.side_effect = YAMLError('error')
-
-        with self.assertRaises(YAMLError):
-            self.clinv._load_yaml(self.raw_inv_path)
-        self.assertEqual(
-            str(self.logging.getLogger.return_value.error.mock_calls),
-            str([call(YAMLError('error'))])
-        )
-
-    @patch('clinv.clinv.open')
-    def test_load_yaml_raises_error_if_file_not_found(self, openMock):
-        openMock.side_effect = FileNotFoundError()
-
-        with self.assertRaises(FileNotFoundError):
-            self.clinv._load_yaml(self.raw_inv_path)
-        self.assertEqual(
-            str(self.logging.getLogger.return_value.error.mock_calls),
-            str([call(
-                'Error opening yaml file {}'.format(self.raw_inv_path)
-            )])
-        )
-
-    @patch('clinv.clinv.Clinv._save_yaml')
-    def test_inventory_saving_saves_raw_inventory(self, saveMock):
-        self.clinv.save_inventory()
-        self.assertTrue(
-            call(self.raw_inv_path, self.clinv.raw_inv) in saveMock.mock_calls
-        )
-
-    @patch('clinv.clinv.Clinv._save_yaml')
-    def test_inventory_saving_saves_raw_data(self, saveMock):
-        self.clinv.save_inventory()
-        self.assertTrue(
-            call(self.raw_data_path, self.clinv.raw_data)
-            in saveMock.mock_calls
-        )
-
-    @patch('clinv.clinv.Clinv._load_yaml')
-    def test_inventory_loading_loads_raw_inventory(self, loadMock):
-        self.clinv.load_inventory()
-        self.assertTrue(call(self.raw_inv_path) in loadMock.mock_calls)
-        self.assertEqual(self.clinv.raw_inv, loadMock())
-
-    @patch('clinv.clinv.Clinv._load_yaml')
-    @patch('clinv.clinv.Clinv._update_inventory')
-    def test_data_loading_loads_raw_data(self, updateMock, loadMock):
-        self.clinv.load_data()
-        self.assertTrue(call(self.raw_data_path) in loadMock.mock_calls)
-        self.assertEqual(self.clinv.raw_data, loadMock())
-
-    @patch('clinv.clinv.Clinv._load_yaml')
-    @patch('clinv.clinv.Clinv._update_inventory')
-    def test_data_loading_updates_dictionary(self, updateMock, loadMock):
-        self.clinv.load_data()
-        self.assertTrue(updateMock.called)
 
     def test_search_ec2_returns_instances(self):
         self.ec2instance.return_value.search.return_value = True

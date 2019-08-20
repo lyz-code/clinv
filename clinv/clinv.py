@@ -19,7 +19,16 @@
 # Program to maintain an inventory of assets.
 
 # from clinv.sources.aws import Route53src
-from clinv.resources import EC2, RDS, Route53, Project, Service, Information
+
+"""
+Module to store the Clinv main classes
+
+Classes:
+    Inventory: Class to gather and manipulate the inventory data.
+"""
+
+from clinv.resources import EC2, RDS, Project, Service, Information
+from clinv.sources.aws import Route53src
 from collections import OrderedDict
 from operator import itemgetter
 from yaml import YAMLError
@@ -27,23 +36,153 @@ import boto3
 import logging
 import os
 import pyexcel
-import re
 import yaml
+
+
+class Inventory():
+    """
+    Class to gather and manipulate the inventory data.
+
+    Parameters:
+        inventory_dir (str): Path to the directory where the source_data.yml
+            and user_data.yml are located.
+        source_plugins (list): List of source plugins objects, for example:
+            [EC2src, RDSsrc, Route53src]
+
+    Public methods:
+        load_source_data_from_file: Load the source data from the
+            source_data.yaml file.
+        save: Saves source and user data into the yaml files.
+        generate_source_data: Build the source data dictionary from the
+            sources.
+
+    Internal methods:
+        _load_yaml: Load a variable from a yaml file.
+        _save_yaml: Save a variable to a yaml file.
+    """
+
+    def __init__(self, inventory_dir, source_plugins):
+        self.log = logging.getLogger('main')
+        self.inventory_dir = inventory_dir
+        self.source_plugins = source_plugins
+        self.source_data_path = os.path.join(
+            self.inventory_dir,
+            'source_data.yaml',
+        )
+        self.user_data_path = os.path.join(
+            self.inventory_dir,
+            'user_data.yaml',
+        )
+        self.user_data = {}
+        self.source_data = {}
+        self.inv = {}
+
+    def _load_yaml(self, yaml_path):
+        """
+        Load the content of a variable from a yaml file.
+
+        Parameters:
+            yaml_path (str): Path to the file to read.
+
+        Returns:
+            (str|dict|list|set|bool): Variable with the content of the file.
+        """
+
+        try:
+            with open(os.path.expanduser(yaml_path), 'r') as f:
+                try:
+                    return yaml.safe_load(f)
+                except YAMLError as e:
+                    self.log.error(e)
+                    raise
+        except FileNotFoundError as e:
+            self.log.error('Error opening yaml file {}'.format(yaml_path))
+            raise(e)
+
+    def _save_yaml(self, yaml_path, variable):
+        """
+        Save the content of a variable into a yaml file.
+
+        Parameters:
+            yaml_path (str): Path to the file to write.
+            variable (str|dict|list|set|bool): Variable to save to the file.
+
+        Returns:
+            Nothing.
+        """
+
+        with open(os.path.expanduser(yaml_path), 'w+') as f:
+            yaml.dump(variable, f, default_flow_style=False)
+
+    def load_source_data_from_file(self):
+        """
+        Load the source data from the source_data.yaml file into
+        self.source_data.
+
+        Parameters:
+            None
+
+        Returns:
+            Nothing.
+        """
+        self.source_data = self._load_yaml(self.source_data_path)
+
+    def load_user_data_from_file(self):
+        """
+        Load the user data from the user_data.yaml file into
+        self.user_data.
+
+        Parameters:
+            None
+
+        Returns:
+            Nothing.
+        """
+        self.user_data = self._load_yaml(self.user_data_path)
+        if self.user_data is None:
+            self.user_data = {
+                'ec2': {},
+                'projects': {},
+                'services': {},
+                'informations': {},
+            }
+
+    def save(self):
+        """
+        Saves source and user data into the yaml files.
+
+        Parameters:
+            None.
+
+        Returns:
+            Nothing.
+        """
+        self._save_yaml(self.source_data_path, self.source_data)
+        self._save_yaml(self.user_data_path, self.user_data)
+
+    def generate_source_data(self):
+        """
+        Build the source data dictionary from the sources. Generates the
+        self.source_data dictionary with the following structure:
+        {
+            'source_1_id': [source_1_resource, source_1_resource, ...]
+            'source_2_id': [source_2_resource, source_2_resource, ...]
+        }
+
+        Parameters:
+            None.
+
+        Returns:
+            Nothing.
+        """
+
+        for source in self.source_plugins:
+            self.source_data[source.id] = source.generate_source_data()
 
 
 class Clinv():
     def __init__(self, inventory_dir):
         self.log = logging.getLogger('main')
-        self.inventory_dir = inventory_dir
-        self.raw_inv_path = os.path.join(
-            self.inventory_dir,
-            'raw_inventory.yaml',
-        )
-        self.raw_data_path = os.path.join(
-            self.inventory_dir,
-            'raw_data.yaml',
-        )
-        self.raw_inv = {}
         self.inv = {}
 
     def _fetch_ec2_inventory(self):
@@ -291,35 +430,35 @@ class Clinv():
 
     def _update_ec2_inventory(self):
         """
-        Do aggregation of data to populate self.raw_data and self.inv
+        Do aggregation of data to populate self.user_data and self.inv
         attributes with EC2 resources.
 
-        self.raw_data is populated with the raw_data.yaml information or with
+        self.user_data is populated with the user_data.yaml information or with
         default values.
 
         self.inv is populated with EC2 resources.
         """
 
         try:
-            self.raw_data['ec2']
+            self.user_data['ec2']
         except KeyError:
-            self.raw_data['ec2'] = {}
+            self.user_data['ec2'] = {}
 
         for region in self.raw_inv['ec2'].keys():
             for resource in self.raw_inv['ec2'][region]:
                 for instance in resource['Instances']:
                     instance_id = instance['InstanceId']
                     try:
-                        self.raw_data['ec2'][instance_id]
+                        self.user_data['ec2'][instance_id]
                     except KeyError:
-                        self.raw_data['ec2'][instance_id] = {
+                        self.user_data['ec2'][instance_id] = {
                             'description': '',
                             'to_destroy': 'tbd',
                             'environment': 'tbd',
                             'region': region,
                         }
                     for key, value in \
-                            self.raw_data['ec2'][instance_id].items():
+                            self.user_data['ec2'][instance_id].items():
                         instance[key] = value
 
                     self.inv['ec2'][instance_id] = EC2(
@@ -330,34 +469,34 @@ class Clinv():
 
     def _update_rds_inventory(self):
         """
-        Do aggregation of data to populate self.raw_data and self.inv
+        Do aggregation of data to populate self.user_data and self.inv
         attributes with RDS resources.
 
-        self.raw_data is populated with the raw_data.yaml information or with
+        self.user_data is populated with the user_data.yaml information or with
         default values.
 
         self.inv is populated with RDS resources.
         """
 
         try:
-            self.raw_data['rds']
+            self.user_data['rds']
         except KeyError:
-            self.raw_data['rds'] = {}
+            self.user_data['rds'] = {}
 
         for region in self.raw_inv['rds'].keys():
             for resource in self.raw_inv['rds'][region]:
                 resource_id = resource['DbiResourceId']
                 try:
-                    self.raw_data['rds'][resource_id]
+                    self.user_data['rds'][resource_id]
                 except KeyError:
-                    self.raw_data['rds'][resource_id] = {
+                    self.user_data['rds'][resource_id] = {
                         'description': '',
                         'to_destroy': 'tbd',
                         'environment': 'tbd',
                         'region': region,
                     }
                 for key, value in \
-                        self.raw_data['rds'][resource_id].items():
+                        self.user_data['rds'][resource_id].items():
                     resource[key] = value
 
                 self.inv['rds'][resource_id] = RDS(
@@ -368,10 +507,10 @@ class Clinv():
 
     def _update_active_inventory(self, resource_type):
         """
-        Do aggregation of data to populate self.raw_data and self.inv
+        Do aggregation of data to populate self.user_data and self.inv
         attributes with resource_type resources.
 
-        self.raw_data is populated with the raw_data.yaml information or with
+        self.user_data is populated with the user_data.yaml information or with
         default values.
 
         self.inv is populated with resource_type resources.
@@ -382,11 +521,12 @@ class Clinv():
         """
 
         try:
-            self.raw_data[resource_type]
+            self.user_data[resource_type]
         except KeyError:
-            self.raw_data[resource_type] = {}
+            self.user_data[resource_type] = {}
 
-        for resource_id, resource_data in self.raw_data[resource_type].items():
+        for resource_id, resource_data in \
+                self.user_data[resource_type].items():
             if resource_type == 'projects':
                 resource = Project({resource_id: resource_data})
             elif resource_type == 'services':
@@ -410,43 +550,6 @@ class Clinv():
         self._update_active_inventory('projects')
         self._update_active_inventory('informations')
         self._update_active_inventory('services')
-
-    def _save_yaml(self, yaml_path, dictionary):
-        'Save variable to yaml'
-
-        with open(os.path.expanduser(yaml_path), 'w+') as f:
-            yaml.dump(dictionary, f, default_flow_style=False)
-
-    def save_inventory(self):
-        self._save_yaml(self.raw_inv_path, self.raw_inv)
-        self._save_yaml(self.raw_data_path, self.raw_data)
-
-    def _load_yaml(self, yaml_path):
-        'Load YAML to variable'
-        try:
-            with open(os.path.expanduser(yaml_path), 'r') as f:
-                try:
-                    return yaml.safe_load(f)
-                except YAMLError as e:
-                    self.log.error(e)
-                    raise
-        except FileNotFoundError as e:
-            self.log.error('Error opening yaml file {}'.format(yaml_path))
-            raise(e)
-
-    def load_inventory(self):
-        self.raw_inv = self._load_yaml(self.raw_inv_path)
-
-    def load_data(self):
-        self.raw_data = self._load_yaml(self.raw_data_path)
-        if self.raw_data is None:
-            self.raw_data = {
-                'ec2': {},
-                'projects': {},
-                'services': {},
-                'informations': {},
-            }
-        self._update_inventory()
 
     def _search_in_resources(self, resource_type, search_string):
         result = []
