@@ -168,6 +168,11 @@ ec2:
     environment: 'production'
 ```
 
+# Contributing
+
+If you want to contribute with the project, read [this file](docs/hacking.md).
+You can also see the roadmap of the project in the [todo](docs/todo.md).
+
 # Test
 
 To run the tests first install `tox`

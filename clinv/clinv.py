@@ -18,6 +18,7 @@
 
 # Program to maintain an inventory of assets.
 
+# from clinv.sources.aws import Route53src
 from clinv.resources import EC2, RDS, Route53, Project, Service, Information
 from collections import OrderedDict
 from operator import itemgetter
@@ -270,78 +271,6 @@ class Clinv():
                     except KeyError:
                         pass
 
-    def _fetch_route53_inventory(self):
-        """
-        Do aggregation of data to populate the raw_inv with the aws information
-        of the route53 resources with the following structure:
-
-        self.raw_inv['route53'] = {
-            'hosted_zones': [
-                {
-                    'Config': {
-                        'Comment': 'This is the description',
-                        'PrivateZone': False,
-                    },
-                    'Id': '/hostedzone/hosted_zone_id',
-                    'Name': 'hostedzone.org',
-                    'ResourceRecordSetCount': 1,
-                    'records': [
-                        {
-                            'Name': 'record1.clinv.org',
-                            'ResourceRecords': [
-                                {
-                                    'Value': '127.0.0.1'
-                                },
-                                {
-                                    'Value': 'localhost'
-                                },
-                            ],
-                            'TTL': 172800,
-                            'Type': 'CNAME'
-                        },
-                    ],
-                },
-            ],
-        }
-        """
-
-        self.log.info('Fetching Route53 inventory')
-        route53 = boto3.client('route53')
-
-        self.raw_inv['route53'] = {}
-
-        # Fetch the hosted zones
-        self.raw_inv['route53']['hosted_zones'] = \
-            route53.list_hosted_zones()['HostedZones']
-
-        prune_keys = [
-            'CallerReference',
-        ]
-
-        for resource in self.raw_inv['route53']['hosted_zones']:
-            for prune_key in prune_keys:
-                try:
-                    resource.pop(prune_key)
-                except KeyError:
-                    pass
-
-        # Fetch the records
-        for zone in self.raw_inv['route53']['hosted_zones']:
-            raw_records = route53.list_resource_record_sets(
-                HostedZoneId=zone['Id'],
-            )
-
-            zone['records'] = raw_records['ResourceRecordSets']
-
-            while raw_records['IsTruncated']:
-                raw_records = route53.list_resource_record_sets(
-                    HostedZoneId=zone['Id'],
-                    StartRecordName=raw_records['NextRecordName'],
-                    StartRecordType=raw_records['NextRecordType'],
-                )
-                for record in raw_records['ResourceRecordSets']:
-                    zone['records'].append(record)
-
     def _fetch_aws_inventory(self):
         """
         Do aggregation of data to populate the raw_inv with the following AWS
@@ -432,63 +361,6 @@ class Clinv():
                     resource[key] = value
 
                 self.inv['rds'][resource_id] = RDS(
-                    {
-                        resource_id: resource
-                    }
-                )
-
-    def _update_route53_inventory(self):
-        """
-        Do aggregation of data to populate self.raw_data and self.inv
-        attributes with Route53 resources.
-
-        self.raw_data is populated with the raw_data.yaml information or with
-        default values.
-
-        self.inv is populated with Route53 resources.
-        """
-
-        # Initialize objects
-        try:
-            self.raw_data['route53']
-        except KeyError:
-            self.raw_data['route53'] = {}
-
-        try:
-            self.inv['route53']
-        except KeyError:
-            self.inv['route53'] = {}
-
-        # Populate self.raw_data and self.inv
-        for zone in self.raw_inv['route53']['hosted_zones']:
-            for resource in zone['records']:
-                resource_id = '{}-{}-{}'.format(
-                    re.sub(r'/hostedzone/', '', zone['Id']),
-                    re.sub(r'\.$', '', resource['Name']),
-                    resource['Type'].lower(),
-                )
-
-                # Define the default raw_data of the resource
-                try:
-                    self.raw_data['route53'][resource_id]
-                except KeyError:
-                    self.raw_data['route53'][resource_id] = {
-                        'description': 'tbd',
-                        'to_destroy': 'tbd',
-                    }
-
-                # Load the raw_data into the raw_inv resource
-                for key, value in \
-                        self.raw_data['route53'][resource_id].items():
-                    resource[key] = value
-                resource['hosted_zone'] = {
-                    'id': zone['Id'],
-                    'name': zone['Name'],
-                    'private': zone['Config']['PrivateZone'],
-                }
-                resource['state'] = 'active'
-
-                self.inv['route53'][resource_id] = Route53(
                     {
                         resource_id: resource
                     }
