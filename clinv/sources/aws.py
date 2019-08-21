@@ -29,6 +29,7 @@ class Route53src():
     Class to gather and manipulate the AWS Route53 resources.
 
     Parameters:
+        source_data (dict): Route53src compatible source_data dictionary
         user_data (dict): Route53src compatible user_data dictionary
 
     Public methods:
@@ -36,10 +37,15 @@ class Route53src():
         generate_user_data: Return the user data dictionary.
         generate_inventory: Build the inventory dictionary with the source
             and user data.
+
+    Public attributes:
+        source_data (dict): Aggregated source data of the different sources.
+        user_data (dict): Aggregated user data of the different sources.
     """
 
-    def __init__(self, user_data={}):
+    def __init__(self, source_data={}, user_data={}):
         self.id = 'route53'
+        self.source_data = source_data
         self.user_data = user_data
         self.log = logging.getLogger('main')
 

@@ -19,7 +19,7 @@
 # Program to maintain an inventory of assets.
 
 from clinv.cli import load_logger, load_parser
-from clinv.clinv import Clinv
+from clinv.clinv import Clinv, Inventory
 
 
 def main():
@@ -28,6 +28,7 @@ def main():
     load_logger()
 
     clinv = Clinv(args.data_path)
+    inventory = Inventory(args.data_path)
     if args.subcommand not in [
         'export',
         'generate',
@@ -39,14 +40,9 @@ def main():
         return
 
     if args.subcommand == 'generate':
-        clinv._fetch_aws_inventory()
-        clinv.load_user_data_from_file()
-        clinv._update_inventory()
-        clinv.save()
+        inventory.generate()
     else:
-        clinv.load_source_data_from_file()
-        clinv.load_user_data_from_file()
-        clinv._update_inventory()
+        inventory.load()
         if args.subcommand == 'search':
             clinv.print_search(args.search_string)
         elif args.subcommand == 'unassigned':

@@ -118,16 +118,29 @@ class TestInventory(InventoryBaseTestClass, unittest.TestCase):
         )
 
     @patch('clinv.clinv.Inventory._load_yaml')
-    def test_loading_source_data_from_file(self, loadMock):
-        self.inv.load_source_data_from_file()
+    def test_load_loads_source_data(self, loadMock):
+        self.inv.load()
         self.assertTrue(call(self.source_data_path) in loadMock.mock_calls)
         self.assertEqual(self.inv.source_data, loadMock())
 
     @patch('clinv.clinv.Inventory._load_yaml')
-    def test_data_loading_loads_user_data(self, loadMock):
-        self.inv.load_user_data_from_file()
+    def test_load_loads_user_data(self, loadMock):
+        self.inv.load()
         self.assertTrue(call(self.user_data_path) in loadMock.mock_calls)
         self.assertEqual(self.inv.user_data, loadMock())
+
+    @patch('clinv.clinv.Inventory._load_yaml')
+    @patch('clinv.clinv.Inventory._load_plugins')
+    @patch('clinv.clinv.Inventory._generate_inventory_objects')
+    def test_load_loads_plugins(self, invMock, loadMock, yamlMock):
+        self.inv.load()
+        self.assertTrue(loadMock.called)
+
+    @patch('clinv.clinv.Inventory._load_yaml')
+    @patch('clinv.clinv.Inventory._generate_inventory_objects')
+    def test_load_generates_inventory_objects(self, invMock, yamlMock):
+        self.inv.load()
+        self.assertTrue(invMock.called)
 
     @patch('clinv.clinv.Inventory._save_yaml')
     def test_save_saves_source_data(self, saveMock):
@@ -155,10 +168,11 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
         super().setUp()
         self.source_patch = patch('clinv.clinv.Route53src', autospect=True)
         self.source = self.source_patch.start()
-        self.source.id = 'source_id'
+        self.source.return_value.id = 'source_id'
         self.source_plugins = [self.source]
 
         self.inv = Inventory(self.inventory_dir, self.source_plugins)
+        self.inv._load_plugins()
 
     def tearDown(self):
         super().tearDown()
@@ -196,14 +210,55 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
         )
 
     def test_generate_source_data_loads_data_from_plugins(self):
-        self.inv.generate_source_data()
+        self.inv._generate_source_data()
 
         self.assertEqual(
             self.inv.source_data,
             {
-                'source_id': self.source.generate_source_data.return_value
+                'source_id':
+                    self.source.return_value.generate_source_data.return_value
             }
         )
+
+    def test_generate_user_data_loads_data_from_plugins(self):
+        self.inv._generate_user_data()
+
+        self.assertEqual(
+            self.inv.user_data,
+            {
+                'source_id':
+                    self.source.return_value.generate_user_data.return_value
+            }
+        )
+
+    def test_generate_inventory_objects_loads_data_from_plugins(self):
+        self.inv._generate_inventory_objects()
+
+        self.assertEqual(
+            self.inv.inv,
+            {
+                'source_id':
+                    self.source.return_value.generate_inventory.return_value
+            }
+        )
+
+    @patch('clinv.clinv.Inventory._generate_inventory_objects')
+    @patch('clinv.clinv.Inventory._generate_user_data')
+    @patch('clinv.clinv.Inventory._generate_source_data')
+    @patch('clinv.clinv.Inventory.save')
+    def test_generate_loads_data_from_plugins(
+        self,
+        saveMock,
+        sourceMock,
+        userMock,
+        inventoryMock,
+    ):
+        self.inv.generate()
+
+        self.assertTrue(saveMock.called)
+        self.assertTrue(sourceMock.called)
+        self.assertTrue(userMock.called)
+        self.assertTrue(inventoryMock.called)
 
 
 class TestClinv(ClinvBaseTestClass, unittest.TestCase):

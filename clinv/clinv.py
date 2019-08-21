@@ -54,16 +54,29 @@ class Inventory():
             [EC2src, RDSsrc, Route53src]
 
     Public methods:
-        load_source_data_from_file: Load the source data from the
-            source_data.yaml file.
+        generate: Build the inventory from source and user data.
+        load: Load the inventory from the yaml files.
         save: Saves source and user data into the yaml files.
-        generate_source_data: Build the source data dictionary from the
-            sources.
 
     Internal methods:
-        _load_yaml: Load a variable from a yaml file.
-        _save_yaml: Save a variable to a yaml file.
         _load_plugins: Initializes the source plugins.
+        _load_source_data_from_file: Load the source data from the
+            source_data.yaml file.
+        _load_user_data_from_file: Load the user data from the
+            user_data.yaml file.
+        _load_yaml: Load a variable from a yaml file.
+        _generate_inventory_objects: Build the inventory dictionary from the
+            sources and user data.
+        _generate_source_data: Build the source data dictionary from the
+            sources.
+        _generate_user_data: Build the user data dictionary from the
+            sources.
+        _save_yaml: Save a variable to a yaml file.
+
+    Public attributes:
+        source_data (dict): Aggregated source data of the different sources.
+        user_data (dict): Aggregated user data of the different sources.
+        sources (dict): Aggregated user data of the different sources.
     """
 
     def __init__(self, inventory_dir, source_plugins=active_source_plugins):
@@ -81,6 +94,66 @@ class Inventory():
         self.user_data = {}
         self.source_data = {}
         self.inv = {}
+
+    def load(self):
+        """
+        Loads the inventory from the saved data.
+
+        Loads the source data from the source_data.yaml file into
+        self.source_data.
+
+        Loads the user data from the user_data.yaml file into
+        self.user_data.
+
+        Loads the source plugins into self.sources
+
+        Loads the resource objects into self.inv
+
+        Parameters:
+            None.
+
+        Returns:
+            Nothing.
+        """
+
+        self.source_data = self._load_yaml(self.source_data_path)
+        self.user_data = self._load_yaml(self.user_data_path)
+        self._load_plugins()
+        self._generate_inventory_objects()
+
+    def _load_plugins(self):
+        """
+        Initializes the source plugins and saves them in the self._sources
+        list with the following structure:
+        [
+            source_1,
+            source_2,
+        ]
+
+        Parameters:
+            None.
+
+        Returns:
+            Nothing.
+        """
+
+        self.sources = []
+
+        for source in self._source_plugins:
+            try:
+                user_data = self.user_data[source().id]
+            except KeyError:
+                user_data = {}
+            try:
+                source_data = self.source_data[source().id]
+            except KeyError:
+                source_data = {}
+            self.sources.append(
+                source(
+                    source_data=source_data,
+                    user_data=user_data,
+                )
+            )
 
     def _load_yaml(self, yaml_path):
         """
@@ -104,53 +177,119 @@ class Inventory():
             self.log.error('Error opening yaml file {}'.format(yaml_path))
             raise(e)
 
-    def _save_yaml(self, yaml_path, variable):
+    def generate(self):
         """
-        Save the content of a variable into a yaml file.
+
+        And saves the inventory to disk.
 
         Parameters:
-            yaml_path (str): Path to the file to write.
-            variable (str|dict|list|set|bool): Variable to save to the file.
+            None.
 
         Returns:
             Nothing.
         """
 
-        with open(os.path.expanduser(yaml_path), 'w+') as f:
-            yaml.dump(variable, f, default_flow_style=False)
+        self._load_plugins()
+        self._generate_source_data()
+        self._generate_user_data()
+        self._generate_inventory_objects()
+        self.save()
 
-    def load_source_data_from_file(self):
+    def _generate_source_data(self):
         """
-        Load the source data from the source_data.yaml file into
-        self.source_data.
+        Build the source data dictionary from the sources. Generates the
+        self.source_data dictionary with the following structure:
+        {
+            'source_1_id': [
+                source_1_resource_1_source_data_dict,
+                source_1_resource_2_source_data_dict,
+                ...
+            ]
+            'source_2_id': [
+                source_2_resource_1_source_data_dict,
+                source_2_resource_2_source_data_dict,
+                ...
+            ]
+        }
+
+        Needs the self.sources data, so you'll need to call first
+        self._load_plugins().
 
         Parameters:
-            None
+            None.
 
         Returns:
             Nothing.
         """
-        self.source_data = self._load_yaml(self.source_data_path)
 
-    def load_user_data_from_file(self):
+        for source in self.sources:
+            self.source_data[source.id] = source.generate_source_data()
+
+    def _generate_user_data(self):
         """
-        Load the user data from the user_data.yaml file into
-        self.user_data.
+        Build the user data dictionary from the sources. Generates the
+        self.user_data dictionary with the following structure:
+        {
+            'source_1_id': {
+                source_1_resource_1_id: source_1_resource_1_user_data_dict,
+                source_1_resource_2_id: source_1_resource_2_user_data_dict,
+                ...
+            ]
+            'source_2_id': [
+                source_2_resource_1_id: source_1_resource_1_user_data_dict,
+                source_2_resource_2_id: source_1_resource_2_user_data_dict,
+                ...
+            ]
+        }
+
+        As it needs the information of the sources, it needs to be called
+        after _generate_source_data.
+
+        Needs the self.sources data, so you'll need to call first
+        self._load_plugins().
 
         Parameters:
-            None
+            None.
 
         Returns:
             Nothing.
         """
-        self.user_data = self._load_yaml(self.user_data_path)
-        if self.user_data is None:
-            self.user_data = {
-                'ec2': {},
-                'projects': {},
-                'services': {},
-                'informations': {},
-            }
+
+        for source in self.sources:
+            self.user_data[source.id] = source.generate_user_data()
+
+    def _generate_inventory_objects(self):
+        """
+        Build the inventory dictionary from the sources. Generates the
+        self.inv dictionary with the following structure:
+        {
+            'source_1_id': {
+                source_1_resource_1_id: source_1_resource_1_object,
+                source_1_resource_2_id: source_1_resource_2_object,
+                ...
+            ]
+            'source_2_id': [
+                source_2_resource_1_id: source_1_resource_1_object,
+                source_2_resource_2_id: source_1_resource_2_object,
+                ...
+            ]
+        }
+
+        As it needs the information of the sources and user, it needs to be
+        called after _generate_source_data and _generate_user_data.
+
+        Needs the self.sources data, so you'll need to call first
+        self._load_plugins().
+
+        Parameters:
+            None.
+
+        Returns:
+            Nothing.
+        """
+
+        for source in self.sources:
+            self.inv[source.id] = source.generate_inventory()
 
     def save(self):
         """
@@ -165,49 +304,20 @@ class Inventory():
         self._save_yaml(self.source_data_path, self.source_data)
         self._save_yaml(self.user_data_path, self.user_data)
 
-    def _load_plugins(self):
+    def _save_yaml(self, yaml_path, variable):
         """
-        Initializes the source plugins and saves them in the self._sources
-        list with the following structure:
-        [
-            source_1,
-            source_2,
-        ]
+        Save the content of a variable into a yaml file.
 
         Parameters:
-            None.
+            yaml_path (str): Path to the file to write.
+            variable (str|dict|list|set|bool): Variable to save to the file.
 
         Returns:
             Nothing.
         """
 
-        self.sources = []
-
-        for source in self._source_plugins:
-            try:
-                user_data = self.user_data[source.id]
-            except KeyError:
-                user_data = {}
-            self.sources.append(source(user_data))
-
-    def generate_source_data(self):
-        """
-        Build the source data dictionary from the sources. Generates the
-        self.source_data dictionary with the following structure:
-        {
-            'source_1_id': [source_1_resource, source_1_resource, ...]
-            'source_2_id': [source_2_resource, source_2_resource, ...]
-        }
-
-        Parameters:
-            None.
-
-        Returns:
-            Nothing.
-        """
-
-        for source in self._source_plugins:
-            self.source_data[source.id] = source.generate_source_data()
+        with open(os.path.expanduser(yaml_path), 'w+') as f:
+            yaml.dump(variable, f, default_flow_style=False)
 
 
 class Clinv():
