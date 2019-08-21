@@ -32,7 +32,11 @@ class ClinvBaseTestClass(object):
         shutil.rmtree(self.tmp)
 
 
-class TestInventory(ClinvBaseTestClass, unittest.TestCase):
+class InventoryBaseTestClass(ClinvBaseTestClass):
+    """
+    Base class to setup the setUp and tearDown methods for the Inventory test
+    cases.
+    """
 
     def setUp(self):
         super().setUp()
@@ -44,6 +48,18 @@ class TestInventory(ClinvBaseTestClass, unittest.TestCase):
             self.inventory_dir,
             'user_data.yaml',
         )
+
+    def tearDown(self):
+        super().tearDown()
+
+
+class TestInventory(InventoryBaseTestClass, unittest.TestCase):
+    """
+    Test class to assess that the Inventory class works as expected
+    """
+
+    def setUp(self):
+        super().setUp()
         self.source_plugins = []
 
         self.inv = Inventory(self.inventory_dir, self.source_plugins)
@@ -55,7 +71,7 @@ class TestInventory(ClinvBaseTestClass, unittest.TestCase):
         self.assertEqual(self.inv.inventory_dir, self.inventory_dir)
 
     def test_init_sets_source_plugins(self):
-        self.assertEqual(self.inv.source_plugins, self.source_plugins)
+        self.assertEqual(self.inv._source_plugins, self.source_plugins)
 
     def test_init_sets_source_data_path(self):
         self.assertEqual(self.inv.source_data_path, self.source_data_path)
@@ -129,19 +145,63 @@ class TestInventory(ClinvBaseTestClass, unittest.TestCase):
             in saveMock.mock_calls
         )
 
-    @patch('clinv.clinv.Route53src')
-    def test_generate_source_data_loads_data_from_plugins(self, src_mock):
-        Sourcesrc = src_mock.return_value
-        Sourcesrc.id = 'source_id'
-        self.source_plugins = [Sourcesrc]
+
+class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
+    """
+    Test class to assess that the Inventory plugins methods work as expected
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.source_patch = patch('clinv.clinv.Route53src', autospect=True)
+        self.source = self.source_patch.start()
+        self.source.id = 'source_id'
+        self.source_plugins = [self.source]
+
         self.inv = Inventory(self.inventory_dir, self.source_plugins)
 
+    def tearDown(self):
+        super().tearDown()
+
+    def test_load_plugins_creates_expected_list_if_user_data(self):
+        self.inv.user_data = {'source_id': {'user': 'data'}}
+
+        self.inv._load_plugins()
+
+        self.assertEqual(
+            self.source.assert_called_with({'user': 'data'}),
+            None
+        )
+        self.assertEqual(
+            self.inv.sources,
+            [
+                self.source.return_value
+            ]
+        )
+
+    def test_load_plugins_creates_expected_list_if_no_user_data(self):
+        self.inv.user_data = {}
+
+        self.inv._load_plugins()
+
+        self.assertEqual(
+            self.source.assert_called_with({}),
+            None
+        )
+        self.assertEqual(
+            self.inv.sources,
+            [
+                self.source.return_value
+            ]
+        )
+
+    def test_generate_source_data_loads_data_from_plugins(self):
         self.inv.generate_source_data()
 
         self.assertEqual(
             self.inv.source_data,
             {
-                'source_id': Sourcesrc.generate_source_data.return_value
+                'source_id': self.source.generate_source_data.return_value
             }
         )
 

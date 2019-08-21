@@ -38,6 +38,10 @@ import os
 import pyexcel
 import yaml
 
+active_source_plugins = [
+    Route53src,
+]
+
 
 class Inventory():
     """
@@ -59,12 +63,13 @@ class Inventory():
     Internal methods:
         _load_yaml: Load a variable from a yaml file.
         _save_yaml: Save a variable to a yaml file.
+        _load_plugins: Initializes the source plugins.
     """
 
-    def __init__(self, inventory_dir, source_plugins):
+    def __init__(self, inventory_dir, source_plugins=active_source_plugins):
         self.log = logging.getLogger('main')
         self.inventory_dir = inventory_dir
-        self.source_plugins = source_plugins
+        self._source_plugins = source_plugins
         self.source_data_path = os.path.join(
             self.inventory_dir,
             'source_data.yaml',
@@ -160,6 +165,31 @@ class Inventory():
         self._save_yaml(self.source_data_path, self.source_data)
         self._save_yaml(self.user_data_path, self.user_data)
 
+    def _load_plugins(self):
+        """
+        Initializes the source plugins and saves them in the self._sources
+        list with the following structure:
+        [
+            source_1,
+            source_2,
+        ]
+
+        Parameters:
+            None.
+
+        Returns:
+            Nothing.
+        """
+
+        self.sources = []
+
+        for source in self._source_plugins:
+            try:
+                user_data = self.user_data[source.id]
+            except KeyError:
+                user_data = {}
+            self.sources.append(source(user_data))
+
     def generate_source_data(self):
         """
         Build the source data dictionary from the sources. Generates the
@@ -176,7 +206,7 @@ class Inventory():
             Nothing.
         """
 
-        for source in self.source_plugins:
+        for source in self._source_plugins:
             self.source_data[source.id] = source.generate_source_data()
 
 
