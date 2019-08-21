@@ -13,7 +13,192 @@ them.
 For the purpose of this section, we'll assume that the new source we want to add
 to our inventory is called `newsource`.
 
-### Fetch the information
+If you want to see similar sources go to `clinv/sources/`.
 
-On `clinv/clinv.py` add the `fetch_newsource_inventory` method to fetch the
-information from your source
+### Desired Interface
+
+To ensure the expected behavior of the sources, the class must follow a common
+interface. Don't worry if you don't understand yet what does each element mean,
+you'll discover it as you read the hole doc.
+
+Must have the following attributes:
+
+* id (str): ID of the resource.
+* source_data (dict): Aggregated source supplied data.
+* user_data (dict): Aggregated user supplied data.
+
+And the following public methods:
+
+* generate_source_data: Generates the source_data attribute and returns it.
+* generate_user_data: Generates the user_data attribute and returns it.
+* generate_inventory: Generates the inventory dictionary with the source
+    resource.
+
+### Create the source test class
+
+On `test/sources/` create your source class from this template. Substitute
+`{{ class_name }}` with your value.
+
+```python
+from clinv.sources import {{ class_name }}src
+from tests.sources import ClinvSourceBaseTestClass
+import unittest
+
+class Test{{ class_name }}Source(ClinvSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the {{ class_name }} implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.class_obj = {{ class_name }}src
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.class_obj(source_data, user_data)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        expected_source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            expected_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            expected_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        expected_user_data = {}
+
+        generated_user_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            expected_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            expected_user_data,
+        )
+```
+
+Import `{{ class_name}}src` on this file.
+
+### Create the source class
+
+On `clinv/sources/` create your source class from this template. Substitute
+`{{ class_name }}` and `{{ class_id }}` with your values.
+
+```python
+from clinv.sources import ClinvSourcesrc
+
+
+class {{ class_name }}src(ClinvSourcesrc):
+    """
+    Class to gather and manipulate the {{ class_name }} resources.
+
+    Parameters:
+        source_data (dict): {{ class_name }}src compatible source_data
+        dictionary.
+        user_data (dict): {{ class_name }}src compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = '{{ class_id }}'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching {{ class_name }} inventory')
+        self.source_data = {}
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        self.user_data = {}
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with {{ class_name }} resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: {{ class_name }} inventory with user and source data
+        """
+
+        inventory = {}
+
+        return inventory
+```
+
+#### Create the generate_source_data method
+
+This method is meant to extract the information from your source, for example
+AWS and save it into the `self.source_data`, as well as return it.
+
+
+#### Create the generate_user_data method
+
+This method is meant to extract the information from the user, so it takes the
+resources saved on `self.source_data` and generates the basic template for each
+one and saves them into `self.user_data`.
+
+#### Create the generate_inventory method
+
+This method is meant to initiate the resource object of the source we're adding.
+This object doesn't exist yet, but we'll do that later.
+
+After initializing all the objects they are returned.
+
+#### Add your source to the loaded sources
+
+Import it in `clinv/clinv.py` and add it into the `active_source_plugins`
+variable
+

@@ -1,13 +1,14 @@
 from clinv.clinv import Clinv, Inventory
 from collections import OrderedDict
-from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
 from yaml import YAMLError
-import datetime
 import os
 import shutil
 import tempfile
 import unittest
+
+import datetime
+from dateutil.tz import tzutc
 
 
 class ClinvBaseTestClass(object):
@@ -430,99 +431,6 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
                 }
             ]
         }
-        self.boto_rds_describe_instances = {
-            'DBInstances': [
-                {
-                    'AllocatedStorage': 100,
-                    'AssociatedRoles': [],
-                    'AutoMinorVersionUpgrade': True,
-                    'AvailabilityZone': 'us-east-1a',
-                    'BackupRetentionPeriod': 7,
-                    'CACertificateIdentifier': 'rds-ca-2015',
-                    'CopyTagsToSnapshot': True,
-                    'DBInstanceArn': 'arn:aws:rds:us-east-1:224119285:db:db',
-                    'DBInstanceClass': 'db.t2.micro',
-                    'DBInstanceIdentifier': 'rds-name',
-                    'DBInstanceStatus': 'available',
-                    'DBParameterGroups': [
-                        {
-                            'DBParameterGroupName': 'default.postgres11',
-                            'ParameterApplyStatus': 'in-sync'
-                        }
-                    ],
-                    'DBSecurityGroups': [],
-                    'DBSubnetGroup': {
-                        'DBSubnetGroupDescription': 'Created from the RDS '
-                        'Management Console',
-                        'DBSubnetGroupName': 'default-vpc-v2dcp2jh',
-                        'SubnetGroupStatus': 'Complete',
-                        'Subnets': [
-                            {
-                                'SubnetAvailabilityZone': {
-                                    'Name': 'us-east-1a'
-                                },
-                                'SubnetIdentifier': 'subnet-42sfl222',
-                                'SubnetStatus': 'Active'
-                            },
-                            {
-                                'SubnetAvailabilityZone': {
-                                    'Name': 'us-east-1e'
-                                },
-                                'SubnetIdentifier': 'subnet-42sfl221',
-                                'SubnetStatus': 'Active'
-                            },
-                        ],
-                        'VpcId': 'vpc-v2dcp2jh'},
-                    'DbInstancePort': 0,
-                    'DbiResourceId': 'db-YDFL2',
-                    'DeletionProtection': True,
-                    'DomainMemberships': [],
-                    'Endpoint': {
-                        'Address': 'rds-name.us-east-1.rds.amazonaws.com',
-                        'HostedZoneId': '202FGHSL2JKCFW',
-                        'Port': 5521
-                    },
-                    'Engine': 'mariadb',
-                    'EngineVersion': '1.2',
-                    'EnhancedMonitoringResourceArn': 'logs-arn',
-                    'IAMDatabaseAuthenticationEnabled': False,
-                    'InstanceCreateTime': datetime.datetime(
-                        2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
-                    ),
-                    'Iops': 1000,
-                    'LatestRestorableTime': datetime.datetime(
-                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                    ),
-                    'LicenseModel': 'mariadb-license',
-                    'MasterUsername': 'root',
-                    'MonitoringInterval': 60,
-                    'MonitoringRoleArn': 'monitoring-arn',
-                    'MultiAZ': True,
-                    'OptionGroupMemberships': [
-                        {
-                            'OptionGroupName': 'default:mariadb-1',
-                            'Status': 'in-sync'
-                        }
-                    ],
-                    'PendingModifiedValues': {},
-                    'PerformanceInsightsEnabled': True,
-                    'PerformanceInsightsKMSKeyId': 'performance-arn',
-                    'PerformanceInsightsRetentionPeriod': 7,
-                    'PreferredBackupWindow': '03:00-04:00',
-                    'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
-                    'PubliclyAccessible': False,
-                    'ReadReplicaDBInstanceIdentifiers': [],
-                    'StorageEncrypted': True,
-                    'StorageType': 'io1',
-                    'VpcSecurityGroups': [
-                        {
-                            'Status': 'active',
-                            'VpcSecurityGroupId': 'sg-f23le20g'
-                        },
-                    ],
-                },
-            ],
-        }
 
         self.clinv.raw_inv = {
             'ec2': {
@@ -656,112 +564,6 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
         self.assertEqual(
             self.clinv.raw_inv['ec2'],
             expected_ec2_aws_resources,
-        )
-
-    @patch('clinv.clinv.Clinv._fetch_route53_inventory')
-    @patch('clinv.clinv.Clinv._fetch_rds_inventory')
-    @patch('clinv.clinv.Clinv._fetch_ec2_inventory')
-    def test_fetch_aws_inventory_calls_expected_resource_updates(
-        self,
-        ec2Mock,
-        rdsMock,
-        route53Mock,
-    ):
-        self.clinv._fetch_aws_inventory()
-
-        self.assertTrue(ec2Mock.called)
-        self.assertTrue(rdsMock.called)
-        self.assertTrue(route53Mock.called)
-
-    def test_update_inventory_adds_ec2_instances(self):
-        self.clinv.user_data = {}
-        self.ec2instance.return_value.id = 'i-023desldk394995ss'
-        self.clinv._update_inventory()
-
-        desired_input = \
-            self.clinv.raw_inv['ec2']['us-east-1'][0]['Instances'][0]
-        desired_input['description'] = ''
-        desired_input['to_destroy'] = 'tbd'
-        desired_input['environment'] = 'tbd'
-        desired_input['region'] = 'us-east-1'
-        self.assertEqual(
-            self.ec2instance.assert_called_with(
-                {
-                    'i-023desldk394995ss': self.clinv.raw_inv['ec2']
-                    ['us-east-1'][0]['Instances'][0]
-                },
-            ),
-            None,
-        )
-        self.assertEqual(
-            self.clinv.inv['ec2']['i-023desldk394995ss'],
-            self.ec2instance()
-        )
-
-    def test_update_inventory_adds_rds_instances(self):
-        self.clinv.user_data = {}
-        self.rdsinstance.return_value.id = 'db-YDFL2'
-        self.clinv._update_inventory()
-
-        desired_input = \
-            self.clinv.raw_inv['rds']['us-east-1'][0]
-        desired_input['description'] = ''
-        desired_input['to_destroy'] = 'tbd'
-        desired_input['environment'] = 'tbd'
-        desired_input['region'] = 'us-east-1'
-        self.assertEqual(
-            self.rdsinstance.assert_called_with(
-                {
-                    'db-YDFL2': desired_input
-                },
-            ),
-            None,
-        )
-        self.assertEqual(
-            self.clinv.inv['rds']['db-YDFL2'],
-            self.rdsinstance()
-        )
-
-    def test_update_inventory_adds_project_instances(self):
-        self.clinv._update_inventory()
-
-        self.assertEqual(
-            self.project.assert_called_with(
-                self.clinv.user_data['projects']
-            ),
-            None,
-        )
-        self.assertEqual(
-            self.clinv.inv['projects']['pro_01'],
-            self.project.return_value
-        )
-
-    def test_update_inventory_adds_service_instances(self):
-        self.clinv._update_inventory()
-
-        self.assertEqual(
-            self.service.assert_called_with(
-                self.clinv.user_data['services']
-            ),
-            None,
-        )
-        self.assertEqual(
-            self.clinv.inv['services']['ser_01'],
-            self.service.return_value
-        )
-
-    def test_update_inventory_adds_information_instances(self):
-        self.clinv._update_inventory()
-
-        self.assertEqual(
-            self.information.assert_called_with(
-                self.clinv.user_data['informations']
-            ),
-            None,
-        )
-        self.assertEqual(
-            self.clinv.inv['informations']['inf_01'],
-            self.information.return_value
         )
 
     def test_search_ec2_returns_instances(self):
@@ -1310,113 +1112,9 @@ class TestClinv(ClinvBaseTestClass, unittest.TestCase):
             None,
         )
 
-    def test_get_regions(self):
-        self.boto.client.return_value.describe_regions.return_value = {
-            'Regions': [
-                {
-                    'RegionName': 'us-east-1'
-                },
-                {
-                    'RegionName': 'eu-west-1'
-                },
-            ]
-        }
-        self.assertEqual(self.clinv.regions, ['us-east-1', 'eu-west-1'])
-
-    @patch('clinv.clinv.Clinv.regions', new_callable=PropertyMock)
-    def test_fetch_rds_inventory_populated_by_rds_resources(self, regionsMock):
-        regionsMock.return_value = ['us-east-1']
-        self.clinv.raw_inv = {'rds': {}}
-
-        expected_rds_aws_resources = {
-            'us-east-1': [
-                {
-                    'AllocatedStorage': 100,
-                    'AssociatedRoles': [],
-                    'AutoMinorVersionUpgrade': True,
-                    'AvailabilityZone': 'us-east-1a',
-                    'BackupRetentionPeriod': 7,
-                    'CACertificateIdentifier': 'rds-ca-2015',
-                    'DBInstanceArn': 'arn:aws:rds:us-east-1:224119285:db:db',
-                    'DBInstanceClass': 'db.t2.micro',
-                    'DBInstanceIdentifier': 'rds-name',
-                    'DBInstanceStatus': 'available',
-                    'DBSecurityGroups': [],
-                    'DBSubnetGroup': {
-                        'DBSubnetGroupDescription': 'Created from the RDS '
-                        'Management Console',
-                        'DBSubnetGroupName': 'default-vpc-v2dcp2jh',
-                        'SubnetGroupStatus': 'Complete',
-                        'Subnets': [
-                            {
-                                'SubnetAvailabilityZone': {
-                                    'Name': 'us-east-1a'
-                                },
-                                'SubnetIdentifier': 'subnet-42sfl222',
-                                'SubnetStatus': 'Active'
-                            },
-                            {
-                                'SubnetAvailabilityZone': {
-                                    'Name': 'us-east-1e'
-                                },
-                                'SubnetIdentifier': 'subnet-42sfl221',
-                                'SubnetStatus': 'Active'
-                            },
-                        ],
-                        'VpcId': 'vpc-v2dcp2jh'},
-                    'DbiResourceId': 'db-YDFL2',
-                    'DeletionProtection': True,
-                    'Endpoint': {
-                        'Address': 'rds-name.us-east-1.rds.amazonaws.com',
-                        'HostedZoneId': '202FGHSL2JKCFW',
-                        'Port': 5521
-                    },
-                    'Engine': 'mariadb',
-                    'EngineVersion': '1.2',
-                    'InstanceCreateTime': datetime.datetime(
-                        2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
-                    ),
-                    'Iops': 1000,
-                    'LatestRestorableTime': datetime.datetime(
-                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                    ),
-                    'MasterUsername': 'root',
-                    'MultiAZ': True,
-                    'PreferredBackupWindow': '03:00-04:00',
-                    'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
-                    'PubliclyAccessible': False,
-                    'StorageEncrypted': True,
-                },
-            ],
-        }
-        self.boto.client.return_value.describe_db_instances.return_value = \
-            self.boto_rds_describe_instances
-
-        self.clinv._fetch_rds_inventory()
-        self.assertEqual(
-            self.clinv.raw_inv['rds'],
-            expected_rds_aws_resources,
-        )
-
     def test_print_method(self):
         self.clinv.print('i-023desldk394995ss')
         self.assertTrue(self.ec2instance.return_value.print.called)
-
-    @unittest.skip('Not yet')
-    @patch('clinv.clinv.Clinv._update_rds_inventory')
-    @patch('clinv.clinv.Clinv._update_ec2_inventory')
-    @patch('clinv.clinv.Clinv._update_active_inventory')
-    @patch('clinv.clinv.Clinv._update_route53_inventory')
-    def test_update_inventory_calls_update_route53(
-        self,
-        route53Mock,
-        activeMock,
-        ec2Mock,
-        rdsMock,
-    ):
-        self.src._update_inventory()
-
-        self.assertTrue(route53Mock.called)
 
 
 class TestRoute53Reports(ClinvBaseTestClass, unittest.TestCase):
