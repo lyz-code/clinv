@@ -27,19 +27,18 @@ Classes:
     Inventory: Class to gather and manipulate the inventory data.
 """
 
-from clinv.resources import EC2
-from clinv.sources.aws import RDSsrc, Route53src
+from clinv.sources.aws import EC2src, RDSsrc, Route53src
 from clinv.sources.risk_management import RiskManagementsrc
 from collections import OrderedDict
 from operator import itemgetter
 from yaml import YAMLError
-import boto3
 import logging
 import os
 import pyexcel
 import yaml
 
 active_source_plugins = [
+    EC2src,
     RDSsrc,
     RiskManagementsrc,
     Route53src,
@@ -327,166 +326,6 @@ class Clinv():
     def __init__(self, inventory_dir):
         self.log = logging.getLogger('main')
         self.inv = {}
-
-    def _fetch_ec2_inventory(self):
-        """
-        Do aggregation of data to populate the source_data with the aws
-        information of the EC2 resources with the following structure:
-
-        self.source_data['ec2'] = {
-            'us-east-1': [
-                {
-                    'Groups': [],
-                    'Instances': [
-                        {
-                            'ImageId': 'ami-ffcsssss',
-                            'InstanceId': 'i-023desldk394995ss',
-                            'InstanceType': 'c4.4xlarge',
-                            'LaunchTime': datetime.datetime(
-                                2018, 5, 10, 7, 13, 17, tzinfo=tzutc()
-                            ),
-                            'NetworkInterfaces': [
-                                {
-                                    'PrivateIpAddresses': [
-                                        {
-                                            'Association': {
-                                                'IpOwnerId': '585394460090',
-                                                'PublicDnsName': 'ec2.com',
-                                                'PublicIp': '32.312.444.22'
-                                            },
-                                            'Primary': True,
-                                            'PrivateDnsName': 'ec2.nternal',
-                                            'PrivateIpAddress': '1.1.1.1',
-                                        }
-                                    ],
-                                }
-                            ],
-                            'SecurityGroups': [
-                                {
-                                    'GroupId': 'sg-f2234gf6',
-                                    'GroupName': 'sg-1'
-                                },
-                                {
-                                    'GroupId': 'sg-cwfccs17',
-                                    'GroupName': 'sg-2'
-                                }
-                            ],
-                            'State': {'Code': 16, 'Name': 'running'},
-                            'StateTransitionReason': '',
-                            'Tags': [{'Key': 'Name', 'Value': 'name'}],
-                            'VpcId': 'vpc-31084921'
-                        }
-                    ],
-                    'OwnerId': '585394460090',
-                    'ReservationId': 'r-039ed99cad2bb3da5'
-                },
-            ],
-        }
-        """
-
-        self.log.info('Fetching EC2 inventory')
-        self.source_data['ec2'] = {}
-
-        for region in self.regions:
-            ec2 = boto3.client('ec2', region_name=region)
-            self.source_data['ec2'][region] = \
-                ec2.describe_instances()['Reservations']
-
-        prune_keys = [
-            'AmiLaunchIndex',
-            'Architecture',
-            'BlockDeviceMappings',
-            'CapacityReservationSpecification',
-            'ClientToken',
-            'CpuOptions',
-            'EbsOptimized',
-            'HibernationOptions',
-            'Hypervisor',
-            'KeyName',
-            'Monitoring',
-            'Placement',
-            'PrivateDnsName',
-            'PrivateIpAddress',
-            'ProductCodes',
-            'PublicDnsName',
-            'PublicIpAddress',
-            'RootDeviceName',
-            'RootDeviceType',
-            'SourceDestCheck',
-            'SubnetId',
-            'VirtualizationType',
-        ]
-        network_prune_keys = [
-            'Association',
-            'Attachment',
-            'Description',
-            'Groups',
-            'InterfaceType',
-            'Ipv6Addresses',
-            'MacAddress',
-            'NetworkInterfaceId',
-            'OwnerId',
-            'PrivateDnsName',
-            'PrivateIpAddress',
-            'SourceDestCheck',
-            'Status',
-            'SubnetId',
-            'VpcId',
-        ]
-
-        for region in self.source_data['ec2'].keys():
-            for resource in self.source_data['ec2'][region]:
-                for instance in resource['Instances']:
-                    for prune_key in prune_keys:
-                        try:
-                            instance.pop(prune_key)
-                        except KeyError:
-                            pass
-                    for interface in instance['NetworkInterfaces']:
-                        for prune_key in network_prune_keys:
-                            try:
-                                interface.pop(prune_key)
-                            except KeyError:
-                                pass
-
-    def _update_ec2_inventory(self):
-        """
-        Do aggregation of data to populate self.user_data and self.inv
-        attributes with EC2 resources.
-
-        self.user_data is populated with the user_data.yaml information or with
-        default values.
-
-        self.inv is populated with EC2 resources.
-        """
-
-        try:
-            self.user_data['ec2']
-        except KeyError:
-            self.user_data['ec2'] = {}
-
-        for region in self.source_data['ec2'].keys():
-            for resource in self.source_data['ec2'][region]:
-                for instance in resource['Instances']:
-                    instance_id = instance['InstanceId']
-                    try:
-                        self.user_data['ec2'][instance_id]
-                    except KeyError:
-                        self.user_data['ec2'][instance_id] = {
-                            'description': '',
-                            'to_destroy': 'tbd',
-                            'environment': 'tbd',
-                            'region': region,
-                        }
-                    for key, value in \
-                            self.user_data['ec2'][instance_id].items():
-                        instance[key] = value
-
-                    self.inv['ec2'][instance_id] = EC2(
-                        {
-                            instance_id: instance
-                        }
-                    )
 
     def _search_in_resources(self, resource_type, search_string):
         result = []

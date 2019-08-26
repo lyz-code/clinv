@@ -7,7 +7,7 @@ Classes:
     RDSsrc: Class to gather and manipulate the AWS RDS resources.
 """
 
-from clinv.resources import Route53, RDS
+from clinv.resources import EC2, Route53, RDS
 from clinv.sources import ClinvSourcesrc
 import boto3
 import re
@@ -42,6 +42,217 @@ class AWSBasesrc(ClinvSourcesrc):
             region['RegionName']
             for region in ec2.describe_regions()['Regions']
         ]
+
+
+class EC2src(AWSBasesrc):
+    """
+    Class to gather and manipulate the EC2 resources.
+
+    Parameters:
+        source_data (dict): EC2src compatible source_data
+        dictionary.
+        user_data (dict): EC2src compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'ec2'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+        {
+            'us-east-1': [
+                {
+                    'Groups': [],
+                    'Instances': [
+                        {
+                            'ImageId': 'ami-ffcsssss',
+                            'InstanceId': 'i-023desldk394995ss',
+                            'InstanceType': 'c4.4xlarge',
+                            'LaunchTime': datetime.datetime(
+                                2018, 5, 10, 7, 13, 17, tzinfo=tzutc()
+                            ),
+                            'NetworkInterfaces': [
+                                {
+                                    'PrivateIpAddresses': [
+                                        {
+                                            'Association': {
+                                                'IpOwnerId': '585394460090',
+                                                'PublicDnsName': 'ec2.com',
+                                                'PublicIp': '32.312.444.22'
+                                            },
+                                            'Primary': True,
+                                            'PrivateDnsName': 'ec2.nternal',
+                                            'PrivateIpAddress': '1.1.1.1',
+                                        }
+                                    ],
+                                }
+                            ],
+                            'SecurityGroups': [
+                                {
+                                    'GroupId': 'sg-f2234gf6',
+                                    'GroupName': 'sg-1'
+                                },
+                                {
+                                    'GroupId': 'sg-cwfccs17',
+                                    'GroupName': 'sg-2'
+                                }
+                            ],
+                            'State': {'Code': 16, 'Name': 'running'},
+                            'StateTransitionReason': '',
+                            'Tags': [{'Key': 'Name', 'Value': 'name'}],
+                            'VpcId': 'vpc-31084921'
+                        }
+                    ],
+                    'OwnerId': '585394460090',
+                    'ReservationId': 'r-039ed99cad2bb3da5'
+                },
+            ],
+        }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching EC2 inventory')
+        self.source_data = {}
+
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            self.source_data[region] = \
+                ec2.describe_instances()['Reservations']
+
+        prune_keys = [
+            'AmiLaunchIndex',
+            'Architecture',
+            'BlockDeviceMappings',
+            'CapacityReservationSpecification',
+            'ClientToken',
+            'CpuOptions',
+            'EbsOptimized',
+            'HibernationOptions',
+            'Hypervisor',
+            'KeyName',
+            'Monitoring',
+            'Placement',
+            'PrivateDnsName',
+            'PrivateIpAddress',
+            'ProductCodes',
+            'PublicDnsName',
+            'PublicIpAddress',
+            'RootDeviceName',
+            'RootDeviceType',
+            'SourceDestCheck',
+            'SubnetId',
+            'VirtualizationType',
+        ]
+        network_prune_keys = [
+            'Association',
+            'Attachment',
+            'Description',
+            'Groups',
+            'InterfaceType',
+            'Ipv6Addresses',
+            'MacAddress',
+            'NetworkInterfaceId',
+            'OwnerId',
+            'PrivateDnsName',
+            'PrivateIpAddress',
+            'SourceDestCheck',
+            'Status',
+            'SubnetId',
+            'VpcId',
+        ]
+
+        for region in self.source_data.keys():
+            for resource in self.source_data[region]:
+                for instance in resource['Instances']:
+                    for prune_key in prune_keys:
+                        try:
+                            instance.pop(prune_key)
+                        except KeyError:
+                            pass
+                    for interface in instance['NetworkInterfaces']:
+                        for prune_key in network_prune_keys:
+                            try:
+                                interface.pop(prune_key)
+                            except KeyError:
+                                pass
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        self.user_data = {}
+        for region in self.source_data.keys():
+            for resource in self.source_data[region]:
+                for instance in resource['Instances']:
+                    instance_id = instance['InstanceId']
+                    try:
+                        self.user_data[instance_id]
+                    except KeyError:
+                        self.user_data[instance_id] = {
+                            'description': '',
+                            'to_destroy': 'tbd',
+                            'environment': 'tbd',
+                            'region': region,
+                        }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with EC2 resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: EC2 inventory with user and source data
+        """
+
+        inventory = {}
+        for region in self.source_data.keys():
+            for resource in self.source_data[region]:
+                for instance in resource['Instances']:
+                    instance_id = instance['InstanceId']
+
+                    for key, value in \
+                            self.user_data[instance_id].items():
+                        instance[key] = value
+
+                    inventory[instance_id] = EC2(
+                        {
+                            instance_id: instance
+                        }
+                    )
+        return inventory
 
 
 class RDSsrc(AWSBasesrc):
