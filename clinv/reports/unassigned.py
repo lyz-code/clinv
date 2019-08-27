@@ -20,23 +20,26 @@ class UnassignedReport(ClinvReport):
     Public methods:
         output: Print the report to stdout.
 
+    Private methods:
+        _unassigned_aws_resource: Do aggregation of data to print the
+            AWS resources that are not associated to any service.
+        _unassigned_ec2: Do aggregation of data to print the EC2 resources
+            that are not associated to any service.
+        _unassigned_rds: Do aggregation of data to print the RDS resources
+            that are not associated to any service.
+        _unassigned_route53: Do aggregation of data to print the Route53
+            resources that are not associated to any service.
+        _unassigned_services: Do aggregation of data to print the services
+            resources that are not associated to any project.
+        _unassigned_informations: Do aggregation of data to print the
+            informations resources that are not associated to any project.
+
     Public attributes:
         inv (Inventory): Clinv inventory.
     """
 
     def __init__(self, inventory):
         super().__init__(inventory)
-
-    def output(self, regexp_id):
-        """
-        Method to print the report to stdout.
-
-        Parameters:
-            resource_id (str): regular expression of a resource id.
-
-        Returns:
-            stdout: Resource information
-        """
 
     def _unassigned_aws_resource(self, resource_type):
         """
@@ -117,6 +120,14 @@ class UnassignedReport(ClinvReport):
                     instance.print()
 
     def _unassigned_services(self):
+        """
+        Do aggregation of data to print the services resources that are not
+        associated to any project.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
         all_assigned_services = []
         for project_id, project in sorted(self.inv['projects'].items()):
             if project.services is None:
@@ -132,6 +143,14 @@ class UnassignedReport(ClinvReport):
         self.short_print_resources(unassigned_services)
 
     def _unassigned_informations(self):
+        """
+        Do aggregation of data to print the informations resources that are not
+        associated to any project.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
         all_assigned_informations = []
         for project_id, project in self.inv['projects'].items():
             if project.informations is None:
@@ -147,7 +166,26 @@ class UnassignedReport(ClinvReport):
                 unassigned_informations.append(information)
         self.short_print_resources(unassigned_informations)
 
-    def unassigned(self, resource_type):
+    def output(self, resource_type):
+        """
+        Method to print the list of unassigned Clinv resources
+
+        Parameters:
+            resource_type (str): Type of clinv resource to be processed.
+                It must be one of [
+                    'all',
+                    'ec2',
+                    'rds',
+                    'route53',
+                    'services',
+                    'informations',
+                    'projects',
+                ], if it's set to 'all' it will test all kind of resources
+
+        Returns:
+            stdout: Unassigned Resource ids.
+        """
+
         if resource_type == 'all':
             self.log.info('Unassigned EC2')
             self._unassigned_ec2()

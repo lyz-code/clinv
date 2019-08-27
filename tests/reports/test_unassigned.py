@@ -82,17 +82,17 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
 
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_ec2')
     def test_general_unassigned_can_use_ec2_resource(self, unassignMock):
-        self.report.unassigned('ec2')
+        self.report.output('ec2')
         self.assertTrue(unassignMock.called)
 
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
     def test_general_unassigned_can_use_rds_resource(self, unassignMock):
-        self.report.unassigned('rds')
+        self.report.output('rds')
         self.assertTrue(unassignMock.called)
 
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_services')
     def test_general_unassigned_can_use_service_resource(self, unassignMock):
-        self.report.unassigned('services')
+        self.report.output('services')
         self.assertTrue(unassignMock.called)
 
     @patch(
@@ -102,7 +102,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self,
         unassignMock,
     ):
-        self.report.unassigned('informations')
+        self.report.output('informations')
         self.assertTrue(unassignMock.called)
 
     def test_unassigned_route53_prints_instances(self):
@@ -128,7 +128,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
 
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     def test_general_unassigned_can_use_route53_resource(self, unassignMock):
-        self.report.unassigned('route53')
+        self.report.output('route53')
         self.assertTrue(unassignMock.called)
 
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
@@ -146,7 +146,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         rdsMock,
         route53Mock,
     ):
-        self.report.unassigned('all')
+        self.report.output('all')
         self.assertTrue(informationsMock.called)
         self.assertTrue(servicesMock.called)
         self.assertTrue(ec2Mock.called)
