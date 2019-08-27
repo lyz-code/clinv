@@ -12,7 +12,6 @@ source clinv/bin/activate
 pip3 install -r requirements.txt
 python3 setup.py install
 mkdir ~/.local/share/clinv
-touch ~/.local/share/clinv/raw_data.yaml
 ```
 
 `clinv` will use your AWS cli credentials, therefore you must have them
@@ -71,13 +70,13 @@ that aren't assigned to a `project`.
 All data used by `clinv` is saved into yaml files in the data path directory (by
 default `~/.local/share/clinv`).
 
-* *raw_inventory.yaml*: Raw information of the AWS account, generally with
+* *source_data.yaml*: Raw information of the AWS account, generally with
   stripped dictionaries from boto3 resources.
-* *raw_data.yaml*: Raw clinv additional data explained below.
+* *user_data.yaml*: Raw clinv additional data explained below.
 
-## The raw_data.yaml file
+## The user_data.yaml file
 
-The raw_data file contains information of the following types of resources:
+The user_data file contains information of the following types of resources:
 
 * Projects
 * Informations
@@ -167,6 +166,11 @@ ec2:
     to_destroy: false
     environment: 'production'
 ```
+
+# Contributing
+
+If you want to contribute with the project, read [this file](docs/hacking.md).
+You can also see the roadmap of the project in the [todo](docs/todo.md).
 
 # Test
 

@@ -1,3 +1,21 @@
+0.3.0 / 2019-08-27
+==================
+
+  * Refactor RiskManagementsrc to Projectsrc, Servicesrc and Informationsrc
+  * Refactored search report
+  * Refactored export and unassigned reports
+  * Refactored EC2 to EC2src
+  * Refactored RDS and RiskManagement to it's own sources
+  * Refactored clinv generate and load to inventory
+  * WIP: Decoupled Route53src fetch and generate data
+  * WIP: Refactor Clinv object into Inventory
+  * Fixed bug in Route53 refactor
+  * Refactored Route53 source into the sources package
+  * Updated dependencies
+  * Added more information to the service print method
+  * Added print method for the active resources
+  * Added to_destroy property to Route53 resource
+  * Typo on readme
 
 0.2.0 / 2019-07-18
 =============

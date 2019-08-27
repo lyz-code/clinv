@@ -51,7 +51,14 @@ def load_parser():
         "resource_type",
         type=str,
         help='String used to search',
-        choices=['ec2', 'rds', 'services', 'informations', 'projects'],
+        choices=[
+            'ec2',
+            'rds',
+            'services',
+            'informations',
+            'projects',
+            'route53',
+        ],
     )
 
     export_parser = subparser.add_parser('export')
@@ -65,9 +72,9 @@ def load_parser():
 
     print_parser = subparser.add_parser('print')
     print_parser.add_argument(
-        "resource_id",
+        "search_string",
         type=str,
-        help='Clinv resource ID',
+        help='Regexp of a Clinv resource ID',
     )
     argcomplete.autocomplete(parser)
     return parser

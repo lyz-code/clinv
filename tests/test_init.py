@@ -11,12 +11,12 @@ class TestMain(unittest.TestCase):
         self.parser = self.parser_patch.start()
         self.parser_args = self.parser.return_value.parse_args.return_value
 
-        self.clinv_patch = patch('clinv.Clinv', autospect=True)
-        self.clinv = self.clinv_patch.start()
+        self.inventory_patch = patch('clinv.Inventory', autospect=True)
+        self.inventory = self.inventory_patch.start()
 
     def tearDown(self):
         self.parser_patch.stop()
-        self.clinv_patch.stop()
+        self.inventory_patch.stop()
 
     def test_main_loads_parser(self):
         self.parser.parse_args = True
@@ -29,71 +29,91 @@ class TestMain(unittest.TestCase):
         main()
         self.assertTrue(loggerMock.called)
 
-    def test_search_subcommand(self):
-        self.parser_args.subcommand = 'search'
-        self.parser_args.search_string = 'inst'
+    def test_main_loads_inventory(self):
+        self.parser.parse_args = True
         self.parser_args.data_path = 'path'
         main()
         self.assertEqual(
-            self.clinv.assert_called_with('path'),
-            None,
-        )
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
-        self.assertEqual(
-            self.clinv.return_value.print_search.assert_called_with('inst'),
+            self.inventory.assert_called_with('path'),
             None,
         )
 
     def test_generate_subcommand(self):
         self.parser_args.subcommand = 'generate'
         main()
-        self.assertTrue(self.clinv.return_value._fetch_aws_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
-        self.assertTrue(self.clinv.return_value.save_inventory.called)
+        self.assertTrue(self.inventory.return_value.generate.called)
 
-    def test_unassigned_subcommand(self):
+    @patch('clinv.SearchReport')
+    def test_search_subcommand(self, reportMock):
+        self.parser_args.subcommand = 'search'
+        self.parser_args.search_string = 'inst'
+        main()
+        self.assertTrue(self.inventory.return_value.load.called)
+        self.assertEqual(
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with('inst'),
+            None,
+        )
+
+    @patch('clinv.UnassignedReport')
+    def test_unassigned_subcommand(self, reportMock):
         self.parser_args.subcommand = 'unassigned'
         self.parser_args.resource_type = 'ec2'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.inventory.return_value.load.called)
         self.assertEqual(
-            self.clinv.return_value.unassigned.assert_called_with('ec2'),
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with('ec2'),
             None,
         )
 
-    def test_list_subcommand(self):
-        self.parser_args.subcommand = 'list'
+    @patch('clinv.ListReport')
+    def test_list_subcommand(self, reportMock):
         self.parser_args.resource_type = 'ec2'
+        self.parser_args.subcommand = 'list'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.inventory.return_value.load.called)
         self.assertEqual(
-            self.clinv.return_value.list.assert_called_with('ec2'),
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with('ec2'),
             None,
         )
 
-    def test_export_subcommand(self):
+    @patch('clinv.ExportReport')
+    def test_export_subcommand(self, reportMock):
         self.parser_args.subcommand = 'export'
         self.parser_args.export_path = 'file.ods'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.inventory.return_value.load.called)
         self.assertEqual(
-            self.clinv.return_value.export.assert_called_with(
-                'file.ods',
-            ),
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with('file.ods'),
             None,
         )
 
-    def test_print_subcommand(self):
+    @patch('clinv.PrintReport')
+    def test_print_subcommand(self, reportMock):
         self.parser_args.subcommand = 'print'
-        self.parser_args.resource_id = 'resource_id'
+        self.parser_args.search_string = 'resource_id'
         main()
-        self.assertTrue(self.clinv.return_value.load_inventory.called)
-        self.assertTrue(self.clinv.return_value.load_data.called)
+        self.assertTrue(self.inventory.return_value.load.called)
         self.assertEqual(
-            self.clinv.return_value.print.assert_called_with('resource_id'),
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with('resource_id'),
             None,
         )

@@ -19,7 +19,12 @@
 # Program to maintain an inventory of assets.
 
 from clinv.cli import load_logger, load_parser
-from clinv.clinv import Clinv
+from clinv.inventory import Inventory
+from clinv.reports.export import ExportReport
+from clinv.reports.list import ListReport
+from clinv.reports.print import PrintReport
+from clinv.reports.unassigned import UnassignedReport
+from clinv.reports.search import SearchReport
 
 
 def main():
@@ -27,7 +32,7 @@ def main():
     args = parser.parse_args()
     load_logger()
 
-    clinv = Clinv(args.data_path)
+    inventory = Inventory(args.data_path)
     if args.subcommand not in [
         'export',
         'generate',
@@ -39,22 +44,19 @@ def main():
         return
 
     if args.subcommand == 'generate':
-        clinv._fetch_aws_inventory()
-        clinv.load_data()
-        clinv.save_inventory()
+        inventory.generate()
     else:
-        clinv.load_inventory()
-        clinv.load_data()
+        inventory.load()
         if args.subcommand == 'search':
-            clinv.print_search(args.search_string)
+            SearchReport(inventory).output(args.search_string)
         elif args.subcommand == 'unassigned':
-            clinv.unassigned(args.resource_type)
+            UnassignedReport(inventory).output(args.resource_type)
         elif args.subcommand == 'print':
-            clinv.print(args.resource_id)
+            PrintReport(inventory).output(args.search_string)
         elif args.subcommand == 'list':
-            clinv.list(args.resource_type)
+            ListReport(inventory).output(args.resource_type)
         elif args.subcommand == 'export':
-            clinv.export(args.export_path)
+            ExportReport(inventory).output(args.export_path)
 
 
 if __name__ == "__main__":
