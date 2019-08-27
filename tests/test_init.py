@@ -75,6 +75,7 @@ class TestMain(unittest.TestCase):
 
     @patch('clinv.ListReport')
     def test_list_subcommand(self, reportMock):
+        self.parser_args.resource_type = 'ec2'
         self.parser_args.subcommand = 'list'
         main()
         self.assertTrue(self.inventory.return_value.load.called)
@@ -83,7 +84,7 @@ class TestMain(unittest.TestCase):
             None,
         )
         self.assertEqual(
-            reportMock.return_value.output.assert_called_with(),
+            reportMock.return_value.output.assert_called_with('ec2'),
             None,
         )
 

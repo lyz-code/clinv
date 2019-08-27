@@ -1,25 +1,41 @@
-from clinv.sources.risk_management import RiskManagementsrc
-from tests.sources import ClinvSourceBaseTestClass
-from unittest.mock import patch
+from clinv.sources.risk_management import \
+    Informationsrc, Projectsrc, Servicesrc
+from clinv.sources.risk_management import Information, Project, Service
+from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
+from unittest.mock import patch, call
 import unittest
 
 
-class TestRiskManagementSource(ClinvSourceBaseTestClass, unittest.TestCase):
+class RiskManagementSourceBaseTestClass(ClinvSourceBaseTestClass):
     '''
-    Test the RiskManagement implementation in the inventory.
+    Abstract Base class to ensure that all the RiskManagement sources have the
+    same interface.
+
+    Must be combined with a unittest.TestCase that defines:
+        * self.module_name: the name of the module file.
+        * self.source_obj: the name of the source class to test.
+        * self.resource_obj: the name of the resource class to test.
+        * self.resource_id: the id of the resource class to test.
+        * self.resource_type: the type of the resource class to test.
     '''
 
     def setUp(self):
+        self.module_name = 'risk_management'
         super().setUp()
-        self.class_obj = RiskManagementsrc
+        self.resource_patch = patch(
+            'clinv.sources.risk_management.{}'.format(self.resource_obj),
+            autospect=True,
+        )
+        self.resource = self.resource_patch.start()
 
         # Initialize object to test
         source_data = {}
         user_data = {}
-        self.src = self.class_obj(source_data, user_data)
+        self.src = self.source_obj(source_data, user_data)
 
     def tearDown(self):
         super().tearDown()
+        self.resource_patch.stop()
 
     def test_generate_source_data_creates_expected_source_data_attrib(self):
         expected_source_data = {}
@@ -54,21 +70,14 @@ class TestRiskManagementSource(ClinvSourceBaseTestClass, unittest.TestCase):
         self.assertEqual(
             self.src.generate_inventory(),
             {
-                'informations': {},
-                'projects': {},
-                'services': {},
+                self.resource_type: {}
             }
         )
 
-    @patch('clinv.sources.risk_management.Information')
-    def test_generate_inventory_creates_information_objects(
-        self,
-        resource_mock
-    ):
-        resource_id = 'inf_01'
+    def test_generate_inventory_creates_resource_objects(self):
         self.src.user_data = {
-            'informations': {
-                resource_id: 'tbd'
+            self.resource_type: {
+                self.resource_id: 'tbd'
             },
         }
 
@@ -76,9 +85,9 @@ class TestRiskManagementSource(ClinvSourceBaseTestClass, unittest.TestCase):
 
         desired_inventory = self.src.generate_inventory()
         self.assertEqual(
-            resource_mock.assert_called_with(
+            self.resource.assert_called_with(
                 {
-                    resource_id: desired_mock_input
+                    self.resource_id: desired_mock_input
                 },
             ),
             None,
@@ -87,74 +96,256 @@ class TestRiskManagementSource(ClinvSourceBaseTestClass, unittest.TestCase):
         self.assertEqual(
             desired_inventory,
             {
-                'services': {},
-                'informations': {
-                    resource_id: resource_mock.return_value
+                self.resource_type: {
+                    self.resource_id: self.resource.return_value
                 },
-                'projects': {},
             },
         )
 
-    @patch('clinv.sources.risk_management.Project')
-    def test_generate_inventory_creates_project_objects(self, resource_mock):
-        resource_id = 'pro_01'
-        self.src.user_data = {
-            'projects': {
-                resource_id: 'tbd'
-            },
+
+class TestProjectSource(RiskManagementSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the Project implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.source_obj = Projectsrc
+        self.resource_obj = 'Project'
+        self.resource_id = 'pro_01'
+        self.resource_type = 'projects'
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+
+class TestServiceSource(RiskManagementSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the Service implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.source_obj = Servicesrc
+        self.resource_obj = 'Service'
+        self.resource_id = 'ser_01'
+        self.resource_type = 'services'
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+
+class TestInformationSource(
+    RiskManagementSourceBaseTestClass,
+    unittest.TestCase,
+):
+    '''
+    Test the Information implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.source_obj = Informationsrc
+        self.resource_obj = 'Information'
+        self.resource_id = 'inf_01'
+        self.resource_type = 'informations'
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+
+class ClinvActiveResourceTests(ClinvGenericResourceTests):
+    '''Must be combined with a unittest.TestCase that defines:
+        * self.resource as a ClinvActiveResource subclass instance
+        * self.raw as a dictionary with the data of the resource
+        * self.id as a string with the resource id'''
+
+    def setUp(self):
+        self.module_name = 'risk_management'
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_instance_responsible(self):
+        self.assertEqual(self.resource.responsible, 'responsible@clinv.com')
+
+
+class TestProject(ClinvActiveResourceTests, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.id = 'pro_01'
+        self.raw = {
+            'pro_01': {
+                'aliases': 'Awesome Project',
+                'description': 'This is the description',
+                'informations': [
+                    'inf_01',
+                ],
+                'links': {
+                    'homepage': 'www.homepage.com'
+                },
+                'responsible': 'responsible@clinv.com',
+                'members': {
+                    'developers': [
+                        'developer_1',
+                    ],
+                    'devops': [
+                        'devops_1'
+                    ],
+                    'po': 'product owner',
+                    'stakeholders': [
+                        'stakeholder_1'
+                    ],
+                    'ux': None,
+                    'qa': None,
+                },
+                'name': 'resource_name',
+                'services': [
+                    'ser_01'
+                ],
+                'state': 'active',
+            }
         }
 
-        desired_mock_input = 'tbd'
+        self.resource = Project(self.raw)
 
-        desired_inventory = self.src.generate_inventory()
-        self.assertEqual(
-            resource_mock.assert_called_with(
-                {
-                    resource_id: desired_mock_input
-                },
-            ),
-            None,
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_services(self):
+        self.assertEqual(self.resource.services, ['ser_01'])
+
+    def test_get_informations(self):
+        self.assertEqual(self.resource.informations, ['inf_01'])
+
+    def test_get_aliases(self):
+        self.assertEqual(self.resource.aliases, ['Awesome Project'])
+
+    def test_search_by_aliases(self):
+        self.assertTrue(self.resource.search('Awesome Project'))
+
+    def test_search_by_aliases_doesn_not_work_if_alias_is_none(self):
+        self.resource.raw['aliases'] = None
+        self.assertFalse(self.resource.search('Awesome Project'))
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('pro_01'),
+            call('  Name: resource_name'),
+            call('  Aliases: Awesome Project'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Services: ser_01'),
+            call('  Informations: inf_01'),
         )
 
-        self.assertEqual(
-            desired_inventory,
-            {
-                'informations': {},
-                'projects': {
-                    resource_id: resource_mock.return_value
-                },
-                'services': {},
-            },
-        )
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(7, len(self.print.mock_calls))
 
-    @patch('clinv.sources.risk_management.Service')
-    def test_generate_inventory_creates_service_objects(self, resource_mock):
-        resource_id = 'ser_01'
-        self.src.user_data = {
-            'services': {
-                resource_id: 'tbd'
-            },
+
+class TestInformation(ClinvActiveResourceTests, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.id = 'inf_01'
+        self.raw = {
+            'inf_01': {
+                'description': 'This is the description',
+                'name': 'resource_name',
+                'personal_data': True,
+                'responsible': 'responsible@clinv.com',
+                'state': 'active',
+            }
         }
 
-        desired_mock_input = 'tbd'
+        self.resource = Information(self.raw)
 
-        desired_inventory = self.src.generate_inventory()
-        self.assertEqual(
-            resource_mock.assert_called_with(
-                {
-                    resource_id: desired_mock_input
-                },
-            ),
-            None,
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_personal_data(self):
+        self.assertEqual(self.resource.personal_data, True)
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('inf_01'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Personal Information: True'),
         )
 
-        self.assertEqual(
-            desired_inventory,
-            {
-                'informations': {},
-                'services': {
-                    resource_id: resource_mock.return_value
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(5, len(self.print.mock_calls))
+
+
+class TestService(ClinvActiveResourceTests, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.id = 'ser_01'
+        self.raw = {
+            'ser_01': {
+                'access': 'public',
+                'authentication': {
+                    '2fa': True,
+                    'method': 'Oauth2'
                 },
-                'projects': {},
-            },
+                'aws': {
+                    'ec2': {
+                        'i-01'
+                    },
+                },
+                'description': 'This is the description',
+                'endpoints': [
+                    'https://endpoint1.com'
+                ],
+                'informations': [
+                    'inf_01',
+                ],
+                'links': {
+                    'docs': {
+                        'internal': 'https://internaldocs',
+                        'external': 'https://internaldocs',
+                    },
+                },
+                'name': 'resource_name',
+                'responsible': 'responsible@clinv.com',
+                'state': 'active',
+            }
+        }
+
+        self.resource = Service(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_access(self):
+        self.assertEqual(self.resource.access, 'public')
+
+    def test_get_informations(self):
+        self.assertEqual(self.resource.informations, ['inf_01'])
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('ser_01'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Access: public'),
+            call('  Informations: inf_01'),
+            call('  Related resources:'),
+            call('    ec2:'),
+            call('      i-01'),
         )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(9, len(self.print.mock_calls))

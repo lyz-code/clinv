@@ -28,7 +28,7 @@ class ClinvReport():
     """
 
     def __init__(self, inventory):
-        self.inv = inventory
+        self.inv = inventory.inv
         self.log = logging.getLogger('main')
 
     def short_print_resources(self, resource_list):

@@ -6,10 +6,11 @@ Classes:
         resources.
 """
 
+from clinv.reports import ClinvReport
 import re
 
 
-class PrintReport():
+class PrintReport(ClinvReport):
     """
     Class to gather methods to print information of Clinv
     resources.
@@ -25,7 +26,7 @@ class PrintReport():
     """
 
     def __init__(self, inventory):
-        self.inv = inventory
+        super().__init__(inventory)
 
     def output(self, regexp_id):
         """

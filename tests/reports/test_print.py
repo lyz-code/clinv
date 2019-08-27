@@ -18,5 +18,5 @@ class TestPrintReport(ClinvReportBaseTestClass, unittest.TestCase):
     def test_output_method(self):
         self.report.output('i-023.*')
         self.assertTrue(
-            self.inventory['ec2']['i-023desldk394995ss'].print.called
+            self.inventory.inv['ec2']['i-023desldk394995ss'].print.called
         )

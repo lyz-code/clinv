@@ -54,7 +54,7 @@ def main():
         elif args.subcommand == 'print':
             PrintReport(inventory).output()
         elif args.subcommand == 'list':
-            ListReport(inventory).output()
+            ListReport(inventory).output(args.resource_type)
         elif args.subcommand == 'export':
             ExportReport(inventory).output()
 

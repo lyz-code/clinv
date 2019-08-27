@@ -28,7 +28,8 @@ Classes:
 """
 
 from clinv.sources.aws import EC2src, RDSsrc, Route53src
-from clinv.sources.risk_management import RiskManagementsrc
+from clinv.sources.risk_management import \
+    Informationsrc, Projectsrc, Servicesrc
 from yaml import YAMLError
 import logging
 import os
@@ -36,9 +37,11 @@ import yaml
 
 active_source_plugins = [
     EC2src,
+    Informationsrc,
+    Projectsrc,
     RDSsrc,
-    RiskManagementsrc,
     Route53src,
+    Servicesrc,
 ]
 
 

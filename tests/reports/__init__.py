@@ -17,7 +17,8 @@ class ClinvReportBaseTestClass(object):
     '''
 
     def setUp(self):
-        self.inventory = {
+        self.inventory = Mock()
+        self.inventory.inv = {
             'ec2': {
                 'i-023desldk394995ss': Mock()
             },
@@ -37,16 +38,18 @@ class ClinvReportBaseTestClass(object):
                 'inf_01': Mock()
             },
         }
-        self.ec2instance = self.inventory['ec2']['i-023desldk394995ss']
-        self.information = self.inventory['informations']['inf_01']
-        self.project = self.inventory['projects']['pro_01']
-        self.rdsinstance = self.inventory['rds']['db-YDFL2']
+        self.ec2instance = self.inventory.inv['ec2']['i-023desldk394995ss']
+        self.information = self.inventory.inv['informations']['inf_01']
+        self.project = self.inventory.inv['projects']['pro_01']
+        self.rdsinstance = self.inventory.inv['rds']['db-YDFL2']
         self.route53instance = \
-            self.inventory['route53']['hosted_zone_id-record1.clinv.org-cname']
-        self.service = self.inventory['services']['ser_01']
+            self.inventory.inv['route53'][
+                'hosted_zone_id-record1.clinv.org-cname'
+            ]
+        self.service = self.inventory.inv['services']['ser_01']
 
     def tearDown(self):
         pass
 
     def test_inventory_is_set(self):
-        self.assertEqual(self.report.inv, self.inventory)
+        self.assertEqual(self.report.inv, self.inventory.inv)
