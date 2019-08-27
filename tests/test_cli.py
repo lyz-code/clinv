@@ -96,7 +96,7 @@ class TestArgparse(unittest.TestCase):
     def test_can_specify_print_subcommand(self):
         parsed = self.parser.parse_args(['print', 'resource_id'])
         self.assertEqual(parsed.subcommand, 'print')
-        self.assertEqual(parsed.resource_id, 'resource_id')
+        self.assertEqual(parsed.search_string, 'resource_id')
 
 
 class TestLogger(unittest.TestCase):

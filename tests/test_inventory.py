@@ -243,8 +243,10 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
     @patch('clinv.inventory.Inventory._generate_user_data')
     @patch('clinv.inventory.Inventory._generate_source_data')
     @patch('clinv.inventory.Inventory.save')
+    @patch('clinv.inventory.Inventory._load_yaml')
     def test_generate_loads_data_from_plugins(
         self,
+        loadMock,
         saveMock,
         sourceMock,
         userMock,
@@ -256,3 +258,4 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
         self.assertTrue(sourceMock.called)
         self.assertTrue(userMock.called)
         self.assertTrue(inventoryMock.called)
+        self.assertTrue(call(self.user_data_path) in loadMock.mock_calls)

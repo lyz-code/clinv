@@ -215,7 +215,6 @@ class EC2src(AWSBasesrc):
             dict: content of self.user_data.
         """
 
-        self.user_data = {}
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
                 for instance in resource['Instances']:
@@ -410,8 +409,6 @@ class RDSsrc(AWSBasesrc):
             dict: content of self.user_data.
         """
 
-        self.user_data = {}
-
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
                 resource_id = resource['DbiResourceId']
@@ -570,8 +567,6 @@ class Route53src(AWSBasesrc):
         Returns:
             dict: content of self.user_data.
         """
-
-        self.user_data = {}
 
         for zone in self.source_data['hosted_zones']:
             for record in zone['records']:

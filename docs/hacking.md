@@ -156,8 +156,6 @@ class {{ class_name }}src(ClinvSourcesrc):
             dict: content of self.user_data.
         """
 
-        self.user_data = {}
-
         return self.user_data
 
     def generate_inventory(self):

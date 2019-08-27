@@ -53,7 +53,6 @@ class RiskManagementBasesrc(ClinvSourcesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching RiskManagement inventory')
         self.source_data = {}
         return self.source_data
 
@@ -66,7 +65,6 @@ class RiskManagementBasesrc(ClinvSourcesrc):
             dict: content of self.user_data.
         """
 
-        self.user_data = {}
         return self.user_data
 
     def generate_inventory(self):
@@ -82,19 +80,12 @@ class RiskManagementBasesrc(ClinvSourcesrc):
             dict: RiskManagement inventory with user and source data
         """
 
-        inventory = {
-            self.id: {},
-        }
-
-        try:
-            self.user_data[self.id]
-        except KeyError:
-            self.user_data[self.id] = {}
+        inventory = {}
 
         for resource_id, resource_data in \
-                self.user_data[self.id].items():
+                self.user_data.items():
             resource = self.resource_obj({resource_id: resource_data})
-            inventory[self.id][resource_id] = resource
+            inventory[resource_id] = resource
 
         return inventory
 

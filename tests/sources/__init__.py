@@ -124,6 +124,15 @@ class ClinvGenericResourceTests(object):
             ['value']
         )
 
+    def test_get_optional_field_returns_list_when_asked_even_if_value_is_none(
+        self
+    ):
+        self.resource.raw['key'] = None
+        self.assertEqual(
+            self.resource._get_optional_field('key', 'list'),
+            []
+        )
+
     def test_get_field_returns_str_when_asked_even_if_value_is_list(self):
         self.resource.raw['key'] = ['value1', 'value2']
         self.assertEqual(

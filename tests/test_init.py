@@ -91,6 +91,7 @@ class TestMain(unittest.TestCase):
     @patch('clinv.ExportReport')
     def test_export_subcommand(self, reportMock):
         self.parser_args.subcommand = 'export'
+        self.parser_args.export_path = 'file.ods'
         main()
         self.assertTrue(self.inventory.return_value.load.called)
         self.assertEqual(
@@ -98,13 +99,14 @@ class TestMain(unittest.TestCase):
             None,
         )
         self.assertEqual(
-            reportMock.return_value.output.assert_called_with(),
+            reportMock.return_value.output.assert_called_with('file.ods'),
             None,
         )
 
     @patch('clinv.PrintReport')
     def test_print_subcommand(self, reportMock):
         self.parser_args.subcommand = 'print'
+        self.parser_args.search_string = 'resource_id'
         main()
         self.assertTrue(self.inventory.return_value.load.called)
         self.assertEqual(
@@ -112,6 +114,6 @@ class TestMain(unittest.TestCase):
             None,
         )
         self.assertEqual(
-            reportMock.return_value.output.assert_called_with(),
+            reportMock.return_value.output.assert_called_with('resource_id'),
             None,
         )

@@ -279,6 +279,25 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
             desired_default_user_data,
         )
 
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        desired_user_data = {
+            'i-023desldk394995ss': {
+                'description': 'filled description',
+                'to_destroy': False,
+                'environment': 'production',
+                'region': 'us-east-1',
+            },
+        }
+
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
     def test_generate_user_data_creates_expected_user_data_attrib(self):
         expected_user_data = {}
 

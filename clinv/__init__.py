@@ -52,11 +52,11 @@ def main():
         elif args.subcommand == 'unassigned':
             UnassignedReport(inventory).output(args.resource_type)
         elif args.subcommand == 'print':
-            PrintReport(inventory).output()
+            PrintReport(inventory).output(args.search_string)
         elif args.subcommand == 'list':
             ListReport(inventory).output(args.resource_type)
         elif args.subcommand == 'export':
-            ExportReport(inventory).output()
+            ExportReport(inventory).output(args.export_path)
 
 
 if __name__ == "__main__":

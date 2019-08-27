@@ -72,9 +72,9 @@ def load_parser():
 
     print_parser = subparser.add_parser('print')
     print_parser.add_argument(
-        "resource_id",
+        "search_string",
         type=str,
-        help='Clinv resource ID',
+        help='Regexp of a Clinv resource ID',
     )
     argcomplete.autocomplete(parser)
     return parser

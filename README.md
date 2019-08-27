@@ -12,7 +12,6 @@ source clinv/bin/activate
 pip3 install -r requirements.txt
 python3 setup.py install
 mkdir ~/.local/share/clinv
-touch ~/.local/share/clinv/user_data.yaml
 ```
 
 `clinv` will use your AWS cli credentials, therefore you must have them

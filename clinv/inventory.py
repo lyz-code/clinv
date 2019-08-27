@@ -191,6 +191,11 @@ class Inventory():
             Nothing.
         """
 
+        try:
+            self.source_data = self._load_yaml(self.source_data_path)
+            self.user_data = self._load_yaml(self.user_data_path)
+        except FileNotFoundError:
+            pass
         self._load_plugins()
         self._generate_source_data()
         self._generate_user_data()

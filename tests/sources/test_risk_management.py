@@ -67,19 +67,10 @@ class RiskManagementSourceBaseTestClass(ClinvSourceBaseTestClass):
 
     def test_generate_inventory_return_empty_dict_if_no_data(self):
         self.src.user_data = {}
-        self.assertEqual(
-            self.src.generate_inventory(),
-            {
-                self.resource_type: {}
-            }
-        )
+        self.assertEqual(self.src.generate_inventory(), {})
 
     def test_generate_inventory_creates_resource_objects(self):
-        self.src.user_data = {
-            self.resource_type: {
-                self.resource_id: 'tbd'
-            },
-        }
+        self.src.user_data = {self.resource_id: 'tbd'}
 
         desired_mock_input = 'tbd'
 
@@ -96,9 +87,7 @@ class RiskManagementSourceBaseTestClass(ClinvSourceBaseTestClass):
         self.assertEqual(
             desired_inventory,
             {
-                self.resource_type: {
-                    self.resource_id: self.resource.return_value
-                },
+                self.resource_id: self.resource.return_value
             },
         )
 

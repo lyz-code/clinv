@@ -146,6 +146,8 @@ class ClinvGenericResource():
         if output_type == 'list':
             if isinstance(value, str):
                 return [value]
+            if value is None:
+                return []
         elif output_type == 'str':
             if isinstance(value, list):
                 return ', '.join(value)
