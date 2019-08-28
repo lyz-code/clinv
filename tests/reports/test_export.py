@@ -250,6 +250,47 @@ class TestExportReport(ClinvReportBaseTestClass, unittest.TestCase):
             exported_data,
         )
 
+    def test_export_s3_generates_expected_dictionary(self):
+        exported_data = [
+            [
+                'ID',
+                'To destroy',
+                'Environment',
+                'Read Permissions (desired/real)',
+                'Write Permissions (desired/real)',
+                'Description',
+            ],
+            [
+                's3_bucket_name',
+                'tbd',
+                'pro',
+                'tbd/public',
+                'tbd/private',
+                'This is the description',
+             ]
+        ]
+
+        self.s3instance.id = 's3_bucket_name'
+        self.s3instance._get_field.return_value = 'pro'
+        self.s3instance.to_destroy = 'tbd'
+        self.s3instance.raw = {
+            'permissions': {
+                'READ': 'public',
+                'WRITE': 'private',
+            },
+            'desired_permissions': {
+                'read': 'tbd',
+                'write': 'tbd',
+            },
+        }
+        self.s3instance.description = 'This is the description'
+
+        self.assertEqual(
+            self.report._export_s3(),
+            exported_data,
+        )
+
+    @patch('clinv.reports.export.ExportReport._export_s3')
     @patch('clinv.reports.export.ExportReport._export_route53')
     @patch('clinv.reports.export.ExportReport._export_rds')
     @patch('clinv.reports.export.ExportReport._export_ec2')
@@ -266,6 +307,7 @@ class TestExportReport(ClinvReportBaseTestClass, unittest.TestCase):
         ec2Mock,
         rdsMock,
         route53Mock,
+        s3Mock,
     ):
         expected_book = OrderedDict()
         expected_book.update({'Projects': projectsMock.return_value})
@@ -274,6 +316,7 @@ class TestExportReport(ClinvReportBaseTestClass, unittest.TestCase):
         expected_book.update({'EC2': ec2Mock.return_value})
         expected_book.update({'RDS': rdsMock.return_value})
         expected_book.update({'Route53': route53Mock.return_value})
+        expected_book.update({'S3': s3Mock.return_value})
 
         self.report.output('file.ods')
         self.assertEqual(

@@ -131,6 +131,11 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report.output('route53')
         self.assertTrue(unassignMock.called)
 
+    def test_unassigned_s3_prints_instances(self):
+        self.report._unassigned_s3()
+        self.assertTrue(self.s3instance.print.called)
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_s3')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_ec2')
@@ -145,6 +150,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         ec2Mock,
         rdsMock,
         route53Mock,
+        s3Mock,
     ):
         self.report.output('all')
         self.assertTrue(informationsMock.called)
@@ -152,3 +158,4 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
         self.assertTrue(route53Mock.called)
+        self.assertTrue(s3Mock.called)
