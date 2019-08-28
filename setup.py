@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-version = '0.3.0'
+version = '0.4.0'
 
 setup(
     name='Clinv',
@@ -8,7 +8,7 @@ setup(
     description='DevSecOps command line asset inventory',
     author='Lyz',
     author_email='lyz@riseup.net',
-    packages=['clinv', ],
+    packages=find_packages(),
     license='GPLv3',
     long_description=open('README.md').read(),
     entry_points={
