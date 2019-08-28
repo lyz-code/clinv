@@ -169,8 +169,15 @@ ec2:
 
 # Contributing
 
-If you want to contribute with the project, read [this file](docs/hacking.md).
+If you want to contribute with the project, first read [the project
+guidelines](docs/hacking.md) and then contribute :).
+
 You can also see the roadmap of the project in the [todo](docs/todo.md).
+
+If you want to create a new source or resource go to [this
+file](docs/source.md).
+
+If you want to create a new report go to [this file](docs/report.md).
 
 # Test
 

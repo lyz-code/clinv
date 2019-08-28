@@ -29,6 +29,8 @@ class ExportReport(ClinvReport):
             resource.
         _export_ec2: Do aggregation of data to return a list with the
             information needed to fill up a spreadsheet for the EC2 resources.
+        _export_s3: Do aggregation of data to return a list with the
+            information needed to fill up a spreadsheet for the S3 resources.
         _export_rds: Do aggregation of data to return a list with the
             information needed to fill up a spreadsheet for the RDS resources.
         _export_route53: Do aggregation of data to return a list with the
@@ -137,6 +139,64 @@ class ExportReport(ClinvReport):
         """
 
         return self._export_aws_resource('rds')
+
+    def _export_s3(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the S3 resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        # Create spreadsheet headers
+        exported_headers = [
+            'ID',
+            'To destroy',
+            'Environment',
+            'Read Permissions (desired/real)',
+            'Write Permissions (desired/real)',
+            'Description',
+        ]
+
+        # Fill up content
+        exported_data = []
+        for instance_id, instance in self.inv['s3'].items():
+            related_services = {}
+            for service_id, service in self.inv['services'].items():
+                try:
+                    service.raw['aws']['s3']
+                except TypeError:
+                    continue
+                except KeyError:
+                    continue
+                for service_resource_id in service.raw['aws']['s3']:
+                    if service_resource_id == instance_id:
+                        related_services[service_id] = service
+
+            exported_data.append(
+                [
+                    instance_id,
+                    instance.to_destroy,
+                    instance._get_field('environment'),
+                    '{}/{}'.format(
+                        instance.raw['desired_permissions']['read'],
+                        instance.raw['permissions']['READ']
+                    ),
+                    '{}/{}'.format(
+                        instance.raw['desired_permissions']['write'],
+                        instance.raw['permissions']['WRITE']
+                    ),
+                    instance.description,
+                ]
+            )
+
+        # Sort by name
+        exported_data = sorted(exported_data, key=itemgetter(1))
+        exported_data.insert(0, exported_headers)
+
+        return exported_data
 
     def _export_route53(self):
         """
@@ -345,6 +405,7 @@ class ExportReport(ClinvReport):
         book.update({'EC2': self._export_ec2()})
         book.update({'RDS': self._export_rds()})
         book.update({'Route53': self._export_route53()})
+        book.update({'S3': self._export_s3()})
 
         pyexcel.save_book_as(
             bookdict=book,

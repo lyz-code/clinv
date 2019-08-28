@@ -27,7 +27,7 @@ Classes:
     Inventory: Class to gather and manipulate the inventory data.
 """
 
-from clinv.sources.aws import EC2src, RDSsrc, Route53src
+from clinv.sources.aws import EC2src, RDSsrc, Route53src, S3src
 from clinv.sources.risk_management import \
     Informationsrc, Projectsrc, Servicesrc
 from yaml import YAMLError
@@ -41,6 +41,7 @@ active_source_plugins = [
     Projectsrc,
     RDSsrc,
     Route53src,
+    S3src,
     Servicesrc,
 ]
 

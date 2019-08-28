@@ -4,15 +4,12 @@
 
 ### H
 
-* Refactor clinv reports and inventory to their own objects
-  * Once you do that, split the tests as TestRoute53Inventory
-  * Give it a think how to use a Plugin model, thinking the contribution as
-  plugins for the resources, and then reports.
 * Add comments to ec2 instances, projects, services and informations
 
 ### M
 
 * Add risk management support
+* Refactor the Source tests into a parent testcase to avoid duplicated code
 * Autoscaling group support
 * Service object access part divided by user type with each it's type of access
 and information it access

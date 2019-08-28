@@ -625,6 +625,177 @@ class Route53src(AWSBasesrc):
         return inventory
 
 
+class S3src(AWSBasesrc):
+    """
+    Class to gather and manipulate the S3 resources.
+
+    Parameters:
+        source_data (dict): S3src compatible source_data
+        dictionary.
+        user_data (dict): S3src compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 's3'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                's3_bucket_name': {
+                    'CreationDate': datetime.datetime(
+                        2012, 12, 12, 0, 7, 46, tzinfo=tzutc()
+                    ),
+                    'Name': 's3_bucket_name',
+                    'permissions': {
+                        'read': 'public',
+                        'write': 'private',
+                    },
+                    'Grants': [
+                        {
+                            'Grantee': {
+                                'DisplayName': 'admin',
+                                'ID': 'admin_id',
+                                'Type': 'CanonicalUser'
+                            },
+                            'Permission': 'READ'
+                        },
+                        {
+                            'Grantee': {
+                                'DisplayName': 'admin',
+                                'ID': 'admin_id',
+                                'Type': 'CanonicalUser'
+                            },
+                            'Permission': 'WRITE'
+                        },
+                        {
+                            'Grantee': {
+                                'Type': 'Group',
+                                'URI': 'http://acs.amazonaws.com/'
+                                        'groups/global/AllUsers'
+                            },
+                            'Permission': 'READ'
+                        },
+                    ],
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching S3 inventory')
+        self.source_data = {}
+
+        public_acl_indicator = \
+            'http://acs.amazonaws.com/groups/global/AllUsers'
+        permissions_to_check = ['READ', 'WRITE']
+
+        # Create S3 client, describe buckets.
+        s3 = boto3.client('s3')
+        list_bucket_response = s3.list_buckets()
+
+        for bucket_dictionary in list_bucket_response['Buckets']:
+            bucket_dictionary['Grants'] = s3.get_bucket_acl(
+                Bucket=bucket_dictionary['Name']
+            )['Grants']
+            bucket_dictionary['permissions'] = {}
+
+            # Check if there is any public access to the bucket
+            for grant in bucket_dictionary['Grants']:
+                for (key, value) in grant.items():
+                    if key == 'Permission' and any(
+                        permission in value
+                        for permission in permissions_to_check
+                    ):
+                        for (grantee_attribute_key, grantee_attribute_value) \
+                                in grant['Grantee'].items():
+                            if 'URI' in grantee_attribute_key and \
+                                    grant['Grantee']['URI'] == \
+                                    public_acl_indicator:
+                                bucket_dictionary['permissions'][value] = \
+                                    'public'
+
+            # If there is no public access, it means it's private
+            for permission in permissions_to_check:
+                try:
+                    bucket_dictionary['permissions'][permission]
+                except KeyError:
+                    bucket_dictionary['permissions'][permission] = \
+                        'private'
+
+            self.source_data[bucket_dictionary['Name']] = bucket_dictionary
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'description': '',
+                    'to_destroy': 'tbd',
+                    'environment': 'tbd',
+                    'desired_permissions': {
+                        'read': 'tbd',
+                        'write': 'tbd',
+                    },
+                    'state': 'active',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with S3 resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: S3 inventory with user and source data
+        """
+
+        inventory = {}
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = S3({resource_id: resource})
+
+        return inventory
+
+
 class ClinvAWSResource(ClinvGenericResource):
     """
     Abstract class to extend ClinvGenericResource, it gathers common method and
@@ -1135,3 +1306,73 @@ class Route53(ClinvGenericResource):
             return True
 
         return False
+
+
+class S3(ClinvGenericResource):
+    """
+    Abstract class to extend ClinvGenericResource, it gathers method and
+    attributes for the S3 resources.
+
+    Public properties:
+        name: Returns the name of the resource.
+        print: Prints the name of the resource
+        short_print: Prints information of the resource
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('Name', 'str')
+
+    @property
+    def to_destroy(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        if we want to destroy the resource.
+
+        Returns:
+            str: If we want to destroy the resource
+        """
+
+        return self._get_field('to_destroy', 'str')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Description: {}'.format(self.description))
+        print('  Permissions: desired/real'),
+        print('      READ: {}/{}'.format(
+            self.raw['desired_permissions']['read'],
+            self.raw['permissions']['READ']
+        )),
+        print('      WRITE: {}/{}'.format(
+            self.raw['desired_permissions']['write'],
+            self.raw['permissions']['WRITE']
+        )),
+        print('  Environment: {}'.format(self.raw['environment'])),
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy))

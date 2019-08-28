@@ -29,6 +29,8 @@ class UnassignedReport(ClinvReport):
             that are not associated to any service.
         _unassigned_route53: Do aggregation of data to print the Route53
             resources that are not associated to any service.
+        _unassigned_s3: Do aggregation of data to print the S3 resources
+            that are not associated to any service.
         _unassigned_services: Do aggregation of data to print the services
             resources that are not associated to any project.
         _unassigned_informations: Do aggregation of data to print the
@@ -119,6 +121,17 @@ class UnassignedReport(ClinvReport):
                 if instance.type != 'SOA' and instance.type != 'NS':
                     instance.print()
 
+    def _unassigned_s3(self):
+        """
+        Do aggregation of data to print the S3 resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        self._unassigned_aws_resource('s3')
+
     def _unassigned_services(self):
         """
         Do aggregation of data to print the services resources that are not
@@ -193,6 +206,8 @@ class UnassignedReport(ClinvReport):
             self._unassigned_rds()
             self.log.info('Unassigned Route53')
             self._unassigned_route53()
+            self.log.info('Unassigned S3')
+            self._unassigned_s3()
             self.log.info('Unassigned Services')
             self._unassigned_services()
             self.log.info('Unassigned Informations')
@@ -203,6 +218,8 @@ class UnassignedReport(ClinvReport):
             self._unassigned_rds()
         elif resource_type == 'route53':
             self._unassigned_route53()
+        elif resource_type == 's3':
+            self._unassigned_s3()
         elif resource_type == 'services':
             self._unassigned_services()
         elif resource_type == 'informations':
