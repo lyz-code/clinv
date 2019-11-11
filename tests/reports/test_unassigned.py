@@ -165,18 +165,49 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report._unassigned_s3()
         self.assertTrue(self.s3instance.print.called)
 
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_iam_users_prints_instances(self, printMock):
+        self.report._unassigned_iam_users()
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.report.inv['iam_users']['iamuser_01']]
+            ),
+            None,
+        )
+
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_iam_users_does_not_fail_on_empty_people_iam_user(
+        self,
+        printMock,
+    ):
+        self.person.iam_user = None
+        self.report._unassigned_iam_users()
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.report.inv['iam_users']['iamuser_01']]
+            ),
+            None,
+        )
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_users')
+    def test_general_unassigned_can_use_iam_users_resource(self, unassignMock):
+        self.report.output('iam_users')
+        self.assertTrue(unassignMock.called)
+
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_s3')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_ec2')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_services')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_people')
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_users')
     @patch(
         'clinv.reports.unassigned.UnassignedReport._unassigned_informations'
     )
     def test_output_can_test_all(
         self,
         informationsMock,
+        iamusersMock,
         peopleMock,
         servicesMock,
         ec2Mock,
@@ -188,6 +219,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.assertTrue(informationsMock.called)
         self.assertTrue(servicesMock.called)
         self.assertTrue(peopleMock.called)
+        self.assertTrue(iamusersMock.called)
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
         self.assertTrue(route53Mock.called)

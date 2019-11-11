@@ -53,6 +53,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'people')
 
+    def test_can_specify_unassigned_iam_users_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'iam_users'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'iam_users')
+
     def test_can_specify_unassigned_informations_subcommand(self):
         parsed = self.parser.parse_args(['unassigned', 'informations'])
         self.assertEqual(parsed.subcommand, 'unassigned')
@@ -87,6 +92,11 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['list', 'people'])
         self.assertEqual(parsed.subcommand, 'list')
         self.assertEqual(parsed.resource_type, 'people')
+
+    def test_can_specify_list_iam_users_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'iam_users'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'iam_users')
 
     def test_can_specify_export_subcommand(self):
         parsed = self.parser.parse_args(['export'])

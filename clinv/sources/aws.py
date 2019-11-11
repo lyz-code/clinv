@@ -342,9 +342,6 @@ class RDSsrc(AWSBasesrc):
                         2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
                     ),
                     'Iops': 1000,
-                    'LatestRestorableTime': datetime.datetime(
-                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                    ),
                     'MasterUsername': 'root',
                     'MultiAZ': True,
                     'PreferredBackupWindow': '03:00-04:00',
@@ -374,6 +371,7 @@ class RDSsrc(AWSBasesrc):
             'DomainMemberships',
             'EnhancedMonitoringResourceArn',
             'IAMDatabaseAuthenticationEnabled',
+            'LatestRestorableTime',
             'LicenseModel',
             'MonitoringInterval',
             'MonitoringRoleArn',
@@ -821,28 +819,28 @@ class IAMUsersrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'iamuser'
+        self.id = 'iam_users'
 
     def generate_source_data(self):
         """
         Do aggregation of the source data to generate the source dictionary
         into self.source_data, with the following structure:
             {
-                'user_1': {
+                'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                    'UserName': 'User 1'
                     'Path': '/',
                     'CreateDate': datetime.datetime(
                         2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
                     ),
                     'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
                 },
-                'user_2': {
+                'arn:aws:iam::XXXXXXXXXXXX:user/user_2': {
+                    'UserName': 'User 2'
                     'Path': '/',
                     'CreateDate': datetime.datetime(
                         2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
                     ),
                     'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_2'
                 },
             }
 
@@ -857,10 +855,13 @@ class IAMUsersrc(AWSBasesrc):
         iam_users = iam.list_users()['Users']
 
         for record in iam_users:
-            username = record['UserName']
-            record.pop('UserName')
-            record.pop('PasswordLastUsed')
-            self.source_data['iamuser_{}'.format(username)] = record
+            user_id = record['Arn']
+            record.pop('Arn')
+            try:
+                record.pop('PasswordLastUsed')
+            except KeyError:
+                pass
+            self.source_data[user_id] = record
 
         return self.source_data
 
@@ -882,7 +883,7 @@ class IAMUsersrc(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'name': 'tbd',
+                    'name': resource['UserName'],
                     'description': 'tbd',
                     'to_destroy': 'tbd',
                     'state': 'tbd',

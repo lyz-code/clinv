@@ -34,6 +34,9 @@ class ClinvReportBaseTestClass(object):
             'people': {
                 'peo_01': Mock()
             },
+            'iam_users': {
+                'iamuser_01': Mock()
+            },
             'projects': {
                 'pro_01': Mock()
             },
@@ -46,6 +49,7 @@ class ClinvReportBaseTestClass(object):
         }
         self.ec2instance = self.inventory.inv['ec2']['i-023desldk394995ss']
         self.s3instance = self.inventory.inv['s3']['s3_bucket_name']
+        self.iamuser = self.inventory.inv['iam_users']['iamuser_01']
         self.information = self.inventory.inv['informations']['inf_01']
         self.person = self.inventory.inv['people']['peo_01']
         self.project = self.inventory.inv['projects']['pro_01']

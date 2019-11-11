@@ -187,7 +187,7 @@ class UnassignedReport(ClinvReport):
 
     def _unassigned_people(self):
         """
-        Do aggregation of data to print the informations resources that are not
+        Do aggregation of data to print the people resources that are not
         associated to any project.
 
         Returns:
@@ -195,6 +195,27 @@ class UnassignedReport(ClinvReport):
         """
 
         self._unassigned_risk_management_resource('people')
+
+    def _unassigned_iam_users(self):
+        """
+        Do aggregation of data to print the iam user resources that are not
+        associated to any person.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+        all_assigned_resources = []
+        for person_id, person in sorted(self.inv['people'].items()):
+            if person.iam_user is None:
+                continue
+            else:
+                all_assigned_resources.append(person.iam_user)
+
+        unassigned_resources = []
+        for resource_id, resource in sorted(self.inv['iam_users'].items()):
+            if resource_id not in all_assigned_resources:
+                unassigned_resources.append(resource)
+        self.short_print_resources(unassigned_resources)
 
     def output(self, resource_type):
         """
@@ -208,6 +229,7 @@ class UnassignedReport(ClinvReport):
                     'rds',
                     'route53',
                     'services',
+                    'iam_users',
                     'informations',
                     'people',
                     'projects',
@@ -230,6 +252,8 @@ class UnassignedReport(ClinvReport):
             self._unassigned_services()
             self.log.info('Unassigned People')
             self._unassigned_people()
+            self.log.info('Unassigned IAM Users')
+            self._unassigned_iam_users()
             self.log.info('Unassigned Informations')
             self._unassigned_informations()
         elif resource_type == 'ec2':
@@ -244,5 +268,7 @@ class UnassignedReport(ClinvReport):
             self._unassigned_services()
         elif resource_type == 'people':
             self._unassigned_people()
+        elif resource_type == 'iam_users':
+            self._unassigned_iam_users()
         elif resource_type == 'informations':
             self._unassigned_informations()

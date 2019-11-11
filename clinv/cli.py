@@ -38,12 +38,13 @@ def load_parser():
         choices=[
             'all',
             'ec2',
+            'iam_users',
             'informations',
+            'people',
             'rds',
             'route53',
             's3',
             'services',
-            'people',
         ],
         default='all'
     )
@@ -57,6 +58,7 @@ def load_parser():
             'ec2',
             'rds',
             'services',
+            'iam_users',
             'informations',
             'people',
             'projects',

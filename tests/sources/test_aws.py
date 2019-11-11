@@ -420,9 +420,6 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                         2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
                     ),
                     'Iops': 1000,
-                    'LatestRestorableTime': datetime.datetime(
-                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                    ),
                     'MasterUsername': 'root',
                     'MultiAZ': True,
                     'PreferredBackupWindow': '03:00-04:00',
@@ -1224,18 +1221,18 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
 
         # What data we want to aggregate to our inventory
         self.desired_source_data = {
-            'iamuser_user_1': {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
                 'Path': '/',
                 'CreateDate': datetime.datetime(
                     2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
                 ),
                 'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                'UserName': 'User 1'
             },
         }
         self.desired_user_data = {
-            'iamuser_user_1': {
-                'name': 'tbd',
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
                 'description': 'tbd',
                 'to_destroy': 'tbd',
                 'state': 'tbd',
@@ -1251,7 +1248,7 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
         self.boto.client.return_value.list_users.return_value = {
             'Users': [
                 {
-                    'UserName': 'user_1',
+                    'UserName': 'User 1',
                     'Path': '/',
                     'CreateDate': datetime.datetime(
                         2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
@@ -1291,7 +1288,7 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
 
     def test_generate_user_data_doesnt_loose_existing_data(self):
         desired_user_data = {
-            'iamuser_user_1': {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
                 'name': 'User 1',
                 'description': 'User 1 description',
                 'to_destroy': False,
@@ -1316,7 +1313,7 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
         self,
         resource_mock
     ):
-        resource_id = 'iamuser_user_1'
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
         self.src.user_data = self.desired_user_data
 
         desired_mock_input = {
@@ -1661,9 +1658,6 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                     2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
                 ),
                 'Iops': 1000,
-                'LatestRestorableTime': datetime.datetime(
-                    2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                ),
                 'MasterUsername': 'root',
                 'MultiAZ': True,
                 'PreferredBackupWindow': '03:00-04:00',
