@@ -19,7 +19,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     def test_unassigned_ec2_prints_instances(self):
         self.report._unassigned_ec2()
 
-        self.assertTrue(self.ec2instance.print.called)
+        self.assertTrue(self.ec2instance.short_print.called)
 
     def test_unassigned_rds_prints_instances(self):
         self.rdsinstance.id = 'db-YDFL2'
@@ -27,7 +27,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
 
         self.report._unassigned_rds()
 
-        self.assertTrue(self.rdsinstance.print.called)
+        self.assertTrue(self.rdsinstance.short_print.called)
 
     @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
     def test_unassigned_services_prints_instances(self, printMock):
@@ -163,14 +163,18 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
 
     def test_unassigned_s3_prints_instances(self):
         self.report._unassigned_s3()
-        self.assertTrue(self.s3instance.print.called)
+        self.assertTrue(self.s3instance.short_print.called)
 
     @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
     def test_unassigned_iam_users_prints_instances(self, printMock):
         self.report._unassigned_iam_users()
         self.assertEqual(
             printMock.assert_called_with(
-                [self.report.inv['iam_users']['iamuser_01']]
+                [
+                    self.report.inv['iam_users'][
+                        'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                    ]
+                ]
             ),
             None,
         )
@@ -184,7 +188,11 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report._unassigned_iam_users()
         self.assertEqual(
             printMock.assert_called_with(
-                [self.report.inv['iam_users']['iamuser_01']]
+                [
+                    self.report.inv['iam_users'][
+                        'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                    ]
+                ]
             ),
             None,
         )
@@ -194,6 +202,23 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report.output('iam_users')
         self.assertTrue(unassignMock.called)
 
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_iam_groups_prints_instances(self, printMock):
+        self.iamgroup.id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        self.iamgroup.name = 'resource_name'
+
+        self.report._unassigned_iam_groups()
+
+        self.assertTrue(self.iamgroup.short_print.called)
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_groups')
+    def test_general_unassigned_can_use_iam_groups_resource(
+        self,
+        unassignMock
+    ):
+        self.report.output('iam_groups')
+        self.assertTrue(unassignMock.called)
+
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_s3')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
@@ -201,12 +226,14 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_services')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_people')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_users')
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_groups')
     @patch(
         'clinv.reports.unassigned.UnassignedReport._unassigned_informations'
     )
     def test_output_can_test_all(
         self,
         informationsMock,
+        iamgroupsMock,
         iamusersMock,
         peopleMock,
         servicesMock,
@@ -220,6 +247,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.assertTrue(servicesMock.called)
         self.assertTrue(peopleMock.called)
         self.assertTrue(iamusersMock.called)
+        self.assertTrue(iamgroupsMock.called)
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
         self.assertTrue(route53Mock.called)

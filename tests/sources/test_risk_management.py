@@ -386,6 +386,12 @@ class TestPeople(ClinvGenericResourceTests, unittest.TestCase):
     def test_get_email(self):
         self.assertEqual(self.resource.email, 'user@email.org')
 
+    def test_search_by_email(self):
+        self.assertTrue(self.resource.search('.*@email.org'))
+
+    def test_search_by_iam_user(self):
+        self.assertTrue(self.resource.search('iamuser.*'))
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (

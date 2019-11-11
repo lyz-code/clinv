@@ -38,6 +38,7 @@ def load_parser():
         choices=[
             'all',
             'ec2',
+            'iam_groups',
             'iam_users',
             'informations',
             'people',
@@ -58,6 +59,7 @@ def load_parser():
             'ec2',
             'rds',
             'services',
+            'iam_groups',
             'iam_users',
             'informations',
             'people',

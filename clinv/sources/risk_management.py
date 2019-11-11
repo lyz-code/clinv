@@ -17,6 +17,8 @@ Classes:
 """
 from clinv.sources import ClinvSourcesrc, ClinvGenericResource
 
+import re
+
 
 class RiskManagementBasesrc(ClinvSourcesrc):
     """
@@ -510,6 +512,34 @@ class People(ClinvActiveResource):
         """
 
         return self._get_field('email', 'str')
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include project specific search.
+
+        Extend to search by:
+            email
+            iam_user
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvGenericResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by email
+        if re.match(search_string, self.email):
+            return True
+
+        # Search by iam_user
+        if re.match(search_string, self.iam_user):
+            return True
 
     def print(self):
         """

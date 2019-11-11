@@ -58,6 +58,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'iam_users')
 
+    def test_can_specify_unassigned_iam_groups_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'iam_groups'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'iam_groups')
+
     def test_can_specify_unassigned_informations_subcommand(self):
         parsed = self.parser.parse_args(['unassigned', 'informations'])
         self.assertEqual(parsed.subcommand, 'unassigned')
