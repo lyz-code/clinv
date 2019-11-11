@@ -56,6 +56,31 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         )
 
     @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_people_prints_instances(self, printMock):
+        self.project.people = []
+        self.report._unassigned_people()
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.report.inv['people']['peo_01']]
+            ),
+            None,
+        )
+
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_people_does_not_fail_on_empty_project_people(
+        self,
+        printMock,
+    ):
+        self.project.people = None
+        self.report._unassigned_people()
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.report.inv['people']['peo_01']]
+            ),
+            None,
+        )
+
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
     def test_unassigned_informations_prints_instances(self, printMock):
         self.project.informations = ['inf_02']
         self.report._unassigned_informations()
@@ -93,6 +118,11 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_services')
     def test_general_unassigned_can_use_service_resource(self, unassignMock):
         self.report.output('services')
+        self.assertTrue(unassignMock.called)
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_people')
+    def test_general_unassigned_can_use_people_resource(self, unassignMock):
+        self.report.output('people')
         self.assertTrue(unassignMock.called)
 
     @patch(
@@ -140,12 +170,14 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_ec2')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_services')
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_people')
     @patch(
         'clinv.reports.unassigned.UnassignedReport._unassigned_informations'
     )
     def test_output_can_test_all(
         self,
         informationsMock,
+        peopleMock,
         servicesMock,
         ec2Mock,
         rdsMock,
@@ -155,6 +187,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report.output('all')
         self.assertTrue(informationsMock.called)
         self.assertTrue(servicesMock.called)
+        self.assertTrue(peopleMock.called)
         self.assertTrue(ec2Mock.called)
         self.assertTrue(rdsMock.called)
         self.assertTrue(route53Mock.called)

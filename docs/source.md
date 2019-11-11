@@ -306,6 +306,10 @@ class Test{{ class_name }}(ClinvGenericResourceTests, unittest.TestCase):
         super().tearDown()
 ```
 
+### Add source to the active_source_plugins
+
+Add it to the `clinv/inventory.py` `active_source_plugins` variable.
+
 ### Add resource to the reports
 
 There are some reports that are generic, such as `list` or `print`, but there

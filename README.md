@@ -148,6 +148,21 @@ services:
       2fa: true
 ```
 
+### People
+
+Represent a person.
+
+An example of a service asset could be:
+```yaml
+people:
+  peo-01:
+    name: Lyz
+    description: Administrator
+    state: active
+    email: lyz@clinv.org
+    iam_user: 'iamuser_lyz'
+```
+
 ### AWS Resources
 
 Represents AWS resources

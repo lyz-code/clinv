@@ -177,6 +177,35 @@ class Informationsrc(RiskManagementBasesrc):
         self.resource_obj = Information
 
 
+class Peoplesrc(RiskManagementBasesrc):
+    """
+    Class to gather and manipulate the Information resources.
+
+    Parameters:
+        source_data (dict): RiskManagementsrc compatible source_data
+        dictionary.
+        user_data (dict): RiskManagementsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'people'
+        self.resource_obj = People
+
+
 class ClinvActiveResource(ClinvGenericResource):
     """
     Abstract class to extend ClinvGenericResource, it gathers common method and
@@ -221,6 +250,7 @@ class Project(ClinvActiveResource):
         aliases: Returns the aliases of the project.
         services: Returns a list of service ids used by the project.
         informations: Returns a list of information ids used by the project.
+        people: Returns a list of people ids of the project.
     """
 
     def __init__(self, raw_data):
@@ -264,6 +294,18 @@ class Project(ClinvActiveResource):
         """
 
         return self._get_field('informations', 'list')
+
+    @property
+    def people(self):
+        """
+        Do aggregation of data to return the People resource ids used
+        by this project.
+
+        Returns:
+            list: of people ids.
+        """
+
+        return self._get_field('people', 'list')
 
     def search(self, search_string):
         """
@@ -426,3 +468,64 @@ class Service(ClinvActiveResource):
             print('    {}:'.format(resource_id))
             for resource_name in resource_value:
                 print('      {}'.format(resource_name))
+
+
+class People(ClinvActiveResource):
+    """
+    Extends the ClinvActiveResource class to add specific properties and
+    methods for the people assets stored in the inventory.
+
+    Public methods:
+        print: Print information of the resource.
+
+    Public properties:
+        iam_user: Returns IAM user of the person
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def iam_user(self):
+        """
+        Do aggregation of data to return the iam user of the person.
+
+        Returns:
+            str: IAM user id.
+        """
+
+        return self._get_field('iam_user', 'str')
+
+    @property
+    def email(self):
+        """
+        Do aggregation of data to return the email of the person.
+
+        Returns:
+            str: email.
+        """
+
+        return self._get_field('email', 'str')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  Email: {}'.format(self.email))
+        print('  State: {}'.format(self.state))
+        print('  IAM User: {}'.format(self.iam_user))

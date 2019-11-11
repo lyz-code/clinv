@@ -796,6 +796,125 @@ class S3src(AWSBasesrc):
         return inventory
 
 
+class IAMUsersrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the IAM User resources.
+
+    Parameters:
+        source_data (dict): IAMUsersrc compatible source_data
+        dictionary.
+        user_data (dict): IAMUsersrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'iamuser'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                'user_1': {
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                },
+                'user_2': {
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_2'
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching IAM users inventory')
+        self.source_data = {}
+
+        iam = boto3.client('iam')
+        iam_users = iam.list_users()['Users']
+
+        for record in iam_users:
+            username = record['UserName']
+            record.pop('UserName')
+            record.pop('PasswordLastUsed')
+            self.source_data['iamuser_{}'.format(username)] = record
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'name': 'tbd',
+                    'description': 'tbd',
+                    'to_destroy': 'tbd',
+                    'state': 'tbd',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with IAM resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: IAM inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = IAMUser({resource_id: resource})
+
+        return inventory
+
+
 class ClinvAWSResource(ClinvGenericResource):
     """
     Abstract class to extend ClinvGenericResource, it gathers common method and
@@ -1376,3 +1495,24 @@ class S3(ClinvGenericResource):
         print('  Environment: {}'.format(self.raw['environment'])),
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy))
+
+
+class IAMUser(ClinvGenericResource):
+    """
+    Abstract class to extend ClinvGenericResource, it gathers method and
+    attributes for the IAMUser resources.
+
+    Public properties:
+        name: Returns the name of the user.
+
+    Public methods:
+        print: Prints the name of the resource
+        short_print: Prints information of the resource
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)

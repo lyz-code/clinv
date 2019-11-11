@@ -1,5 +1,5 @@
-from clinv.sources.aws import EC2src, Route53src, RDSsrc, S3src
-from clinv.sources.aws import EC2, RDS, Route53, S3
+from clinv.sources.aws import EC2src, Route53src, RDSsrc, S3src, IAMUsersrc
+from clinv.sources.aws import EC2, RDS, Route53, S3, IAMUser
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
 from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
@@ -1208,6 +1208,140 @@ class TestS3Source(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
 
+class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMUser source implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMUsersrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'iamuser_user_1': {
+                'Path': '/',
+                'CreateDate': datetime.datetime(
+                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                ),
+                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+            },
+        }
+        self.desired_user_data = {
+            'iamuser_user_1': {
+                'name': 'tbd',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        self.boto.client.return_value.list_users.return_value = {
+            'Users': [
+                {
+                    'UserName': 'user_1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                },
+            ]
+        }
+
+        self.src.source_data = {}
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        desired_user_data = {
+            'iamuser_user_1': {
+                'name': 'User 1',
+                'description': 'User 1 description',
+                'to_destroy': False,
+            },
+        }
+
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMUser')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'iamuser_user_1'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
 class ClinvAWSResourceTests(ClinvGenericResourceTests):
     '''Must be combined with a unittest.TestCase that defines:
         * self.resource as a ClinvAWSResource subclass instance
@@ -1774,3 +1908,29 @@ class TestS3(ClinvGenericResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(8, len(self.print.mock_calls))
+
+
+class TestIAMUser(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        super().setUp()
+
+        self.id = 'iamuser_user_1'
+        self.raw = {
+            'iamuser_user_1': {
+                'Path': '/',
+                'CreateDate': datetime.datetime(
+                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                ),
+                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1',
+                'name': 'resource_name',
+                'description': 'This is the description',
+                'state': 'active',
+                'to_destroy': 'tbd',
+            },
+        }
+        self.resource = IAMUser(self.raw)
+
+    def tearDown(self):
+        super().tearDown()

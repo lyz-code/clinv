@@ -43,6 +43,7 @@ def load_parser():
             'route53',
             's3',
             'services',
+            'people',
         ],
         default='all'
     )
@@ -57,6 +58,7 @@ def load_parser():
             'rds',
             'services',
             'informations',
+            'people',
             'projects',
             'route53',
             's3',

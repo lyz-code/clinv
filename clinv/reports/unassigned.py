@@ -132,6 +132,37 @@ class UnassignedReport(ClinvReport):
 
         self._unassigned_aws_resource('s3')
 
+    def _unassigned_risk_management_resource(self, resource_type):
+        """
+        Do aggregation of data to print the services resources that are not
+        associated to any project.
+
+        Parameters:
+            resource_type (str): Type of clinv resource to be processed.
+                It must be one of [
+                    'services',
+                    'informations',
+                    'people',
+                ]
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        all_assigned_resources = []
+        for project_id, project in sorted(self.inv['projects'].items()):
+            resource_method = getattr(project, resource_type)
+            if resource_method is None:
+                continue
+            else:
+                for resource_id in resource_method:
+                    all_assigned_resources.append(resource_id)
+
+        unassigned_resources = []
+        for resource_id, resource in sorted(self.inv[resource_type].items()):
+            if resource_id not in all_assigned_resources:
+                unassigned_resources.append(resource)
+        self.short_print_resources(unassigned_resources)
+
     def _unassigned_services(self):
         """
         Do aggregation of data to print the services resources that are not
@@ -141,19 +172,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        all_assigned_services = []
-        for project_id, project in sorted(self.inv['projects'].items()):
-            if project.services is None:
-                continue
-            else:
-                for service in project.services:
-                    all_assigned_services.append(service)
-
-        unassigned_services = []
-        for service_id, service in sorted(self.inv['services'].items()):
-            if service_id not in all_assigned_services:
-                unassigned_services.append(service)
-        self.short_print_resources(unassigned_services)
+        self._unassigned_risk_management_resource('services')
 
     def _unassigned_informations(self):
         """
@@ -164,20 +183,18 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        all_assigned_informations = []
-        for project_id, project in self.inv['projects'].items():
-            if project.informations is None:
-                continue
-            else:
-                for information in project.informations:
-                    all_assigned_informations.append(information)
+        self._unassigned_risk_management_resource('informations')
 
-        unassigned_informations = []
-        for information_id, information in \
-                sorted(self.inv['informations'].items()):
-            if information_id not in all_assigned_informations:
-                unassigned_informations.append(information)
-        self.short_print_resources(unassigned_informations)
+    def _unassigned_people(self):
+        """
+        Do aggregation of data to print the informations resources that are not
+        associated to any project.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        self._unassigned_risk_management_resource('people')
 
     def output(self, resource_type):
         """
@@ -192,6 +209,7 @@ class UnassignedReport(ClinvReport):
                     'route53',
                     'services',
                     'informations',
+                    'people',
                     'projects',
                 ], if it's set to 'all' it will test all kind of resources
 
@@ -210,6 +228,8 @@ class UnassignedReport(ClinvReport):
             self._unassigned_s3()
             self.log.info('Unassigned Services')
             self._unassigned_services()
+            self.log.info('Unassigned People')
+            self._unassigned_people()
             self.log.info('Unassigned Informations')
             self._unassigned_informations()
         elif resource_type == 'ec2':
@@ -222,5 +242,7 @@ class UnassignedReport(ClinvReport):
             self._unassigned_s3()
         elif resource_type == 'services':
             self._unassigned_services()
+        elif resource_type == 'people':
+            self._unassigned_people()
         elif resource_type == 'informations':
             self._unassigned_informations()

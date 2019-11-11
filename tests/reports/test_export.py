@@ -290,18 +290,46 @@ class TestExportReport(ClinvReportBaseTestClass, unittest.TestCase):
             exported_data,
         )
 
+    def test_export_people_generates_expected_dictionary(self):
+        exported_data = [
+            [
+                'ID',
+                'Name',
+                'State',
+                'Description',
+            ],
+            [
+                'peo_01',
+                'User 1',
+                'active',
+                'User 1 description',
+             ]
+        ]
+
+        self.person.id = 'peo_01'
+        self.person.name = 'User 1'
+        self.person.state = 'active'
+        self.person.description = 'User 1 description'
+
+        self.assertEqual(
+            self.report._export_people(),
+            exported_data,
+        )
+
     @patch('clinv.reports.export.ExportReport._export_s3')
     @patch('clinv.reports.export.ExportReport._export_route53')
     @patch('clinv.reports.export.ExportReport._export_rds')
     @patch('clinv.reports.export.ExportReport._export_ec2')
     @patch('clinv.reports.export.ExportReport._export_informations')
     @patch('clinv.reports.export.ExportReport._export_services')
+    @patch('clinv.reports.export.ExportReport._export_people')
     @patch('clinv.reports.export.ExportReport._export_projects')
     @patch('clinv.reports.export.pyexcel')
     def test_export_generates_expected_book(
         self,
         pyexcelMock,
         projectsMock,
+        peopleMock,
         servicesMock,
         informationsMock,
         ec2Mock,
@@ -317,6 +345,7 @@ class TestExportReport(ClinvReportBaseTestClass, unittest.TestCase):
         expected_book.update({'RDS': rdsMock.return_value})
         expected_book.update({'Route53': route53Mock.return_value})
         expected_book.update({'S3': s3Mock.return_value})
+        expected_book.update({'People': peopleMock.return_value})
 
         self.report.output('file.ods')
         self.assertEqual(

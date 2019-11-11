@@ -36,6 +36,9 @@ class ExportReport(ClinvReport):
         _export_route53: Do aggregation of data to return a list with the
             information needed to fill up a spreadsheet for the Route53
             resources.
+        _export_people: Do aggregation of data to return a list with the
+            information needed to fill up a spreadsheet for the people
+            resources.
         _export_projects: Do aggregation of data to return a list with the
             information needed to fill up a spreadsheet for the project
             resources.
@@ -382,6 +385,42 @@ class ExportReport(ClinvReport):
 
         return exported_data
 
+    def _export_people(self):
+        """
+        Do aggregation of data to return a list with the information needed to
+        fill up a spreadsheet for the People resources.
+
+        Returns:
+            list: First row are the headers of the spreadsheet, followed
+            by lines of data.
+        """
+
+        # Create spreadsheet headers
+        exported_headers = [
+            'ID',
+            'Name',
+            'State',
+            'Description',
+        ]
+
+        # Fill up content
+        exported_data = []
+        for resource_id, resource in self.inv['people'].items():
+            exported_data.append(
+                [
+                    resource_id,
+                    resource.name,
+                    resource.state,
+                    resource.description,
+                ]
+            )
+
+        # Sort by id
+        exported_data = sorted(exported_data, key=itemgetter(0))
+        exported_data.insert(0, exported_headers)
+
+        return exported_data
+
     def output(self, export_path):
         """
         Method to export the Clinv inventory to ods.
@@ -406,6 +445,7 @@ class ExportReport(ClinvReport):
         book.update({'RDS': self._export_rds()})
         book.update({'Route53': self._export_route53()})
         book.update({'S3': self._export_s3()})
+        book.update({'People': self._export_people()})
 
         pyexcel.save_book_as(
             bookdict=book,

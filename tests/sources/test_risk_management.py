@@ -1,6 +1,6 @@
 from clinv.sources.risk_management import \
-    Informationsrc, Projectsrc, Servicesrc
-from clinv.sources.risk_management import Information, Project, Service
+    Informationsrc, Peoplesrc, Projectsrc, Servicesrc
+from clinv.sources.risk_management import Information, Project, Service, People
 from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
 from unittest.mock import patch, call
 import unittest
@@ -143,6 +143,22 @@ class TestInformationSource(
         super().tearDown()
 
 
+class TestPeopleSource(RiskManagementSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the People implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.source_obj = Peoplesrc
+        self.resource_obj = 'People'
+        self.resource_id = 'peo_01'
+        self.resource_type = 'people'
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+
 class ClinvActiveResourceTests(ClinvGenericResourceTests):
     '''Must be combined with a unittest.TestCase that defines:
         * self.resource as a ClinvActiveResource subclass instance
@@ -190,6 +206,9 @@ class TestProject(ClinvActiveResourceTests, unittest.TestCase):
                     'ux': None,
                     'qa': None,
                 },
+                'people': [
+                    'peo_01',
+                ],
                 'name': 'resource_name',
                 'services': [
                     'ser_01'
@@ -338,3 +357,46 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(9, len(self.print.mock_calls))
+
+
+class TestPeople(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'risk_management'
+        super().setUp()
+
+        self.id = 'peo_01'
+        self.raw = {
+            'peo_01': {
+                'description': 'This is the description',
+                'name': 'resource_name',
+                'state': 'active',
+                'email': 'user@email.org',
+                'iam_user': 'iamuser_user1',
+            }
+        }
+
+        self.resource = People(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_iam_user(self):
+        self.assertEqual(self.resource.iam_user, 'iamuser_user1')
+
+    def test_get_email(self):
+        self.assertEqual(self.resource.email, 'user@email.org')
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('peo_01'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  Email: user@email.org'),
+            call('  State: active'),
+            call('  IAM User: iamuser_user1'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(6, len(self.print.mock_calls))
