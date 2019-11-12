@@ -1,4 +1,13 @@
 
+0.5.0 / 2019-11-12
+==================
+
+  * Added IAM User source and resource
+  * Added People source and resource
+  * Added IAM Group source and resources
+  * Added regular expression match on ec2 search ips
+  * Added to_destroy property to ClinvGenericResource
+
 0.4.0 / 2019-08-28
 ==================
 
