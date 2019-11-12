@@ -342,9 +342,6 @@ class RDSsrc(AWSBasesrc):
                         2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
                     ),
                     'Iops': 1000,
-                    'LatestRestorableTime': datetime.datetime(
-                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                    ),
                     'MasterUsername': 'root',
                     'MultiAZ': True,
                     'PreferredBackupWindow': '03:00-04:00',
@@ -374,6 +371,7 @@ class RDSsrc(AWSBasesrc):
             'DomainMemberships',
             'EnhancedMonitoringResourceArn',
             'IAMDatabaseAuthenticationEnabled',
+            'LatestRestorableTime',
             'LicenseModel',
             'MonitoringInterval',
             'MonitoringRoleArn',
@@ -796,6 +794,251 @@ class S3src(AWSBasesrc):
         return inventory
 
 
+class IAMGroupsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the IAMGroup resources.
+
+    Parameters:
+        source_data (dict): IAMGroupsrc compatible source_data
+        dictionary.
+        user_data (dict): IAMGroupsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'iam_groups'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching IAMGroup inventory')
+        self.source_data = {}
+
+        iam = boto3.client('iam')
+        iam_group_names = [
+            group['GroupName']
+            for group in iam.list_groups()['Groups']
+        ]
+
+        for group_name in iam_group_names:
+            group_data = iam.get_group(GroupName=group_name)
+            group_id = group_data['Group']['Arn']
+            self.source_data[group_id] = group_data['Group']
+            self.source_data[group_id].pop('Arn')
+            self.source_data[group_id]['Users'] = [
+                user['Arn']
+                for user in group_data['Users']
+            ]
+            self.source_data[group_id]['InlinePolicies'] = [
+                policy['PolicyArn']
+                for policy in iam.list_group_policies(
+                    GroupName=group_name
+                )['PolicyNames']
+            ]
+            self.source_data[group_id]['AttachedPolicies'] = [
+                policy['PolicyArn']
+                for policy in iam.list_attached_group_policies(
+                    GroupName=group_name
+                )['AttachedPolicies']
+            ]
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'name': resource['GroupName'],
+                    'description': 'tbd',
+                    'to_destroy': 'tbd',
+                    'state': 'tbd',
+                    'desired_users': resource['Users']
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with IAMGroup resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: IAMGroup inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = IAMGroup({resource_id: resource})
+
+        return inventory
+
+
+class IAMUsersrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the IAM User resources.
+
+    Parameters:
+        source_data (dict): IAMUsersrc compatible source_data
+        dictionary.
+        user_data (dict): IAMUsersrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'iam_users'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                    'UserName': 'User 1'
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                },
+                'arn:aws:iam::XXXXXXXXXXXX:user/user_2': {
+                    'UserName': 'User 2'
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching IAM users inventory')
+        self.source_data = {}
+
+        iam = boto3.client('iam')
+        iam_users = iam.list_users()['Users']
+
+        for record in iam_users:
+            user_id = record['Arn']
+            record.pop('Arn')
+            try:
+                record.pop('PasswordLastUsed')
+            except KeyError:
+                pass
+            self.source_data[user_id] = record
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'name': resource['UserName'],
+                    'description': 'tbd',
+                    'to_destroy': 'tbd',
+                    'state': 'tbd',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with IAM resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: IAM inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = IAMUser({resource_id: resource})
+
+        return inventory
+
+
 class ClinvAWSResource(ClinvGenericResource):
     """
     Abstract class to extend ClinvGenericResource, it gathers common method and
@@ -1039,11 +1282,11 @@ class EC2(ClinvAWSResource):
             return True
 
         # Search by public IP
-        if search_string in self.public_ips:
+        if self._match_list(search_string, self.public_ips):
             return True
 
         # Search by private IP
-        if search_string in self.private_ips:
+        if self._match_list(search_string, self.private_ips):
             return True
 
         return False
@@ -1338,18 +1581,6 @@ class S3(ClinvGenericResource):
 
         return self._get_field('Name', 'str')
 
-    @property
-    def to_destroy(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        if we want to destroy the resource.
-
-        Returns:
-            str: If we want to destroy the resource
-        """
-
-        return self._get_field('to_destroy', 'str')
-
     def print(self):
         """
         Override parent method to do aggregation of data to print information
@@ -1376,3 +1607,182 @@ class S3(ClinvGenericResource):
         print('  Environment: {}'.format(self.raw['environment'])),
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy))
+
+
+class IAMGroup(ClinvGenericResource):
+    """
+    Abstract class to extend ClinvGenericResource, it gathers method and
+    attributes for the IAMGroup resources.
+
+    Public methods:
+        print: Prints the name of the resource
+        short_print: Prints information of the resource
+
+    Public properties:
+        name: Returns the name of the record.
+        users: Return the real users of the group.
+        desired_users: Return the desired users of the group.
+        inline_policies: Return the inline policies of the group.
+        attached_policies: Return the attached policies of the group.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('GroupName', 'str')
+
+    @property
+    def users(self):
+        """
+        Do aggregation of data to return the real users of the group.
+
+        Returns:
+            list: List of user ids.
+        """
+
+        return self._get_field('Users', 'list')
+
+    @property
+    def desired_users(self):
+        """
+        Do aggregation of data to return the desired users of the group.
+
+        Returns:
+            list: List of user ids.
+        """
+
+        return self._get_field('desired_users', 'list')
+
+    @property
+    def inline_policies(self):
+        """
+        Do aggregation of data to return the inline policies of the group.
+
+        Returns:
+            list: List of policy ids.
+        """
+
+        return self._get_field('InlinePolicies', 'list')
+
+    @property
+    def attached_policies(self):
+        """
+        Do aggregation of data to return the attached policies of the group.
+
+        Returns:
+            list: List of policy ids.
+        """
+
+        return self._get_field('AttachedPolicies', 'list')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  Users:'),
+        for user_id in self.users:
+            print('    - {}'.format(user_id))
+        print('  AttachedPolicies:'),
+        for policy_id in self.attached_policies:
+            print('    - {}'.format(policy_id))
+        print('  InlinePolicies:'),
+        for policy_id in self.inline_policies:
+            print('    - {}'.format(policy_id))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include iam group specific search.
+
+        Extend to search by:
+            users in group
+            Policies ids
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvAWSResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by user ids
+        if self._match_list(search_string, self.users) or \
+                self._match_list(search_string, self.desired_users):
+            return True
+
+        # Search by policy ids
+        if self._match_list(search_string, self.attached_policies) or \
+                self._match_list(search_string, self.inline_policies):
+            return True
+
+        return False
+
+
+class IAMUser(ClinvGenericResource):
+    """
+    Abstract class to extend ClinvGenericResource, it gathers method and
+    attributes for the IAMUser resources.
+
+    Public properties:
+        name: Returns the name of the user.
+
+    Public methods:
+        print: Prints the name of the resource
+        short_print: Prints information of the resource
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),

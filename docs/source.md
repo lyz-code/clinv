@@ -112,6 +112,7 @@ class Test{{ class_name }}Source(ClinvSourceBaseTestClass, unittest.TestCase):
         self.src.source_data = {}
         self.assertEqual(self.src.generate_inventory(), {})
 
+    @unittest.skip('Not yet')
     @patch('clinv.sources.{{ module_name }}.{{ class_name }}')
     def test_generate_inventory_creates_expected_dictionary(
         self,
@@ -271,15 +272,12 @@ class {{ class_name }}(ClinvGenericResource):
     Abstract class to extend ClinvGenericResource, it gathers method and
     attributes for the {{ class_name }} resources.
 
-    Public properties:
-        name: Returns the name of the record.
-        value: Returns the value of the record.
-        type: Returns the type of the record.
-        hosted_zone: Returns the hosted zone name of the resource.
-        hosted_zone_id: Returns the hosted zone id of the resource.
-        private: Returns if the resource is private.
+    Public methods:
         print: Prints the name of the resource
         short_print: Prints information of the resource
+
+    Public properties:
+        name: Returns the name of the record.
     """
 
     def __init__(self, raw_data):
@@ -306,12 +304,19 @@ class Test{{ class_name }}(ClinvGenericResourceTests, unittest.TestCase):
         super().tearDown()
 ```
 
+Think if you can add more search filters in the object `search` method.
+
+### Add source to the active_source_plugins
+
+Add it to the `clinv/inventory.py` `active_source_plugins` variable.
+
 ### Add resource to the reports
 
 There are some reports that are generic, such as `list` or `print`, but there
 are some that still aren't.
 
 So you'll need to manually add your resource to `export` and `unassigned`.
+
 
 ### Add resource to the cli
 
@@ -326,4 +331,6 @@ Execute the following tasks
 * Regenerate the inventory and check that no information is lost.
 * Check the different reports.
 
+### Add documentation
 
+Complete the README.md and History.md

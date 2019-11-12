@@ -1,5 +1,11 @@
-from clinv.sources.aws import EC2src, Route53src, RDSsrc, S3src
-from clinv.sources.aws import EC2, RDS, Route53, S3
+from clinv.sources.aws import \
+    EC2src, \
+    IAMUsersrc,\
+    IAMGroupsrc, \
+    Route53src, \
+    RDSsrc, \
+    S3src
+from clinv.sources.aws import EC2, RDS, Route53, S3, IAMUser, IAMGroup
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
 from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
@@ -420,9 +426,6 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                         2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
                     ),
                     'Iops': 1000,
-                    'LatestRestorableTime': datetime.datetime(
-                        2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                    ),
                     'MasterUsername': 'root',
                     'MultiAZ': True,
                     'PreferredBackupWindow': '03:00-04:00',
@@ -1208,6 +1211,329 @@ class TestS3Source(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
 
+class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMUser source implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMUsersrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'Path': '/',
+                'CreateDate': datetime.datetime(
+                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                ),
+                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'UserName': 'User 1'
+            },
+        }
+        self.desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        self.boto.client.return_value.list_users.return_value = {
+            'Users': [
+                {
+                    'UserName': 'User 1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                },
+            ]
+        }
+
+        self.src.source_data = {}
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
+                'description': 'User 1 description',
+                'to_destroy': False,
+            },
+        }
+
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMUser')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMGroup implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMGroupsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'Administrator',
+                'Path': '/',
+                'Users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ],
+                'InlinePolicies': [
+                    'arn:aws:iam::aws:policy/Inlinepolicy'
+                ],
+                'AttachedPolicies': [
+                    'arn:aws:iam::aws:policy/Attachedpolicy'
+                ],
+            },
+        }
+        self.desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'name': 'Administrator',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+                'desired_users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ]
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        boto_mock = self.boto.client.return_value
+        boto_mock.list_groups.return_value = {
+            'Groups': [
+                {
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
+                    'CreateDate': datetime.datetime(
+                        2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                    ),
+                    'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'GroupName': 'Administrator',
+                    'Path': '/',
+                }
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+
+        boto_mock.get_group.return_value = {
+            'Group': {
+                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'Administrator',
+                'Path': '/',
+            },
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+            'Users': [
+                {
+                    'UserName': 'User 1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                }
+            ],
+        }
+        boto_mock.list_group_policies.return_value = {
+            'PolicyNames': [
+                {
+                    'PolicyArn': 'arn:aws:iam::aws:policy/Inlinepolicy',
+                    'PolicyName': 'InlinePolicy'
+                },
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+        boto_mock.list_attached_group_policies.return_value = {
+            'AttachedPolicies': [
+                {
+                    'PolicyArn': 'arn:aws:iam::aws:policy/Attachedpolicy',
+                    'PolicyName': 'AttachedPolicy'
+                },
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMGroup')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
 class ClinvAWSResourceTests(ClinvGenericResourceTests):
     '''Must be combined with a unittest.TestCase that defines:
         * self.resource as a ClinvAWSResource subclass instance
@@ -1527,9 +1853,6 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                     2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
                 ),
                 'Iops': 1000,
-                'LatestRestorableTime': datetime.datetime(
-                    2019, 7, 8, 6, 23, 55, tzinfo=tzutc()
-                ),
                 'MasterUsername': 'root',
                 'MultiAZ': True,
                 'PreferredBackupWindow': '03:00-04:00',
@@ -1774,3 +2097,136 @@ class TestS3(ClinvGenericResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(8, len(self.print.mock_calls))
+
+
+class TestIAMGroup(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        super().setUp()
+
+        self.id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        self.raw = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'resource_name',
+                'Path': '/',
+                'Users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ],
+                'InlinePolicies': [
+                    'arn:aws:iam::aws:policy/Inlinepolicy'
+                ],
+                'AttachedPolicies': [
+                    'arn:aws:iam::aws:policy/Attachedpolicy'
+                ],
+                'description': 'This is the description',
+                'state': 'active',
+                'to_destroy': 'tbd',
+                'desired_users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_2'
+                ]
+            },
+        }
+        self.resource = IAMGroup(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_users_property_works_as_expected(self):
+        self.assertEqual(
+            self.resource.users,
+            ['arn:aws:iam::XXXXXXXXXXXX:user/user_1']
+        )
+
+    def test_desired_users_property_works_as_expected(self):
+        self.assertEqual(
+            self.resource.desired_users,
+            ['arn:aws:iam::XXXXXXXXXXXX:user/user_2']
+        )
+
+    def test_desired_inline_policies_property_works_as_expected(self):
+        self.assertEqual(
+            self.resource.inline_policies,
+            ['arn:aws:iam::aws:policy/Inlinepolicy']
+        )
+
+    def test_desired_attached_policies_property_works_as_expected(self):
+        self.assertEqual(
+            self.resource.attached_policies,
+            ['arn:aws:iam::aws:policy/Attachedpolicy']
+        )
+
+    def test_search_by_users_in_group(self):
+        self.assertTrue(self.resource.search('.*user_1'))
+
+    def test_search_by_desired_users_in_group(self):
+        self.assertTrue(self.resource.search('.*user_2'))
+
+    def test_search_by_inline_policies_in_group(self):
+        self.assertTrue(self.resource.search('.*Inlinepolicy'))
+
+    def test_search_by_attached_policies_in_group(self):
+        self.assertTrue(self.resource.search('.*Attachedpolicy'))
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('arn:aws:iam::XXXXXXXXXXXX:group/Administrator'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  Users:'),
+            call('    - arn:aws:iam::XXXXXXXXXXXX:user/user_1'),
+            call('  AttachedPolicies:'),
+            call('    - arn:aws:iam::aws:policy/Attachedpolicy'),
+            call('  InlinePolicies:'),
+            call('    - arn:aws:iam::aws:policy/Inlinepolicy'),
+            call('  State: active'),
+            call('  Destroy: tbd'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(11, len(self.print.mock_calls))
+
+
+class TestIAMUser(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        super().setUp()
+
+        self.id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+        self.raw = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'Path': '/',
+                'CreateDate': datetime.datetime(
+                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                ),
+                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1',
+                'name': 'resource_name',
+                'description': 'This is the description',
+                'state': 'active',
+                'to_destroy': 'tbd',
+            },
+        }
+        self.resource = IAMUser(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('arn:aws:iam::XXXXXXXXXXXX:user/user_1'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Destroy: tbd'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(5, len(self.print.mock_calls))

@@ -205,3 +205,12 @@ class ClinvGenericResourceTests(object):
         for print_call in print_calls:
             self.assertIn(print_call, self.init_print.mock_calls)
         self.assertEqual(4, len(self.init_print.mock_calls))
+
+    def test_match_list_detects_regular_expression(self):
+        self.assertTrue(self.resource._match_list('a.c', ['abcd', '1']))
+
+    def test_match_list_is_case_insensitive(self):
+        self.assertTrue(self.resource._match_list('a.c', ['AbCd', '1']))
+
+    def test_match_list_returns_false_if_no_match(self):
+        self.assertFalse(self.resource._match_list('a.c', ['0', '1']))

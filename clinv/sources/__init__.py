@@ -37,6 +37,7 @@ class ClinvGenericResource():
         search: Search in the resource data if a string matches.
         short_print: Print the id and name of the resource.
         state: Returns the state of the resource.
+        to_destroy: Returns if the resource must be destroyed.
 
     Public properties:
         description: Returns the description of the resource.
@@ -154,6 +155,23 @@ class ClinvGenericResource():
 
         return value
 
+    def _match_list(self, search_term, list_to_search):
+        """
+        Check if regular expression matches the contents of a list.
+
+        Parameters:
+            search_term (str): Regular expression to search.
+            list_to_search (list): List to perform the list
+
+        Returns:
+            bool: If it matches.
+        """
+
+        for element in list_to_search:
+            if re.match(search_term, element, re.IGNORECASE):
+                return True
+        return False
+
     @property
     def description(self):
         """
@@ -186,6 +204,18 @@ class ClinvGenericResource():
         """
 
         return self._get_field('state', 'str')
+
+    @property
+    def to_destroy(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        if we want to destroy the resource.
+
+        Returns:
+            str: If we want to destroy the resource
+        """
+
+        return self._get_field('to_destroy', 'str')
 
     def search(self, search_string):
         """
