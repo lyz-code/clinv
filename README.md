@@ -1,6 +1,16 @@
 # Clinv
 
-`clinv` is a command line inventory for devsecops resources in AWS.
+`clinv` is a command line inventory for DevSecOps resources in AWS.
+
+# Features
+
+* Manage an inventory of risk management resources (Projects, Services,
+  Information, People) and infrastructure resources (EC2, RDS, S3, Route53, IAM
+  users, IAM groups...).
+* Add risk management metadata to your AWS resources.
+* Monitor if there are resources that are not inside your inventory.
+* Perform regular expression searches on all your resources.
+* Get all your resources information.
 
 # Install
 
@@ -25,9 +35,13 @@ in your AWS account with your local inventory, execute `clinv generate`.
 ## Generate
 
 `clinv generate` uses boto3 to update what is in your AWS inventory, right now
-it imports the following resources from all the regions:
+it is able to import the following resources from all the regions:
 
-* EC2 instances
+* EC2
+* RDS
+* Route53
+* S3
+* IAM users and groups
 
 ## List
 
@@ -46,6 +60,8 @@ In the case of services, it will only display the ones that doesn't have a `stat
 * Information names, aliases and descriptions.
 * EC2, RDS and Route53 properties (id, name, instance_type, private ips, public ips,
   descriptions, regions and security group ids).
+* People names and emails.
+* IAM users, groups and it's attached policies.
 
 And will print the matching information.
 
@@ -56,9 +72,9 @@ The search_string can be a regular expression.
 `clinv unassigned resource_type` will show a list of id and names of elements
 that are unassigned.
 
-If `resource_type` is `ec2`, it will search for instances that aren't assigned
-in a `service`.
-If `resource_type` is `service` or `information`, it will search for instances
+If `resource_type` is `ec2`, `rds`, `s3`, `route53`, it will search for
+instances that aren't assigned in a `service`.
+If `resource_type` is `people`, `service` or `information`, it will search for instances
 that aren't assigned to a `project`.
 
 ## Export
@@ -97,6 +113,7 @@ An example of a project could be:
 projects:
   pro-01:
     name: Clinv project
+    aliases: Other name for the project
     description: Project to develope clinv
     informations:
     - inf-01
@@ -104,6 +121,8 @@ projects:
     links:
       homepage: https://git.digitales.cslabrecha.org/lyz/clinv
       docs: https://git.digitales.cslabrecha.org/lyz/clinv
+    people:
+    - peo-01
     services:
     - ser-01
     - ser-02
@@ -122,7 +141,8 @@ informations:
     name: Clinv source code
     description: Clinv source code
     personal_data: false
-    responsible: lyz
+    responsible: peo-1
+    state: active
 ```
 
 ### Services
@@ -139,13 +159,33 @@ services:
     aws:
       ec2:
       - i-xxxxxxxxxxxx
+      route53:
+      - XXXXXXX-blabla.clinv.org-cname
+      rds:
+      s3:
+      iam_group:
     endpoints:
       - https://www.thispagedoesnot.exist
-    responsible: lyz
+    responsible: peo-01
     informations:
+    - inf-01
+    links:
+      agile board: tbd
+      ci: tbd
+      docs:
+        deploy: tbd
+        internal: tbd
+        ops: tbd
+        public: tbd
+      issues: tbd
+      source code: https://git.cloud.icij.org/staff/cassandra-prophecies
     authentication:
       method: sso
       2fa: true
+    users:
+    - admins
+    - partners
+    - internet
 ```
 
 ### People
@@ -165,14 +205,10 @@ people:
 
 ### AWS Resources
 
-Represents AWS resources
+Represents AWS resources, we'll show a typical resource template, though
+a default one is filled up when `clinv generate` is issued.
 
 #### EC2
-
-Represents an ec2 instance
-
-An example could be:
-
 
 ```yaml
 ec2:
@@ -180,6 +216,65 @@ ec2:
     description: 'Clinv homepage'
     to_destroy: false
     environment: 'production'
+```
+
+#### RDS
+
+```yaml
+rds:
+  db-xxxxxxxxxxxxxxxxxxxxxxxxxx:
+    description: Clinv backend database
+    environment: production
+    region: eu-east-1
+    to_destroy: false
+```
+
+#### Route53
+
+```yaml
+route53:
+  zone_id-clinv.com-cname:
+    description: 'Public endpoint to the clinv frontened'
+    to_destroy: true
+```
+
+#### S3
+
+```yaml
+s3:
+  clinv-bucket:
+    description: Webpage static storage bucket
+    desired_permissions:
+      read: public
+      write: private
+    environment: production
+    state: active
+    to_destroy: false
+```
+
+#### IAM Groups
+
+```yaml
+iam_groups:
+  arn:aws:iam::xxxxxxxxxxxx:group/admin:
+    description: AWS administrators.
+    desired_users:
+    - arn:aws:iam::xxxxxxxxxxxx:user/lyz
+    - arn:aws:iam::xxxxxxxxxxxx:user/user_1
+    name: Administrator
+    state: active
+    to_destroy: false
+```
+
+#### IAM Users
+
+```yaml
+iam_users:
+  arn:aws:iam::xxxxxxxxxxxx:user/lyz:
+    description: Lyz AWS IAM User
+    name: Lyz
+    state: active
+    to_destroy: false
 ```
 
 # Contributing
