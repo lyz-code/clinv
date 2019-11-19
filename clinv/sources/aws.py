@@ -851,7 +851,7 @@ class IAMGroupsrc(AWSBasesrc):
                 for user in group_data['Users']
             ]
             self.source_data[group_id]['InlinePolicies'] = [
-                policy['PolicyArn']
+                policy
                 for policy in iam.list_group_policies(
                     GroupName=group_name
                 )['PolicyNames']

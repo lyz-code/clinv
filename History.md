@@ -1,4 +1,12 @@
 
+0.5.1 / 2019-11-19
+==================
+
+  * Fixed IAM Group Policies fetching
+  * Added github actions
+  * Changed git url
+  * Updated README
+
 0.5.0 / 2019-11-12
 ==================
 
