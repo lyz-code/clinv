@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/lyz-code/clinv/workflows/Python%20package/badge.svg)](https://github.com/lyz-code/clinv/actions)
+
 # Clinv
 
 `clinv` is a command line inventory for DevSecOps resources in AWS.
