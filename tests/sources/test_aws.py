@@ -1372,7 +1372,7 @@ class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                     'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
                 ],
                 'InlinePolicies': [
-                    'arn:aws:iam::aws:policy/Inlinepolicy'
+                    'Inlinepolicy'
                 ],
                 'AttachedPolicies': [
                     'arn:aws:iam::aws:policy/Attachedpolicy'
@@ -1442,12 +1442,7 @@ class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
             ],
         }
         boto_mock.list_group_policies.return_value = {
-            'PolicyNames': [
-                {
-                    'PolicyArn': 'arn:aws:iam::aws:policy/Inlinepolicy',
-                    'PolicyName': 'InlinePolicy'
-                },
-            ],
+            'PolicyNames': ['Inlinepolicy'],
             'IsTruncated': False,
             'ResponseMetadata': {},
         }
@@ -2117,7 +2112,7 @@ class TestIAMGroup(ClinvGenericResourceTests, unittest.TestCase):
                     'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
                 ],
                 'InlinePolicies': [
-                    'arn:aws:iam::aws:policy/Inlinepolicy'
+                    'Inlinepolicy'
                 ],
                 'AttachedPolicies': [
                     'arn:aws:iam::aws:policy/Attachedpolicy'
@@ -2150,7 +2145,7 @@ class TestIAMGroup(ClinvGenericResourceTests, unittest.TestCase):
     def test_desired_inline_policies_property_works_as_expected(self):
         self.assertEqual(
             self.resource.inline_policies,
-            ['arn:aws:iam::aws:policy/Inlinepolicy']
+            ['Inlinepolicy']
         )
 
     def test_desired_attached_policies_property_works_as_expected(self):
@@ -2182,7 +2177,7 @@ class TestIAMGroup(ClinvGenericResourceTests, unittest.TestCase):
             call('  AttachedPolicies:'),
             call('    - arn:aws:iam::aws:policy/Attachedpolicy'),
             call('  InlinePolicies:'),
-            call('    - arn:aws:iam::aws:policy/Inlinepolicy'),
+            call('    - Inlinepolicy'),
             call('  State: active'),
             call('  Destroy: tbd'),
         )
