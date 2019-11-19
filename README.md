@@ -15,7 +15,7 @@
 # Install
 
 ```bash
-git clone https://git.digitales.cslabrecha.org/lyz/clinv
+git clone https://github.com/lyz-code/clinv
 cd clinv
 virtualenv -p python3 clinv
 source clinv/bin/activate
