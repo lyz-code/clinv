@@ -410,10 +410,12 @@ class Service(ClinvActiveResource):
 
     Public methods:
         print: Print information of the resource.
+        search: Extends parent method to search by aws resources
 
     Public properties:
         access: Returns the level of exposure of the service.
         informations: Returns a list of information ids used by the service.
+        aws: Returns a dict of aws resources used by the service.
     """
 
     def __init__(self, raw_data):
@@ -519,9 +521,11 @@ class People(ClinvActiveResource):
 
     Public methods:
         print: Print information of the resource.
+        search: Extends parent method to search by email and iam user
 
     Public properties:
-        iam_user: Returns IAM user of the person
+        iam_user: Returns IAM user of the person.
+        email: Returns IAM user email.
     """
 
     def __init__(self, raw_data):
