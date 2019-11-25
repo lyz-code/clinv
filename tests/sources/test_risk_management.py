@@ -306,9 +306,9 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
                     'method': 'Oauth2'
                 },
                 'aws': {
-                    'ec2': {
+                    'ec2': [
                         'i-01'
-                    },
+                    ],
                 },
                 'description': 'This is the description',
                 'endpoints': [
@@ -339,6 +339,12 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
 
     def test_get_informations(self):
         self.assertEqual(self.resource.informations, ['inf_01'])
+
+    def test_get_aws(self):
+        self.assertEqual(self.resource.aws, {'ec2': ['i-01']})
+
+    def test_search_matches_aws_resources(self):
+        self.assertTrue(self.resource.search('i-01'))
 
     def test_print_resource_information(self):
         self.resource.print()
