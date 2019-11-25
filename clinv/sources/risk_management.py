@@ -447,6 +447,46 @@ class Service(ClinvActiveResource):
 
         return self._get_field('informations', 'list')
 
+    @property
+    def aws(self):
+        """
+        Do aggregation of data to return the aws resource ids used
+        by this service.
+
+        Returns:
+            dict: AWS resources used by the service.
+        """
+
+        return self._get_field('aws', 'dict')
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include service specific search.
+
+        Extend to search by:
+            AWS resources
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvGenericResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by email
+        service_aws_resources = [
+            resource_id
+            for resource_type in self.aws
+            for resource_id in self.aws[resource_type]
+        ]
+        if self._match_list(search_string, service_aws_resources):
+            return True
+
     def print(self):
         """
         Override parent method to do aggregation of data to print information
@@ -515,7 +555,7 @@ class People(ClinvActiveResource):
 
     def search(self, search_string):
         """
-        Extend the parent search method to include project specific search.
+        Extend the parent search method to include people specific search.
 
         Extend to search by:
             email
