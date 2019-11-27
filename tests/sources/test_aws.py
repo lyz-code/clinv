@@ -1865,18 +1865,25 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def tearDown(self):
         super().tearDown()
 
+    def test_endpoint_property_works_as_expected(self):
+        self.assertEqual(
+            self.resource.endpoint,
+            'rds-name.us-east-1.rds.amazonaws.com:5521',
+        )
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
             call('db-YDFL2'),
             call('  Name: resource_name'),
+            call('  Endpoint: rds-name.us-east-1.rds.amazonaws.com:5521'),
             call('  Type: c4.4xlarge'),
             call('  Description: This is in the description of the instance'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(4, len(self.print.mock_calls))
+        self.assertEqual(5, len(self.print.mock_calls))
 
 
 class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
