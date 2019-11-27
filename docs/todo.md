@@ -19,6 +19,8 @@
 
 * Add risk management support
 * Autoscaling group support
+* Add to `clinv verify` to check if there are deleted or terminated aws resources assigned to
+  projects.
 * Create an input method `clinv create service`
 * Create an edit method `clinv edit ser_01`
 * Refactor the Source tests into a parent testcase to avoid duplicated code

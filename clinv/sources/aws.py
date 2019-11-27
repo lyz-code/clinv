@@ -1298,6 +1298,7 @@ class RDS(ClinvAWSResource):
     for the RDS resources.
 
     Public properties:
+        endpoint: Return the database endpoint.
         name: Returns the name of the resource.
         security_groups: Returns the security groups of the resource.
         type: Returns the type of the resource.
@@ -1357,6 +1358,18 @@ class RDS(ClinvAWSResource):
 
         return self._get_field('DBInstanceClass', 'str')
 
+    @property
+    def endpoint(self):
+        """
+        Do aggregation of data to return the resource endpoint.
+
+        Returns:
+            str: Resource type.
+        """
+
+        endpoint_dict = self._get_field('Endpoint', 'dict')
+        return '{}:{}'.format(endpoint_dict['Address'], endpoint_dict['Port'])
+
     def print(self):
         """
         Override parent method to do aggregation of data to print information
@@ -1371,6 +1384,7 @@ class RDS(ClinvAWSResource):
 
         print(self.id)
         print('  Name: {}'.format(self.name))
+        print('  Endpoint: {}'.format(self.endpoint)),
         print('  Type: {}'.format(self.type))
         print('  Description: {}'.format(self.description))
 
