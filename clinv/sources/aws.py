@@ -1039,6 +1039,88 @@ class IAMUsersrc(AWSBasesrc):
         return inventory
 
 
+class ASGsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the ASG resources.
+
+    Parameters:
+        source_data (dict): ASGsrc compatible source_data
+        dictionary.
+        user_data (dict): ASGsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'asg'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching ASG inventory')
+        self.source_data = {}
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with ASG resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: ASG inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = ASG({resource_id: resource})
+
+        return inventory
+
+
 class ClinvAWSResource(ClinvGenericResource):
     """
     Abstract class to extend ClinvGenericResource, it gathers common method and
@@ -1800,3 +1882,24 @@ class IAMUser(ClinvGenericResource):
         print('  Description: {}'.format(self.description))
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy)),
+
+
+class ASG(ClinvGenericResource):
+    """
+    Abstract class to extend ClinvGenericResource, it gathers method and
+    attributes for the ASG resources.
+
+    Public methods:
+        print: Prints the name of the resource
+        short_print: Prints information of the resource
+
+    Public properties:
+        name: Returns the name of the record.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)

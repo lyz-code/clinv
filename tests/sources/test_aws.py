@@ -1,4 +1,5 @@
 from clinv.sources.aws import \
+    ASGsrc, \
     EC2src, \
     IAMUsersrc,\
     IAMGroupsrc, \
@@ -1504,6 +1505,232 @@ class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
         resource_mock
     ):
         resource_id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestASGSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the ASG implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = ASGsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'us-east-1': {
+                'arn:aws:autoscaler_arn': {
+                    'AutoScalingGroupName': 'autoscaler_name',
+                    'AvailabilityZones': ['us-east-1a'],
+                    'CreatedTime': datetime.datetime(
+                        2015, 10, 10, 10, 36, 41, 398000, tzinfo=tzutc()
+                    ),
+                    'DesiredCapacity': 2,
+                    'HealthCheckGracePeriod': 300,
+                    'HealthCheckType': 'EC2',
+                    'Instances': [
+                        {
+                            'AvailabilityZone': 'eu-east-1a',
+                            'HealthStatus': 'Healthy',
+                            'InstanceId': 'i-xxxxxxxxxxxxxxxx1',
+                            'LaunchConfigurationName': 'lc_name',
+                            'LifecycleState': 'InService',
+                            'ProtectedFromScaleIn': False
+                        },
+                        {
+                            'AvailabilityZone': 'eu-east-1a',
+                            'HealthStatus': 'Healthy',
+                            'InstanceId': 'i-xxxxxxxxxxxxxxxx2',
+                            'LaunchConfigurationName': 'lc_name',
+                            'LifecycleState': 'InService',
+                            'ProtectedFromScaleIn': False
+                        },
+                    ],
+                    'LaunchConfigurationName': 'lc_name',
+                    'LoadBalancerNames': [],
+                    'MaxSize': 10,
+                    'MinSize': 2,
+                    'ServiceLinkedRoleARN': 'service_role_arn',
+                    'TargetGroupARNs': [
+                        'target_group_arn'
+                    ],
+                    'VPCZoneIdentifier': 'subnet-xxxxxxxx',
+                },
+            },
+        }
+        self.desired_user_data = {
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        self.src.source_data = {}
+
+        boto_mock = self.boto.client.return_value
+        boto_mock.describe_auto_scaling_groups.return_value = {
+            'AutoScalingGroups': [
+                {
+                    'AutoScalingGroupARN': 'arn:aws:autoscaler_arn',
+                    'AutoScalingGroupName': 'autoscaler_name',
+                    'AvailabilityZones': ['us-east-1a'],
+                    'CreatedTime': datetime.datetime(
+                        2015, 10, 10, 10, 36, 41, 398000, tzinfo=tzutc()
+                    ),
+                    'DefaultCooldown': 300,
+                    'DesiredCapacity': 2,
+                    'EnabledMetrics': [{'Granularity': '1Minute',
+                                        'Metric': 'GroupInServiceInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupDesiredCapacity'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupPendingInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupTerminatingInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupTotalInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupMinSize'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupMaxSize'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupStandbyInstances'}],
+                    'HealthCheckGracePeriod': 300,
+                    'HealthCheckType': 'EC2',
+                    'Instances': [
+                        {
+                            'AvailabilityZone': 'eu-east-1a',
+                            'HealthStatus': 'Healthy',
+                            'InstanceId': 'i-xxxxxxxxxxxxxxxx1',
+                            'LaunchConfigurationName': 'lc_name',
+                            'LifecycleState': 'InService',
+                            'ProtectedFromScaleIn': False
+                        },
+                        {
+                            'AvailabilityZone': 'eu-east-1a',
+                            'HealthStatus': 'Healthy',
+                            'InstanceId': 'i-xxxxxxxxxxxxxxxx2',
+                            'LaunchConfigurationName': 'lc_name',
+                            'LifecycleState': 'InService',
+                            'ProtectedFromScaleIn': False
+                        },
+                    ],
+                    'LaunchConfigurationName': 'lc_name',
+                    'LoadBalancerNames': [],
+                    'MaxSize': 10,
+                    'MinSize': 2,
+                    'NewInstancesProtectedFromScaleIn': False,
+                    'ServiceLinkedRoleARN': 'service_role_arn',
+                    'SuspendedProcesses': [],
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'PropagateAtLaunch': True,
+                            'ResourceId': 'austoscaler_name',
+                            'ResourceType': 'auto-scaling-group',
+                            'Value': 'autoscaler_name'
+                        },
+                    ],
+                    'TargetGroupARNs': [
+                        'target_group_arn'
+                    ],
+                    'TerminationPolicies': ['Default'],
+                    'VPCZoneIdentifier': 'subnet-xxxxxxxx',
+                },
+            ],
+            'ResponseMetadata': {
+                'HTTPHeaders': {
+                    'content-length': '11839',
+                    'content-type': 'text/xml',
+                    'date': 'Tue, 03 Dec 2019 13:36:12 GMT',
+                    'vary': 'Accept-Encoding',
+                    'x-amzn-requestid': 'df092cb4-15d1-11ea-8543-9febaca0a9c9'
+                },
+                'HTTPStatusCode': 200,
+                'RequestId': 'df092cb4-15d1-11ea-8543-9febaca0a9c9',
+                'RetryAttempts': 0
+            },
+        }
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    @unittest.skip('Not yet')
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    @unittest.skip('Not yet')
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    @unittest.skip('Not yet')
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @unittest.skip('Not yet')
+    @patch('clinv.sources.{{ module_name }}.ASG')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 's3_bucket_name'
         self.src.user_data = self.desired_user_data
 
         desired_mock_input = {
