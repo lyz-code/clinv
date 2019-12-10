@@ -81,6 +81,14 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         )
 
     @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_people_does_not_print_terminated(self, printMock):
+        self.inventory.inv['people']['peo_01'].state = \
+            'terminated'
+        self.project.people = []
+        self.report._unassigned_people()
+        self.assertEqual(printMock.assert_called_with([]), None)
+
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
     def test_unassigned_informations_prints_instances(self, printMock):
         self.project.informations = ['inf_02']
         self.report._unassigned_informations()
