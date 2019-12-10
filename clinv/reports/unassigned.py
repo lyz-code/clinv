@@ -161,7 +161,8 @@ class UnassignedReport(ClinvReport):
 
         unassigned_resources = []
         for resource_id, resource in sorted(self.inv[resource_type].items()):
-            if resource_id not in all_assigned_resources:
+            if resource_id not in all_assigned_resources and \
+                    resource.state != 'terminated':
                 unassigned_resources.append(resource)
         self.short_print_resources(unassigned_resources)
 
