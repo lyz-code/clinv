@@ -81,11 +81,11 @@ class MonitoredReport(ClinvReport):
                 except AttributeError:
                     monitor_status = 'unknown'
 
-                if monitor_status == 'true':
+                if monitor_status is True:
                     self.monitor_status['monitored'][
                         resource_type
                     ].append(resource)
-                elif monitor_status == 'false':
+                elif monitor_status is False:
                     self.monitor_status['unmonitored'][
                         resource_type
                     ].append(resource)

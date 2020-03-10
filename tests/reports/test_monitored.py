@@ -17,9 +17,9 @@ class TestMonitoredReport(ClinvReportBaseTestClass, unittest.TestCase):
         super().tearDown()
 
     def test_get_monitored_detects_monitored_resources(self):
-        self.ec2instance.monitored = 'true'
-        self.rdsinstance.monitored = 'true'
-        self.route53instance.monitored = 'true'
+        self.ec2instance.monitored = True
+        self.rdsinstance.monitored = True
+        self.route53instance.monitored = True
         desired_result = {
             'monitored': {
                 'ec2': [
@@ -49,11 +49,11 @@ class TestMonitoredReport(ClinvReportBaseTestClass, unittest.TestCase):
         )
 
     def test_get_monitored_detects_unmonitored_resources(self):
-        self.ec2instance.monitored = 'false'
-        self.rdsinstance.monitored = 'false'
-        self.route53instance.monitored = 'false'
+        self.ec2instance.monitored = False
+        self.rdsinstance.monitored = False
+        self.route53instance.monitored = False
         desired_result = {
-            'monitored': {
+            'unmonitored': {
                 'ec2': [
                     self.ec2instance,
                 ],
@@ -116,10 +116,11 @@ class TestMonitoredReport(ClinvReportBaseTestClass, unittest.TestCase):
         # Used a MagicMock to simulate the AttributeError when calling
         # self.monitored
         self.report.inv['ec2']['i-023desldk394995ss'] = MagicMock(spec=[])
+        self.report.inv['ec2']['i-023desldk394995ss'].state = 'active'
         self.report._get_monitor_status()
 
     def test_get_monitored_doesnt_print_terminated_resources(self):
-        self.ec2instance.monitored = 'true'
+        self.ec2instance.monitored = True
         self.ec2instance.state = 'terminated'
 
         self.report._get_monitor_status()

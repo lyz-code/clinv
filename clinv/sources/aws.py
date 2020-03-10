@@ -1120,7 +1120,7 @@ class ClinvAWSResource(ClinvGenericResource):
 
         try:
             monitored = self._get_field('monitored', 'str')
-            if monitored not in ['true', 'false']:
+            if monitored not in [True, False]:
                 monitored = 'unknown'
         except KeyError:
             monitored = 'unknown'
@@ -1531,7 +1531,7 @@ class Route53(ClinvGenericResource):
 
         try:
             monitored = self._get_field('monitored', 'str')
-            if monitored not in ['true', 'false']:
+            if monitored not in [True, False]:
                 monitored = 'unknown'
         except KeyError:
             monitored = 'unknown'
@@ -1648,7 +1648,7 @@ class S3(ClinvGenericResource):
 
         try:
             monitored = self._get_field('monitored', 'str')
-            if monitored not in ['true', 'false']:
+            if monitored not in [True, False]:
                 monitored = 'unknown'
         except KeyError:
             monitored = 'unknown'

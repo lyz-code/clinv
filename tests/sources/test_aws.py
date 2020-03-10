@@ -1584,13 +1584,13 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
         self.resource.raw['monitored'] = 'tbd'
         self.assertEqual(self.resource.monitored, 'unknown')
 
-    def test_monitored_property_works_as_expected_if_set_to_true(self):
-        self.resource.raw['monitored'] = 'true'
-        self.assertEqual(self.resource.monitored, 'true')
+    def test_monitored_property_works_as_expected_if_set_to_bool_true(self):
+        self.resource.raw['monitored'] = True
+        self.assertEqual(self.resource.monitored, True)
 
-    def test_monitored_property_works_as_expected_if_set_to_false(self):
-        self.resource.raw['monitored'] = 'false'
-        self.assertEqual(self.resource.monitored, 'false')
+    def test_monitored_property_works_as_expected_if_set_to_bool_false(self):
+        self.resource.raw['monitored'] = False
+        self.assertEqual(self.resource.monitored, False)
 
 
 class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
@@ -2054,12 +2054,12 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
         self.assertEqual(self.resource.monitored, 'unknown')
 
     def test_monitored_property_works_as_expected_if_set_to_true(self):
-        self.resource.raw['monitored'] = 'true'
-        self.assertEqual(self.resource.monitored, 'true')
+        self.resource.raw['monitored'] = True
+        self.assertEqual(self.resource.monitored, True)
 
     def test_monitored_property_works_as_expected_if_set_to_false(self):
-        self.resource.raw['monitored'] = 'false'
-        self.assertEqual(self.resource.monitored, 'false')
+        self.resource.raw['monitored'] = False
+        self.assertEqual(self.resource.monitored, False)
 
 
 class TestS3(ClinvGenericResourceTests, unittest.TestCase):
