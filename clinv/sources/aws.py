@@ -226,6 +226,7 @@ class EC2src(AWSBasesrc):
                             'description': '',
                             'to_destroy': 'tbd',
                             'environment': 'tbd',
+                            'monitored': 'tbd',
                             'region': region,
                         }
 
@@ -418,6 +419,7 @@ class RDSsrc(AWSBasesrc):
                         'description': '',
                         'to_destroy': 'tbd',
                         'environment': 'tbd',
+                        'monitored': 'tbd',
                         'region': region,
                     }
         return self.user_data
@@ -581,6 +583,7 @@ class Route53src(AWSBasesrc):
                     self.user_data[record_id] = {
                         'description': 'tbd',
                         'to_destroy': 'tbd',
+                        'monitored': 'tbd',
                         'state': 'active',
                     }
         return self.user_data
@@ -1048,6 +1051,7 @@ class ClinvAWSResource(ClinvGenericResource):
         search: Search in the resource data if a string matches.
 
     Public properties:
+        monitored: Returns if the resource is monitored.
         region: Returns the region of the resource.
     """
 
@@ -1104,6 +1108,24 @@ class ClinvAWSResource(ClinvGenericResource):
             return True
 
         return False
+
+    @property
+    def monitored(self):
+        """
+        Do aggregation of data to return if the resource is being monitored.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitored = self._get_field('monitored', 'str')
+            if monitored not in ['true', 'false']:
+                monitored = 'unknown'
+        except KeyError:
+            monitored = 'unknown'
+
+        return monitored
 
 
 class EC2(ClinvAWSResource):
@@ -1400,6 +1422,7 @@ class Route53(ClinvGenericResource):
         type: Returns the type of the record.
         hosted_zone: Returns the hosted zone name of the resource.
         hosted_zone_id: Returns the hosted zone id of the resource.
+        monitored: Returns if the resource is being monitored.
         private: Returns if the resource is private.
         print: Prints the name of the resource
         short_print: Prints information of the resource
@@ -1497,6 +1520,24 @@ class Route53(ClinvGenericResource):
         else:
             return 'public'
 
+    @property
+    def monitored(self):
+        """
+        Do aggregation of data to return if the resource is being monitored.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitored = self._get_field('monitored', 'str')
+            if monitored not in ['true', 'false']:
+                monitored = 'unknown'
+        except KeyError:
+            monitored = 'unknown'
+
+        return monitored
+
     def short_print(self):
         """
         Override parent method to do aggregation of data to print the id of the
@@ -1572,6 +1613,7 @@ class S3(ClinvGenericResource):
 
     Public properties:
         name: Returns the name of the resource.
+        monitored: Returns if the resource is monitored.
         print: Prints the name of the resource
         short_print: Prints information of the resource
     """
@@ -1594,6 +1636,24 @@ class S3(ClinvGenericResource):
         """
 
         return self._get_field('Name', 'str')
+
+    @property
+    def monitored(self):
+        """
+        Do aggregation of data to return if the resource is being monitored.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitored = self._get_field('monitored', 'str')
+            if monitored not in ['true', 'false']:
+                monitored = 'unknown'
+        except KeyError:
+            monitored = 'unknown'
+
+        return monitored
 
     def print(self):
         """

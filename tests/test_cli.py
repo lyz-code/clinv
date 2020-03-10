@@ -123,6 +123,26 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'print')
         self.assertEqual(parsed.search_string, 'resource_id')
 
+    def test_can_specify_monitored_subcommand(self):
+        parsed = self.parser.parse_args(['monitored'])
+        self.assertEqual(parsed.subcommand, 'monitored')
+        self.assertEqual(parsed.monitor_status, 'true')
+
+    def test_can_specify_monitored_monitored_subcommand(self):
+        parsed = self.parser.parse_args(['monitored', 'true'])
+        self.assertEqual(parsed.subcommand, 'monitored')
+        self.assertEqual(parsed.monitor_status, 'true')
+
+    def test_can_specify_monitored_unmonitored_subcommand(self):
+        parsed = self.parser.parse_args(['monitored', 'false'])
+        self.assertEqual(parsed.subcommand, 'monitored')
+        self.assertEqual(parsed.monitor_status, 'false')
+
+    def test_can_specify_monitored_unknown_subcommand(self):
+        parsed = self.parser.parse_args(['monitored', 'unknown'])
+        self.assertEqual(parsed.subcommand, 'monitored')
+        self.assertEqual(parsed.monitor_status, 'unknown')
+
 
 class TestLogger(unittest.TestCase):
 

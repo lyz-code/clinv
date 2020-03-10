@@ -84,6 +84,21 @@ def load_parser():
         type=str,
         help='Regexp of a Clinv resource ID',
     )
+
+    monitored_parser = subparser.add_parser('monitored')
+    monitored_parser.add_argument(
+        "monitor_status",
+        type=str,
+        nargs='?',
+        help='Monitor status of the resources',
+        choices=[
+            'true',
+            'false',
+            'unknown',
+        ],
+        default='true'
+    )
+
     argcomplete.autocomplete(parser)
     return parser
 
