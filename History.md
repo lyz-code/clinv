@@ -1,4 +1,13 @@
 
+0.6.2 / 2020-04-06
+==================
+
+  * Deprecate python 3.5
+  * Updated requirements
+  * Small fixes on the monitored repo
+  * Add first version of the MonitoredReport
+  * Unassigned reports don't show terminated resources
+
 0.6.1 / 2019-11-27
 ==================
 

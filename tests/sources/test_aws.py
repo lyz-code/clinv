@@ -116,6 +116,7 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
                 'description': '',
                 'to_destroy': 'tbd',
                 'environment': 'tbd',
+                'monitored': 'tbd',
                 'region': 'us-east-1',
             },
         }
@@ -440,6 +441,7 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                 'description': '',
                 'to_destroy': 'tbd',
                 'environment': 'tbd',
+                'monitored': 'tbd',
                 'region': 'us-east-1',
             },
         }
@@ -666,6 +668,7 @@ class TestRoute53Source(AWSSourceBaseTestClass, unittest.TestCase):
             'hosted_zone_id-record1.clinv.org-cname': {
                 'description': 'tbd',
                 'to_destroy': 'tbd',
+                'monitored': 'tbd',
                 'state': 'active',
             },
         }
@@ -1573,6 +1576,22 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
     def test_search_by_type(self):
         self.assertTrue(self.resource.search('c4.4xlarge'))
 
+    def test_monitored_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop('monitored')
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw['monitored'] = 'tbd'
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_set_to_bool_true(self):
+        self.resource.raw['monitored'] = True
+        self.assertEqual(self.resource.monitored, True)
+
+    def test_monitored_property_works_as_expected_if_set_to_bool_false(self):
+        self.resource.raw['monitored'] = False
+        self.assertEqual(self.resource.monitored, False)
+
 
 class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
     def setUp(self):
@@ -1704,6 +1723,7 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
                 'description': 'This is in the description of the instance',
                 'region': 'us-east-1',
                 'to_destroy': 'tbd',
+                'monitored': 'true',
                 'environment': 'tbd',
             }
         }
@@ -1857,6 +1877,7 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 'description': 'This is in the description of the instance',
                 'region': 'us-east-1',
                 'to_destroy': 'tbd',
+                'monitored': 'true',
                 'environment': 'production',
             }
         }
@@ -1908,6 +1929,7 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
                 'description': 'This is the description',
                 'to_destroy': 'tbd',
                 'state': 'active',
+                'monitored': 'true',
                 'hosted_zone': {
                     'id': '/hostedzone/hosted_zone_id',
                     'private': False,
@@ -2022,6 +2044,22 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
 
     def test_search_resource_by_type_insensitive(self):
         self.assertTrue(self.resource.search('cname'))
+
+    def test_monitored_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop('monitored')
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw['monitored'] = 'tbd'
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_set_to_true(self):
+        self.resource.raw['monitored'] = True
+        self.assertEqual(self.resource.monitored, True)
+
+    def test_monitored_property_works_as_expected_if_set_to_false(self):
+        self.resource.raw['monitored'] = False
+        self.assertEqual(self.resource.monitored, False)
 
 
 class TestS3(ClinvGenericResourceTests, unittest.TestCase):

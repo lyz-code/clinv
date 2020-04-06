@@ -25,6 +25,7 @@ from clinv.reports.list import ListReport
 from clinv.reports.print import PrintReport
 from clinv.reports.unassigned import UnassignedReport
 from clinv.reports.search import SearchReport
+from clinv.reports.monitored import MonitoredReport
 
 
 def main():
@@ -37,6 +38,7 @@ def main():
         'export',
         'generate',
         'list',
+        'monitored',
         'print',
         'search',
         'unassigned',
@@ -57,6 +59,8 @@ def main():
             ListReport(inventory).output(args.resource_type)
         elif args.subcommand == 'export':
             ExportReport(inventory).output(args.export_path)
+        elif args.subcommand == 'monitored':
+            MonitoredReport(inventory).output(args.monitor_status)
 
 
 if __name__ == "__main__":
