@@ -19,12 +19,33 @@ class ClinvSourcesrc():
         source_data (dict): Aggregated source supplied data.
         user_data (dict): Aggregated user supplied data.
         log (logging object):
+
+    Public methods:
+        prune_dictionary: Remove keys from a dictionary.
     """
 
     def __init__(self, source_data={}, user_data={}):
         self.source_data = source_data
         self.user_data = user_data
         self.log = logging.getLogger('main')
+
+    def prune_dictionary(self, dictionary, prune_keys):
+        """
+        Remove keys from a dictionary.
+
+        Parameters:
+            dictionary (dict): Dictionary to modify.
+            prune_keys (list): List of keys to prune.
+
+        Returns:
+            dict: dictionary without the keys specified in prune_keys.
+        """
+        for prune_key in prune_keys:
+            try:
+                dictionary.pop(prune_key)
+            except KeyError:
+                pass
+        return dictionary
 
 
 class ClinvGenericResource():
@@ -38,6 +59,15 @@ class ClinvGenericResource():
         short_print: Print the id and name of the resource.
         state: Returns the state of the resource.
         to_destroy: Returns if the resource must be destroyed.
+
+    Internal methods:
+        _get_field: Do aggregation of data to return the value of the
+            self.raw[key].
+        _get_optional_field: Similar to _get_field, but it wont raise
+            exceptions on inexistent keys or if the value is None.
+        _match_list: Check if regular expression matches the contents of a
+            list.
+        _transform_type: input_object on the desired output_type.
 
     Public properties:
         description: Returns the description of the resource.

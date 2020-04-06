@@ -29,11 +29,12 @@ Classes:
 
 from clinv.sources.aws import \
     EC2src, \
+    IAMGroupsrc, \
+    IAMUsersrc, \
     RDSsrc, \
     Route53src, \
     S3src, \
-    IAMUsersrc, \
-    IAMGroupsrc
+    SecurityGroupsrc
 
 from clinv.sources.risk_management import \
     Informationsrc, Projectsrc, Servicesrc, Peoplesrc
@@ -52,6 +53,7 @@ active_source_plugins = [
     RDSsrc,
     Route53src,
     S3src,
+    SecurityGroupsrc,
     Servicesrc,
 ]
 

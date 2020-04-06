@@ -190,17 +190,12 @@ class EC2src(AWSBasesrc):
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
                 for instance in resource['Instances']:
-                    for prune_key in prune_keys:
-                        try:
-                            instance.pop(prune_key)
-                        except KeyError:
-                            pass
+                    instance = self.prune_dictionary(instance, prune_keys)
                     for interface in instance['NetworkInterfaces']:
-                        for prune_key in network_prune_keys:
-                            try:
-                                interface.pop(prune_key)
-                            except KeyError:
-                                pass
+                        interface = self.prune_dictionary(
+                            interface,
+                            network_prune_keys
+                        )
         return self.source_data
 
     def generate_user_data(self):
@@ -388,11 +383,7 @@ class RDSsrc(AWSBasesrc):
 
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                for prune_key in prune_keys:
-                    try:
-                        resource.pop(prune_key)
-                    except KeyError:
-                        pass
+                resource = self.prune_dictionary(resource, prune_keys)
 
         return self.source_data
 
@@ -531,11 +522,7 @@ class Route53src(AWSBasesrc):
         # Prune unneeded information
         prune_keys = ['CallerReference']
         for zone in self.source_data['hosted_zones']:
-            for prune_key in prune_keys:
-                try:
-                    zone.pop(prune_key)
-                except KeyError:
-                    pass
+            zone = self.prune_dictionary(zone, prune_keys)
 
         # Fetch the records
         for zone in self.source_data['hosted_zones']:
@@ -1042,6 +1029,141 @@ class IAMUsersrc(AWSBasesrc):
         return inventory
 
 
+class SecurityGroupsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the SecurityGroup resources.
+
+    Parameters:
+        source_data (dict): SecurityGroupsrc compatible source_data
+        dictionary.
+        user_data (dict): SecurityGroupsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'security_group'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                'sg-xxxxxxxx': {
+                    'description': 'default group',
+                    'GroupName': 'default',
+                    'region': 'us-east-1',
+                    'IpPermissions': [
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'udp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                        },
+                        ...
+                    ],
+                    'IpPermissionsEgress': [],
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching SecurityGroup inventory')
+        self.source_data = {}
+        raw_data = {}
+
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            raw_data[region] = ec2.describe_security_groups()['SecurityGroups']
+
+        prune_keys = [
+            'GroupId',
+            'OwnerId',
+            'Description',
+        ]
+        permissions_prune_keys = [
+            'UserIdGroupPairs',
+        ]
+
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                security_group_id = resource['GroupId']
+                resource['description'] = resource['Description']
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                for permission in resource['IpPermissions'] or \
+                        resource['IpPermissionsEgress']:
+                    permission = self.prune_dictionary(
+                        permission,
+                        permissions_prune_keys,
+                    )
+                self.source_data[security_group_id] = resource
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            self.user_data[resource_id] = {
+                'state': 'tbd',
+                'to_destroy': 'tbd',
+                'ingress': resource['IpPermissions'],
+                'egress': resource['IpPermissionsEgress'],
+            }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with SecurityGroup resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: SecurityGroup inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = SecurityGroup({resource_id: resource})
+
+        return inventory
+
+
 class ClinvAWSResource(ClinvGenericResource):
     """
     Abstract class to extend ClinvGenericResource, it gathers common method and
@@ -1130,12 +1252,12 @@ class ClinvAWSResource(ClinvGenericResource):
 
 class EC2(ClinvAWSResource):
     """
-    Abstract class to extend ClinvAWSResource, it gathers method and attributes
-    for the EC2 resources.
+    Class to extend the ClinvAWSResource abstract class. It gathers methods and
+    attributes for the EC2 resources.
 
     Public methods:
         search: Search in the resource data if a string matches.
-        print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the resource.
@@ -1316,8 +1438,8 @@ class EC2(ClinvAWSResource):
 
 class RDS(ClinvAWSResource):
     """
-    Abstract class to extend ClinvAWSResource, it gathers method and attributes
-    for the RDS resources.
+    Class to extend the ClinvAWSResource abstract class. It gathers methods
+    and attributes for the RDS resources.
 
     Public properties:
         endpoint: Return the database endpoint.
@@ -1413,8 +1535,8 @@ class RDS(ClinvAWSResource):
 
 class Route53(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the Route53 resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the Route53 resources.
 
     Public properties:
         name: Returns the name of the record.
@@ -1424,8 +1546,8 @@ class Route53(ClinvGenericResource):
         hosted_zone_id: Returns the hosted zone id of the resource.
         monitored: Returns if the resource is being monitored.
         private: Returns if the resource is private.
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
+        short_print: Prints the resource id.
     """
 
     def __init__(self, raw_data):
@@ -1608,14 +1730,13 @@ class Route53(ClinvGenericResource):
 
 class S3(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the S3 resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the S3 resources.
 
     Public properties:
         name: Returns the name of the resource.
         monitored: Returns if the resource is monitored.
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1685,12 +1806,11 @@ class S3(ClinvGenericResource):
 
 class IAMGroup(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the IAMGroup resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the IAMGroup resources.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the record.
@@ -1825,15 +1945,14 @@ class IAMGroup(ClinvGenericResource):
 
 class IAMUser(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the IAMUser resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the IAMUser resources.
 
     Public properties:
         name: Returns the name of the user.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1860,3 +1979,35 @@ class IAMUser(ClinvGenericResource):
         print('  Description: {}'.format(self.description))
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy)),
+
+
+class SecurityGroup(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the SecurityGroup resources.
+
+    Public methods:
+        print: Prints information of the resource.
+
+    Public properties:
+        name: Returns the name of the resource.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('GroupName')

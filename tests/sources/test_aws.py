@@ -2,10 +2,18 @@ from clinv.sources.aws import \
     EC2src, \
     IAMUsersrc,\
     IAMGroupsrc, \
-    Route53src, \
     RDSsrc, \
-    S3src
-from clinv.sources.aws import EC2, RDS, Route53, S3, IAMUser, IAMGroup
+    Route53src, \
+    S3src, \
+    SecurityGroupsrc
+from clinv.sources.aws import \
+    EC2, \
+    IAMUser, \
+    IAMGroup, \
+    RDS, \
+    Route53, \
+    S3, \
+    SecurityGroup
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
 from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
@@ -1532,6 +1540,239 @@ class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
 
+class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the SecurityGroup implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.module_name = 'aws'
+        self.source_obj = SecurityGroupsrc
+        super().setUp()
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'sg-xxxxxxxx': {
+                'description': 'default group',
+                'GroupName': 'default',
+                'region': 'us-east-1',
+                'IpPermissions': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    }
+                ],
+                'IpPermissionsEgress': [],
+            },
+        }
+
+        self.desired_user_data = {
+            'sg-xxxxxxxx': {
+                'state': 'tbd',
+                'to_destroy': 'tbd',
+                'ingress': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    }
+                ],
+                'egress': [],
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        # Mock here the call to your provider
+        boto_mock = self.boto.client.return_value
+
+        # Simulate only one region
+        boto_mock.describe_regions.return_value = {
+            'Regions': [
+                {
+                    'RegionName': 'us-east-1'
+                }
+            ]
+        }
+        boto_mock.describe_security_groups.return_value = {
+            'SecurityGroups': [
+                {
+                    'Description': 'default group',
+                    'GroupId': 'sg-xxxxxxxx',
+                    'GroupName': 'default',
+                    'IpPermissions': [
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'udp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                            'UserIdGroupPairs': [
+                                {
+                                    'GroupId': 'sg-xxxxxxxx',
+                                    'GroupName': 'default',
+                                    'UserId': 'yyyyyyyyyyyy'
+                                }
+                            ]
+                        },
+                        {
+                            'FromPort': -1,
+                            'IpProtocol': 'icmp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': -1,
+                            'UserIdGroupPairs': [
+                                {
+                                    'GroupId': 'sg-xxxxxxxx',
+                                    'GroupName': 'default',
+                                    'UserId': 'yyyyyyyyyyyy'
+                                }
+                            ]
+                        },
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'tcp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                            'UserIdGroupPairs': [
+                                {
+                                    'GroupId': 'sg-xxxxxxxx',
+                                    'GroupName': 'default',
+                                    'UserId': 'yyyyyyyyyyyy'
+                                }
+                            ]
+                        }
+                    ],
+                    'IpPermissionsEgress': [],
+                    'OwnerId': 'yyyyyyyyyyyy'
+                }
+            ]
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.SecurityGroup')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'sg-xxxxxxxx'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
 class ClinvAWSResourceTests(ClinvGenericResourceTests):
     '''Must be combined with a unittest.TestCase that defines:
         * self.resource as a ClinvAWSResource subclass instance
@@ -2270,3 +2511,79 @@ class TestIAMUser(ClinvGenericResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(5, len(self.print.mock_calls))
+
+
+class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        self.id = 'sg-xxxxxxxx'
+
+        super().setUp()
+
+        self.raw = {
+            'sg-xxxxxxxx': {
+                'state': 'active',
+                'to_destroy': 'tbd',
+                'description': 'the description',
+                'GroupName': 'resource_name',
+                'region': 'us-east-1',
+                'IpPermissions': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    }
+                ],
+                'IpPermissionsEgress': [],
+                'ingress': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                    }
+                ],
+                'egress': [],
+            },
+        }
+        self.resource = SecurityGroup(self.raw)
+
+    def tearDown(self):
+        super().tearDown()

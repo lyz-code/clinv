@@ -53,6 +53,20 @@ class ClinvSourceBaseTestClass(object):
     def test_id_property_works_as_expected(self):
         self.assertEqual(type(self.src.id), str)
 
+    def test_prune_dictionary_removes_keys(self):
+        dictionary = {'a': 'b', 'c': 'd'}
+        self.assertEqual(
+            self.src.prune_dictionary(dictionary, 'a'),
+            {'c': 'd'}
+        )
+
+    def test_prune_dictionary_doesnt_fail_if_key_doesnt_exist(self):
+        dictionary = {'a': 'b', 'c': 'd'}
+        self.assertEqual(
+            self.src.prune_dictionary(dictionary, 'f'),
+            dictionary
+        )
+
 
 class ClinvGenericResourceTests(object):
     '''
