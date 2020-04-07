@@ -1430,6 +1430,10 @@ class EC2(ClinvAWSResource):
         if self._match_list(search_string, self.private_ips):
             return True
 
+        # Search by security group
+        if self._match_dict(search_string, self.security_groups):
+            return True
+
         return False
 
 

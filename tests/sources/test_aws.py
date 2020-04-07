@@ -2056,6 +2056,9 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             }
         )
 
+    def test_search_ec2_by_security_group_id(self):
+        self.assertTrue(self.resource.search('sg-cw.*'))
+
 
 class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def setUp(self):
