@@ -103,6 +103,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'list')
         self.assertEqual(parsed.resource_type, 'iam_users')
 
+    def test_can_specify_list_security_groups_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'security_groups'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'security_groups')
+
     def test_can_specify_export_subcommand(self):
         parsed = self.parser.parse_args(['export'])
         self.assertEqual(parsed.subcommand, 'export')

@@ -1569,6 +1569,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': -1,
@@ -1577,6 +1578,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': -1,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': 0,
@@ -1585,6 +1587,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     }
                 ],
                 'IpPermissionsEgress': [],
@@ -1603,6 +1606,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': -1,
@@ -1611,6 +1615,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': -1,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': 0,
@@ -1619,6 +1624,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     }
                 ],
                 'egress': [],
@@ -1656,13 +1662,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                             'Ipv6Ranges': [],
                             'PrefixListIds': [],
                             'ToPort': 65535,
-                            'UserIdGroupPairs': [
-                                {
-                                    'GroupId': 'sg-xxxxxxxx',
-                                    'GroupName': 'default',
-                                    'UserId': 'yyyyyyyyyyyy'
-                                }
-                            ]
+                            'UserIdGroupPairs': [],
                         },
                         {
                             'FromPort': -1,
@@ -1671,13 +1671,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                             'Ipv6Ranges': [],
                             'PrefixListIds': [],
                             'ToPort': -1,
-                            'UserIdGroupPairs': [
-                                {
-                                    'GroupId': 'sg-xxxxxxxx',
-                                    'GroupName': 'default',
-                                    'UserId': 'yyyyyyyyyyyy'
-                                }
-                            ]
+                            'UserIdGroupPairs': [],
                         },
                         {
                             'FromPort': 0,
@@ -1686,13 +1680,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                             'Ipv6Ranges': [],
                             'PrefixListIds': [],
                             'ToPort': 65535,
-                            'UserIdGroupPairs': [
-                                {
-                                    'GroupId': 'sg-xxxxxxxx',
-                                    'GroupName': 'default',
-                                    'UserId': 'yyyyyyyyyyyy'
-                                }
-                            ]
+                            'UserIdGroupPairs': [],
                         }
                     ],
                     'IpPermissionsEgress': [],
@@ -2650,6 +2638,71 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             self.print.mock_calls
         )
 
+    def test_print_security_rule_supports_all_traffic(self):
+        security_rule = {
+            'IpProtocol': '-1',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    All Traffic: ')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_supports_ipranges(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [
+                {
+                    'CidrIp': '0.0.0.0/0',
+                }
+            ],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [
+                call('    TCP: 443'),
+                call('      - 0.0.0.0/0'),
+            ],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_supports_security_group_sources(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+            'UserIdGroupPairs': [
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                }
+            ],
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [
+                call('    TCP: 443'),
+                call('      - sg-yyyyyyyy'),
+            ],
+            self.print.mock_calls
+        )
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
@@ -2659,6 +2712,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             call('  State: active'),
             call('  Synchronized: True'),
             call('  Destroy: tbd'),
+            call('  Region: us-east-1'),
             call('  Ingress:'),
             call('    UDP: 0-65535'),
             call('    ICMP: '),
@@ -2668,4 +2722,4 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(11, len(self.print.mock_calls))
+        self.assertEqual(12, len(self.print.mock_calls))

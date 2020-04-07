@@ -66,6 +66,7 @@ def load_parser():
             'projects',
             'route53',
             's3',
+            'security_groups',
         ],
     )
 

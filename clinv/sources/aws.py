@@ -1054,7 +1054,7 @@ class SecurityGroupsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'security_group'
+        self.id = 'security_groups'
 
     def generate_source_data(self):
         """
@@ -1073,6 +1073,7 @@ class SecurityGroupsrc(AWSBasesrc):
                             'Ipv6Ranges': [],
                             'PrefixListIds': [],
                             'ToPort': 65535,
+                            'UserIdGroupPairs': [],
                         },
                         ...
                     ],
@@ -1097,9 +1098,6 @@ class SecurityGroupsrc(AWSBasesrc):
             'OwnerId',
             'Description',
         ]
-        permissions_prune_keys = [
-            'UserIdGroupPairs',
-        ]
 
         for region in raw_data.keys():
             for resource in raw_data[region]:
@@ -1107,12 +1105,6 @@ class SecurityGroupsrc(AWSBasesrc):
                 resource['description'] = resource['Description']
                 resource['region'] = region
                 resource = self.prune_dictionary(resource, prune_keys)
-                for permission in resource['IpPermissions'] or \
-                        resource['IpPermissionsEgress']:
-                    permission = self.prune_dictionary(
-                        permission,
-                        permissions_prune_keys,
-                    )
                 self.source_data[security_group_id] = resource
 
         return self.source_data
@@ -2052,18 +2044,35 @@ class SecurityGroup(ClinvGenericResource):
         """
         protocol = security_rule['IpProtocol'].upper()
 
-        if security_rule['FromPort'] == security_rule['ToPort']:
-            port_string = security_rule['FromPort']
-        else:
-            port_string = '{}-{}'.format(
-                security_rule['FromPort'],
-                security_rule['ToPort'],
-            )
-
         if protocol == 'ICMP':
             port_string = ''
+        elif protocol == '-1':
+            protocol = 'All Traffic'
+            port_string = ''
+        else:
+            if security_rule['FromPort'] == security_rule['ToPort']:
+                port_string = security_rule['FromPort']
+            else:
+                port_string = '{}-{}'.format(
+                    security_rule['FromPort'],
+                    security_rule['ToPort'],
+                )
 
         print('    {}: {}'.format(protocol, port_string))
+
+        try:
+            if len(security_rule['IpRanges']) > 0:
+                for cidr in security_rule['IpRanges']:
+                    print('      - {}'.format(cidr['CidrIp']))
+        except KeyError:
+            pass
+
+        try:
+            if len(security_rule['UserIdGroupPairs']) > 0:
+                for security_group in security_rule['UserIdGroupPairs']:
+                    print('      - {}'.format(security_group['GroupId']))
+        except KeyError:
+            pass
 
     def print(self):
         """
@@ -2080,6 +2089,7 @@ class SecurityGroup(ClinvGenericResource):
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy)),
         print('  Synchronized: {}'.format(str(self.is_synchronized())))
+        print('  Region: {}'.format(self._get_field('region', 'str')))
         print('  Ingress:')
         for security_rule in self._get_field('IpPermissions'):
             self._print_security_rule(security_rule)

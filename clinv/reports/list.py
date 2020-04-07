@@ -38,6 +38,7 @@ class ListReport(ClinvReport):
                     'rds',
                     'route53',
                     'services',
+                    'security_groups',
                     'informations',
                     'projects',
                 ]. If not specified it will print all resources.
