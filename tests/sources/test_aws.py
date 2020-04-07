@@ -2010,14 +2010,16 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             call('  Name: resource_name'),
             call('  State: running'),
             call('  Type: c4.4xlarge'),
-            call("  SecurityGroups: ['sg-f2234gf6', 'sg-cwfccs17']"),
+            call('  SecurityGroups: '),
+            call('    - sg-f2234gf6: sg-1'),
+            call('    - sg-cwfccs17: sg-2'),
             call("  PrivateIP: ['142.33.2.113']"),
             call("  PublicIP: ['32.312.444.22']"),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(7, len(self.print.mock_calls))
+        self.assertEqual(9, len(self.print.mock_calls))
 
     def test_print_ec2_reason_if_stopped(self):
         self.raw['i-01']['State']['Name'] = 'stopped'
@@ -2028,20 +2030,31 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             call('  State: stopped'),
             call('  State Reason: reason'),
             call('  Type: c4.4xlarge'),
-            call("  SecurityGroups: ['sg-f2234gf6', 'sg-cwfccs17']"),
+            call('  SecurityGroups: '),
+            call('    - sg-f2234gf6: sg-1'),
+            call('    - sg-cwfccs17: sg-2'),
             call("  PrivateIP: ['142.33.2.113']"),
             call("  PublicIP: ['32.312.444.22']"),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(8, len(self.print.mock_calls))
+        self.assertEqual(10, len(self.print.mock_calls))
 
     def test_search_ec2_by_public_ip(self):
         self.assertTrue(self.resource.search('32.312.444.22'))
 
     def test_search_ec2_by_private_ip(self):
         self.assertTrue(self.resource.search('142.33.2.113'))
+
+    def test_get_security_groups(self):
+        self.assertEqual(
+            self.resource.security_groups,
+            {
+                'sg-f2234gf6': 'sg-1',
+                'sg-cwfccs17': 'sg-2'
+            }
+        )
 
 
 class TestRDS(ClinvAWSResourceTests, unittest.TestCase):

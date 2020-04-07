@@ -1298,9 +1298,10 @@ class EC2(ClinvAWSResource):
         """
 
         try:
-            return [security_group['GroupId']
-                    for security_group in self.raw['SecurityGroups']
-                    ]
+            return {
+                security_group['GroupId']: security_group['GroupName']
+                for security_group in self.raw['SecurityGroups']
+            }
         except KeyError:
             pass
 
@@ -1393,7 +1394,11 @@ class EC2(ClinvAWSResource):
         if self.state != 'running':
             print('  State Reason: {}'.format(self.state_transition))
         print('  Type: {}'.format(self.type))
-        print('  SecurityGroups: {}'.format(self.security_groups))
+
+        print('  SecurityGroups: ')
+        for sg_id, sg_name in self.security_groups.items():
+            print('    - {}: {}'.format(sg_id, sg_name))
+
         print('  PrivateIP: {}'.format(self.private_ips))
         print('  PublicIP: {}'.format(self.public_ips))
 

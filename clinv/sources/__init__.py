@@ -65,6 +65,8 @@ class ClinvGenericResource():
             self.raw[key].
         _get_optional_field: Similar to _get_field, but it wont raise
             exceptions on inexistent keys or if the value is None.
+        _match_dict: Check if regular expression matches the contents of a
+            dictionary.
         _match_list: Check if regular expression matches the contents of a
             list.
         _transform_type: input_object on the desired output_type.
@@ -203,6 +205,25 @@ class ClinvGenericResource():
 
         for element in list_to_search:
             if re.match(search_term, element, re.IGNORECASE):
+                return True
+        return False
+
+    def _match_dict(self, search_term, dict_to_search):
+        """
+        Check if regular expression matches the contents of a dictionary.
+
+        Parameters:
+            search_term (str): Regular expression to search.
+            dict_to_search (dict): List to perform the dictionary.
+
+        Returns:
+            bool: If it matches.
+        """
+
+        for key, value in dict_to_search.items():
+            if re.match(search_term, key, re.IGNORECASE):
+                return True
+            if re.match(search_term, value, re.IGNORECASE):
                 return True
         return False
 
