@@ -1988,6 +1988,11 @@ class SecurityGroup(ClinvGenericResource):
 
     Public methods:
         print: Prints information of the resource.
+        is_synchronized: Check if the real state of the security group
+            is the same as the expected.
+
+    Private methods:
+        _print_security_rule: print the information of a security rule.
 
     Public properties:
         name: Returns the name of the resource.
@@ -2011,3 +2016,73 @@ class SecurityGroup(ClinvGenericResource):
         """
 
         return self._get_field('GroupName')
+
+    def is_synchronized(self):
+        """
+        Check if the real state of the security group is the same as the
+        expected.
+
+        Returns:
+            bool: If the state is synchronized.
+        """
+
+        if self.raw['ingress'] == self.raw['IpPermissions'] and \
+                self.raw['egress'] == self.raw['IpPermissionsEgress']:
+            return True
+        return False
+
+    def _print_security_rule(self, security_rule):
+        """
+        Print the information of a security rule.
+
+        Input:
+            security_rule (dict): Security rule dictionary, for example:
+
+                {
+                    'FromPort': 0,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': [],
+                    'Ipv6Ranges': [],
+                    'PrefixListIds': [],
+                    'ToPort': 65535,
+                }
+
+        Return:
+            stdout: Print the information with a defined format.
+        """
+        protocol = security_rule['IpProtocol'].upper()
+
+        if security_rule['FromPort'] == security_rule['ToPort']:
+            port_string = security_rule['FromPort']
+        else:
+            port_string = '{}-{}'.format(
+                security_rule['FromPort'],
+                security_rule['ToPort'],
+            )
+
+        if protocol == 'ICMP':
+            port_string = ''
+
+        print('    {}: {}'.format(protocol, port_string))
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Synchronized: {}'.format(str(self.is_synchronized())))
+        print('  Ingress:')
+        for security_rule in self._get_field('IpPermissions'):
+            self._print_security_rule(security_rule)
+        print('  Egress:')
+        for security_rule in self._get_field('IpPermissionsEgress'):
+            self._print_security_rule(security_rule)

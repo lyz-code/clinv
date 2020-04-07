@@ -72,6 +72,10 @@ class ClinvGenericResource():
     Public properties:
         description: Returns the description of the resource.
         name: Returns the name of the resource.
+
+    Public Attributes:
+        id: Stores the id of the resource.
+        raw: Stores the raw_data dictionary information
     """
 
     def __init__(self, raw_data):

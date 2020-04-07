@@ -2524,7 +2524,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             'sg-xxxxxxxx': {
                 'state': 'active',
                 'to_destroy': 'tbd',
-                'description': 'the description',
+                'description': 'This is the description',
                 'GroupName': 'resource_name',
                 'region': 'us-east-1',
                 'IpPermissions': [
@@ -2587,3 +2587,85 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
+
+    def test_is_synchronized_returns_true_if_is_synchronized(self):
+        self.assertTrue(self.resource.is_synchronized())
+
+    def test_is_synchronized_returns_false_if_ingress_not_in_sync(self):
+        self.resource.raw['ingress'].pop()
+        self.assertFalse(self.resource.is_synchronized())
+
+    def test_is_synchronized_returns_false_if_egress_not_in_sync(self):
+        self.resource.raw['egress'] = self.resource.raw['ingress']
+        self.assertFalse(self.resource.is_synchronized())
+
+    def test_print_security_rule_prints_tcp_with_range_of_ports(self):
+        security_rule = {
+            'FromPort': 0,
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 65535,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    TCP: 0-65535')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_prints_tcp_with_one_port(self):
+        security_rule = {
+            'FromPort': 443,
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 443,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    TCP: 443')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_prints_icmp_without_ip_range(self):
+        security_rule = {
+            'FromPort': -1,
+            'IpProtocol': 'icmp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': -1,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    ICMP: ')],
+            self.print.mock_calls
+        )
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('sg-xxxxxxxx'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Synchronized: True'),
+            call('  Destroy: tbd'),
+            call('  Ingress:'),
+            call('    UDP: 0-65535'),
+            call('    ICMP: '),
+            call('    TCP: 0-65535'),
+            call('  Egress:'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(11, len(self.print.mock_calls))
