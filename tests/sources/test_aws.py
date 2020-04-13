@@ -2741,3 +2741,122 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(12, len(self.print.mock_calls))
+
+    def test_is_related_identifies_source_cidrs(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [
+                {
+                    'CidrIp': '0.0.0.0/0',
+                }
+            ],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('0.0.0.0.*', security_rule)
+        )
+
+    def test_is_related_identifies_source_ports(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('443', security_rule)
+        )
+
+    def test_is_related_identifies_source_range_of_ports(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 441,
+            'ToPort': 445,
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('443', security_rule)
+        )
+
+    def test_is_related_identifies__security_group_sources(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+            'UserIdGroupPairs': [
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                }
+            ],
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('sg-yyy.*', security_rule)
+        )
+
+    @patch('clinv.sources.aws.SecurityGroup._is_security_rule_related')
+    def test_is_related_uses_is_related_security_group_on_ingress(
+        self,
+        relatedMock,
+    ):
+
+        security_rule = {
+            'FromPort': 0,
+            'IpProtocol': 'udp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 65535,
+        }
+
+        self.resource.raw['IpPermissions'] = [security_rule]
+        self.resource.is_related('.*')
+        self.assertEqual(
+            relatedMock.assert_called_with('.*', security_rule),
+            None,
+        )
+
+    @patch('clinv.sources.aws.SecurityGroup._is_security_rule_related')
+    def test_is_related_uses_is_related_security_group_on_egress(
+        self,
+        relatedMock,
+    ):
+
+        security_rule = {
+            'FromPort': 0,
+            'IpProtocol': 'udp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 65535,
+        }
+
+        self.resource.raw['IpPermissionsEgress'] = [security_rule]
+        self.resource.is_related('.*')
+        self.assertEqual(
+            relatedMock.assert_called_with('.*', security_rule),
+            None,
+        )
+
+    @patch('clinv.sources.aws.SecurityGroup.is_related')
+    def test_search_uses_is_related(self, relatedMock):
+
+        self.resource.search('sg-yyyyyyyy')
+        self.assertEqual(
+            relatedMock.assert_called_with('sg-yyyyyyyy'),
+            None,
+        )

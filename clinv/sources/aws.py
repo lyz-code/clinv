@@ -1290,7 +1290,7 @@ class EC2(ClinvAWSResource):
         Do aggregation of data to return the security groups of the resource.
 
         Returns:
-            list: Security groups of the resource.
+            dict: Security groups of the resource.
         """
 
         try:
@@ -2011,11 +2011,17 @@ class SecurityGroup(ClinvGenericResource):
 
     Public methods:
         print: Prints information of the resource.
+        is_related: Return if the security group is related with the contents
+            of a regular expression.
         is_synchronized: Check if the real state of the security group
             is the same as the expected.
+        search: Extend the parent search method to include security_groups
+            specific search.
 
     Private methods:
         _print_security_rule: print the information of a security rule.
+        _is_security_rule_related: Return if the security rule is related with
+            the contents of a regular expression.
 
     Public properties:
         name: Returns the name of the resource.
@@ -2105,6 +2111,72 @@ class SecurityGroup(ClinvGenericResource):
         except KeyError:
             pass
 
+    def _is_security_rule_related(self, regexp, security_rule):
+        """
+        Return if the security rule is related with the contents of a
+        regular expression.
+
+        It checks in the security group rules CIDRs, related security groups
+        and ports.
+
+        Input:
+            regexp (dict): Regular expression to test.
+            security_rule (dict): Security rule dictionary, for example:
+
+                {
+                    'FromPort': 0,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': [],
+                    'Ipv6Ranges': [],
+                    'PrefixListIds': [],
+                    'ToPort': 65535,
+                }
+
+        Return:
+            bool: If it's related
+        """
+        # Check regular expression in the associated IPv4s.
+        for cidr in security_rule['IpRanges']:
+            if re.match(regexp, cidr['CidrIp']):
+                return True
+
+        # Check regular expression in the associated ports.
+        try:
+            port_to_test = int(regexp)
+            if port_to_test >= security_rule['FromPort'] and \
+                    port_to_test <= security_rule['ToPort']:
+                return True
+        except ValueError:
+            pass
+
+        # Check regular expression in the associated security groups
+        for security_group in security_rule['UserIdGroupPairs']:
+            if re.match(regexp, security_group['GroupId']):
+                return True
+
+    def is_related(self, regexp):
+        """
+        Return if the security group is related with the contents of a
+        regular expression.
+
+        It checks in the security group rules CIDRs, related security groups
+        and ports.
+
+        Input:
+            regexp (dict): Regular expression to test.
+
+        Return:
+            bool: If it's related
+        """
+
+        for security_rule in self._get_field('IpPermissions'):
+            if self._is_security_rule_related(regexp, security_rule):
+                return True
+
+        for security_rule in self._get_field('IpPermissionsEgress'):
+            if self._is_security_rule_related(regexp, security_rule):
+                return True
+
     def print(self):
         """
         Override parent method to do aggregation of data to print information
@@ -2127,3 +2199,31 @@ class SecurityGroup(ClinvGenericResource):
         print('  Egress:')
         for security_rule in self._get_field('IpPermissionsEgress'):
             self._print_security_rule(security_rule)
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include security_groups specific
+        search.
+
+        Extend to search by:
+            CIDR in security group ingress and egress rules.
+            Security groups in security group ingress and egress rules.
+            Ports in security group ingress and egress rules.
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvGenericResource searches.
+        if super().search(search_string):
+            return True
+
+        # Search by CIDR, port and security groups in the rules.
+        if self.is_related(search_string):
+            return True
+
+        return False
