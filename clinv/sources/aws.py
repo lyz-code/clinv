@@ -378,7 +378,6 @@ class RDSsrc(AWSBasesrc):
             'PerformanceInsightsRetentionPeriod',
             'ReadReplicaDBInstanceIdentifiers',
             'StorageType',
-            'VpcSecurityGroups',
         ]
 
         for region in self.source_data.keys():
@@ -1487,7 +1486,12 @@ class RDS(ClinvAWSResource):
             list: Security groups of the resource.
         """
 
-        return self._get_field('DBSecurityGroups', 'list')
+        security_groups = self._get_field('DBSecurityGroups', 'list')
+
+        for security_group in self._get_field('VpcSecurityGroups', 'list'):
+            security_groups.append(security_group['VpcSecurityGroupId'])
+
+        return security_groups
 
     @property
     def type(self):

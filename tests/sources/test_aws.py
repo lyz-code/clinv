@@ -441,6 +441,12 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                     'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
                     'PubliclyAccessible': False,
                     'StorageEncrypted': True,
+                    'VpcSecurityGroups': [
+                        {
+                            'Status': 'active',
+                            'VpcSecurityGroupId': 'sg-f23le20g'
+                        }
+                    ],
                 },
             ],
         }
@@ -1769,7 +1775,6 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
 
     And the following properties must be set:
         * resource name: resource_name
-        * security groups: ['sg-f2234gf6', 'sg-cwfccs17']
         * type: 'c4.4xlarge'
         * region: 'us-east-1'
     '''
@@ -1780,12 +1785,6 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
 
     def tearDown(self):
         super().tearDown()
-
-    def test_get_security_groups(self):
-        self.assertEqual(
-            self.resource.security_groups,
-            ['sg-f2234gf6', 'sg-cwfccs17']
-        )
 
     def test_get_type(self):
         self.assertEqual(self.resource.type, 'c4.4xlarge')
@@ -2079,7 +2078,7 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 'DBInstanceClass': 'c4.4xlarge',
                 'DBInstanceIdentifier': 'resource_name',
                 'DBInstanceStatus': 'active',
-                'DBSecurityGroups': ['sg-f2234gf6', 'sg-cwfccs17'],
+                'DBSecurityGroups': ['sg-f2234gf6'],
                 'DBSubnetGroup': {
                     'DBSubnetGroupDescription': 'Created from the RDS '
                     'Management Console',
@@ -2126,6 +2125,12 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 'to_destroy': 'tbd',
                 'monitored': 'true',
                 'environment': 'production',
+                'VpcSecurityGroups': [
+                    {
+                        'Status': 'active',
+                        'VpcSecurityGroupId': 'sg-f23le20g'
+                    }
+                ],
             }
         }
         self.resource = RDS(self.raw)
@@ -2152,6 +2157,17 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(5, len(self.print.mock_calls))
+
+    def test_security_groups_property_gets_dbsecurity_groups(self):
+        self.resource.raw['DBSecurityGroups'] = ['sg-yyyyyyyy']
+        self.resource.raw['VpcSecurityGroups'] = {}
+
+        self.assertEqual(self.resource.security_groups, ['sg-yyyyyyyy'])
+
+    def test_security_groups_property_gets_vpc_security_groups(self):
+        self.resource.raw['DBSecurityGroups'] = []
+
+        self.assertEqual(self.resource.security_groups, ['sg-f23le20g'])
 
 
 class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
