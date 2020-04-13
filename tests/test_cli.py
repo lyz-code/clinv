@@ -78,6 +78,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'security_groups')
 
+    def test_can_specify_unassigned_vpc_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'vpc'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'vpc')
+
     def test_can_specify_list_rds_subcommand(self):
         parsed = self.parser.parse_args(['list', 'rds'])
         self.assertEqual(parsed.subcommand, 'list')

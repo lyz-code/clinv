@@ -34,7 +34,8 @@ from clinv.sources.aws import \
     RDSsrc, \
     Route53src, \
     S3src, \
-    SecurityGroupsrc
+    SecurityGroupsrc, \
+    VPCsrc
 
 from clinv.sources.risk_management import \
     Informationsrc, Projectsrc, Servicesrc, Peoplesrc
@@ -55,6 +56,7 @@ active_source_plugins = [
     S3src,
     SecurityGroupsrc,
     Servicesrc,
+    VPCsrc,
 ]
 
 

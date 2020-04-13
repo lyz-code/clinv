@@ -47,6 +47,7 @@ def load_parser():
             's3',
             'services',
             'security_groups',
+            'vpc',
         ],
         default='all'
     )

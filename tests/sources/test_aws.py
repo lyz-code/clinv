@@ -5,7 +5,8 @@ from clinv.sources.aws import \
     RDSsrc, \
     Route53src, \
     S3src, \
-    SecurityGroupsrc
+    SecurityGroupsrc, \
+    VPCsrc
 from clinv.sources.aws import \
     EC2, \
     IAMUser, \
@@ -13,7 +14,8 @@ from clinv.sources.aws import \
     RDS, \
     Route53, \
     S3, \
-    SecurityGroup
+    SecurityGroup, \
+    VPC
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
 from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
@@ -351,6 +353,324 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
         desired_mock_input = {
             **self.src.user_data['i-023desldk394995ss'],
             **self.src.source_data['us-east-1'][0]['Instances'][0],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMUser source implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMUsersrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'Path': '/',
+                'CreateDate': datetime.datetime(
+                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                ),
+                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'UserName': 'User 1'
+            },
+        }
+        self.desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        self.boto.client.return_value.list_users.return_value = {
+            'Users': [
+                {
+                    'UserName': 'User 1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                },
+            ]
+        }
+
+        self.src.source_data = {}
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
+                'description': 'User 1 description',
+                'to_destroy': False,
+            },
+        }
+
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMUser')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMGroup implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMGroupsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'Administrator',
+                'Path': '/',
+                'Users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ],
+                'InlinePolicies': [
+                    'Inlinepolicy'
+                ],
+                'AttachedPolicies': [
+                    'arn:aws:iam::aws:policy/Attachedpolicy'
+                ],
+            },
+        }
+        self.desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'name': 'Administrator',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+                'desired_users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ]
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        boto_mock = self.boto.client.return_value
+        boto_mock.list_groups.return_value = {
+            'Groups': [
+                {
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
+                    'CreateDate': datetime.datetime(
+                        2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                    ),
+                    'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'GroupName': 'Administrator',
+                    'Path': '/',
+                }
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+
+        boto_mock.get_group.return_value = {
+            'Group': {
+                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'Administrator',
+                'Path': '/',
+            },
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+            'Users': [
+                {
+                    'UserName': 'User 1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                }
+            ],
+        }
+        boto_mock.list_group_policies.return_value = {
+            'PolicyNames': ['Inlinepolicy'],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+        boto_mock.list_attached_group_policies.return_value = {
+            'AttachedPolicies': [
+                {
+                    'PolicyArn': 'arn:aws:iam::aws:policy/Attachedpolicy',
+                    'PolicyName': 'AttachedPolicy'
+                },
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMGroup')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
         }
 
         desired_inventory = self.src.generate_inventory()
@@ -1228,324 +1548,6 @@ class TestS3Source(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
 
-class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
-    '''
-    Test the IAMUser source implementation in the inventory.
-    '''
-
-    def setUp(self):
-        super().setUp()
-        self.source_obj = IAMUsersrc
-
-        # Initialize object to test
-        source_data = {}
-        user_data = {}
-        self.src = self.source_obj(source_data, user_data)
-
-        # What data we want to aggregate to our inventory
-        self.desired_source_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                'Path': '/',
-                'CreateDate': datetime.datetime(
-                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                ),
-                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'UserName': 'User 1'
-            },
-        }
-        self.desired_user_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                'name': 'User 1',
-                'description': 'tbd',
-                'to_destroy': 'tbd',
-                'state': 'tbd',
-            },
-        }
-
-        self.src.source_data = self.desired_source_data
-
-    def tearDown(self):
-        super().tearDown()
-
-    def test_generate_source_data_creates_expected_source_data_attrib(self):
-        self.boto.client.return_value.list_users.return_value = {
-            'Users': [
-                {
-                    'UserName': 'User 1',
-                    'Path': '/',
-                    'CreateDate': datetime.datetime(
-                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                    ),
-                    'PasswordLastUsed': datetime.datetime(
-                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
-                    ),
-                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                },
-            ]
-        }
-
-        self.src.source_data = {}
-        generated_source_data = self.src.generate_source_data()
-
-        self.assertEqual(
-            self.src.source_data,
-            self.desired_source_data,
-        )
-        self.assertEqual(
-            generated_source_data,
-            self.desired_source_data,
-        )
-
-    def test_generate_user_data_creates_expected_user_data_attrib(self):
-        generated_user_data = self.src.generate_user_data()
-
-        self.assertEqual(
-            self.src.user_data,
-            self.desired_user_data,
-        )
-        self.assertEqual(
-            generated_user_data,
-            self.desired_user_data,
-        )
-
-    def test_generate_user_data_doesnt_loose_existing_data(self):
-        desired_user_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                'name': 'User 1',
-                'description': 'User 1 description',
-                'to_destroy': False,
-            },
-        }
-
-        self.src.user_data = desired_user_data
-
-        self.src.generate_user_data()
-
-        self.assertEqual(
-            self.src.user_data,
-            desired_user_data,
-        )
-
-    def test_generate_inventory_return_empty_dict_if_no_data(self):
-        self.src.source_data = {}
-        self.assertEqual(self.src.generate_inventory(), {})
-
-    @patch('clinv.sources.aws.IAMUser')
-    def test_generate_inventory_creates_expected_dictionary(
-        self,
-        resource_mock
-    ):
-        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-        self.src.user_data = self.desired_user_data
-
-        desired_mock_input = {
-            **self.src.user_data[resource_id],
-            **self.src.source_data[resource_id],
-        }
-
-        desired_inventory = self.src.generate_inventory()
-        self.assertEqual(
-            resource_mock.assert_called_with(
-                {
-                    resource_id: desired_mock_input
-                },
-            ),
-            None,
-        )
-
-        self.assertEqual(
-            desired_inventory,
-            {
-                resource_id: resource_mock.return_value
-            },
-        )
-
-
-class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
-    '''
-    Test the IAMGroup implementation in the inventory.
-    '''
-
-    def setUp(self):
-        super().setUp()
-        self.source_obj = IAMGroupsrc
-
-        # Initialize object to test
-        source_data = {}
-        user_data = {}
-        self.src = self.source_obj(source_data, user_data)
-
-        # What data we want to aggregate to our inventory
-        self.desired_source_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
-                'CreateDate': datetime.datetime(
-                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
-                ),
-                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'GroupName': 'Administrator',
-                'Path': '/',
-                'Users': [
-                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                ],
-                'InlinePolicies': [
-                    'Inlinepolicy'
-                ],
-                'AttachedPolicies': [
-                    'arn:aws:iam::aws:policy/Attachedpolicy'
-                ],
-            },
-        }
-        self.desired_user_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
-                'name': 'Administrator',
-                'description': 'tbd',
-                'to_destroy': 'tbd',
-                'state': 'tbd',
-                'desired_users': [
-                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                ]
-            },
-        }
-
-        self.src.source_data = self.desired_source_data
-
-    def tearDown(self):
-        super().tearDown()
-
-    def test_generate_source_data_creates_expected_source_data_attrib(self):
-        boto_mock = self.boto.client.return_value
-        boto_mock.list_groups.return_value = {
-            'Groups': [
-                {
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
-                    'CreateDate': datetime.datetime(
-                        2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
-                    ),
-                    'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'GroupName': 'Administrator',
-                    'Path': '/',
-                }
-            ],
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-        }
-
-        boto_mock.get_group.return_value = {
-            'Group': {
-                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
-                'CreateDate': datetime.datetime(
-                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
-                ),
-                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'GroupName': 'Administrator',
-                'Path': '/',
-            },
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-            'Users': [
-                {
-                    'UserName': 'User 1',
-                    'Path': '/',
-                    'CreateDate': datetime.datetime(
-                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                    ),
-                    'PasswordLastUsed': datetime.datetime(
-                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
-                    ),
-                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                }
-            ],
-        }
-        boto_mock.list_group_policies.return_value = {
-            'PolicyNames': ['Inlinepolicy'],
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-        }
-        boto_mock.list_attached_group_policies.return_value = {
-            'AttachedPolicies': [
-                {
-                    'PolicyArn': 'arn:aws:iam::aws:policy/Attachedpolicy',
-                    'PolicyName': 'AttachedPolicy'
-                },
-            ],
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-        }
-
-        self.src.source_data = {}
-
-        generated_source_data = self.src.generate_source_data()
-
-        self.assertEqual(
-            self.src.source_data,
-            self.desired_source_data,
-        )
-        self.assertEqual(
-            generated_source_data,
-            self.desired_source_data,
-        )
-
-    def test_generate_user_data_creates_expected_user_data_attrib(self):
-        generated_user_data = self.src.generate_user_data()
-
-        self.assertEqual(
-            self.src.user_data,
-            self.desired_user_data,
-        )
-        self.assertEqual(
-            generated_user_data,
-            self.desired_user_data,
-        )
-
-    def test_generate_user_data_doesnt_loose_existing_data(self):
-        user_key = [key for key in self.desired_user_data.keys()][0]
-        desired_user_data = {user_key: {}}
-        self.src.user_data = desired_user_data
-
-        self.src.generate_user_data()
-
-        self.assertEqual(
-            self.src.user_data,
-            desired_user_data,
-        )
-
-    def test_generate_inventory_return_empty_dict_if_no_data(self):
-        self.src.source_data = {}
-        self.assertEqual(self.src.generate_inventory(), {})
-
-    @patch('clinv.sources.aws.IAMGroup')
-    def test_generate_inventory_creates_expected_dictionary(
-        self,
-        resource_mock
-    ):
-        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
-        self.src.user_data = self.desired_user_data
-
-        desired_mock_input = {
-            **self.src.user_data[resource_id],
-            **self.src.source_data[resource_id],
-        }
-
-        desired_inventory = self.src.generate_inventory()
-        self.assertEqual(
-            resource_mock.assert_called_with(
-                {
-                    resource_id: desired_mock_input
-                },
-            ),
-            None,
-        )
-
-        self.assertEqual(
-            desired_inventory,
-            {
-                resource_id: resource_mock.return_value
-            },
-        )
-
-
 class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
     '''
     Test the SecurityGroup implementation in the inventory.
@@ -1742,6 +1744,164 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
         resource_mock
     ):
         resource_id = 'sg-xxxxxxxx'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestVPCSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the VPC implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.module_name = 'aws'
+        super().setUp()
+        self.source_obj = VPCsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'vpc-xxxxxxxxxxxx': {
+                'CidrBlock': '172.16.0.0/16',
+                'DhcpOptionsId': 'dopt-xxxxxxxx',
+                'InstanceTenancy': 'default',
+                'IsDefault': False,
+                'region': 'us-east-1',
+                'State': 'available',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'vpc name'
+                    }
+                ],
+            }
+        }
+        self.desired_user_data = {
+            'vpc-xxxxxxxxxxxx': {
+                'state': 'tbd',
+                'to_destroy': 'tbd',
+                'description': 'tbd',
+            }
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        # Mock here the call to your provider
+        boto_mock = self.boto.client.return_value
+
+        # Simulate only one region
+        boto_mock.describe_regions.return_value = {
+            'Regions': [
+                {
+                    'RegionName': 'us-east-1'
+                }
+            ]
+        }
+        boto_mock.describe_vpcs.return_value = {
+            'Vpcs': [
+                {
+                    'CidrBlock': '172.16.0.0/16',
+                    'CidrBlockAssociationSet': [
+                        {
+                            'AssociationId': 'vpc-cidr-assoc-xxxxxxxxx',
+                            'CidrBlock': '172.16.0.0/16',
+                            'CidrBlockState': {
+                                'State': 'associated'
+                            }
+                        }
+                    ],
+                    'DhcpOptionsId': 'dopt-xxxxxxxx',
+                    'InstanceTenancy': 'default',
+                    'IsDefault': False,
+                    'OwnerId': 'xxxxxxxxxxxx',
+                    'State': 'available',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': 'vpc name'
+                        }
+                    ],
+                    'VpcId': 'vpc-xxxxxxxxxxxx'
+                }
+            ],
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.VPC')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'vpc-xxxxxxxxxxxx'
         self.src.user_data = self.desired_user_data
 
         desired_mock_input = {
@@ -2876,3 +3036,58 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             relatedMock.assert_called_with('sg-yyyyyyyy'),
             None,
         )
+
+
+class TestVPC(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        self.id = 'vpc-xxxxxxxxxxxx'
+
+        super().setUp()
+
+        self.raw = {
+            'vpc-xxxxxxxxxxxx': {
+                'CidrBlock': '172.16.0.0/16',
+                'DhcpOptionsId': 'dopt-xxxxxxxx',
+                'InstanceTenancy': 'default',
+                'IsDefault': False,
+                'region': 'us-east-1',
+                'State': 'available',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'resource_name'
+                    }
+                ],
+                'state': 'active',
+                'to_destroy': 'tbd',
+                'description': 'This is the description',
+            }
+        }
+        self.resource = VPC(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_instance_name_return_null_if_empty(self):
+        self.raw['vpc-xxxxxxxxxxxx'].pop('Tags', None)
+        self.assertEqual(self.resource.name, 'none')
+
+    def test_cidr_returns_expected_value(self):
+        self.assertEqual(self.resource.cidr, self.resource.raw['CidrBlock'])
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('vpc-xxxxxxxxxxxx'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Destroy: tbd'),
+            call('  Region: us-east-1'),
+            call('  CIDR: 172.16.0.0/16'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(7, len(self.print.mock_calls))

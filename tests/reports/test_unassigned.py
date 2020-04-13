@@ -281,6 +281,16 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
             None,
         )
 
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_vpc_prints_instances(self, printMock):
+        self.report._unassigned_vpc()
+        self.assertTrue(self.vpc.short_print.called)
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_vpc')
+    def test_general_unassigned_can_use_vpc_resource(self, unassignMock):
+        self.report.output('vpc')
+        self.assertTrue(unassignMock.called)
+
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_s3')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
@@ -289,6 +299,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_people')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_users')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_groups')
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_vpc')
     @patch(
         'clinv.reports.unassigned.UnassignedReport._unassigned_informations'
     )
@@ -307,6 +318,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         route53Mock,
         s3Mock,
         security_groupMock,
+        vpcMock,
     ):
         self.report.output('all')
         self.assertTrue(informationsMock.called)
@@ -319,3 +331,4 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.assertTrue(route53Mock.called)
         self.assertTrue(s3Mock.called)
         self.assertTrue(security_groupMock.called)
+        self.assertTrue(vpcMock.called)

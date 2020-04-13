@@ -313,17 +313,12 @@ class Test{{ class_name }}(ClinvGenericResourceTests, unittest.TestCase):
 
 Think if you can add more search filters in the object `search` method.
 
-### Add source to the active_source_plugins
-
-Add it to the `clinv/inventory.py` `active_source_plugins` variable.
-
 ### Add resource to the reports
 
 There are some reports that are generic, such as `list` or `print`, but there
 are some that still aren't.
 
 So you'll need to manually add your resource to `export` and `unassigned`.
-
 
 ### Add resource to the cli
 

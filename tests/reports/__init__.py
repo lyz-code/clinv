@@ -52,6 +52,9 @@ class ClinvReportBaseTestClass(object):
             'informations': {
                 'inf_01': Mock()
             },
+            'vpc': {
+                'vpc-xxxxxxxx': Mock()
+            },
         }
         self.ec2instance = self.inventory.inv['ec2']['i-023desldk394995ss']
         self.s3instance = self.inventory.inv['s3']['s3_bucket_name']
@@ -72,6 +75,7 @@ class ClinvReportBaseTestClass(object):
         self.service = self.inventory.inv['services']['ser_01']
         self.security_group = \
             self.inventory.inv['security_groups']['sg-xxxxxxxx']
+        self.vpc = self.inventory.inv['vpc']['vpc-xxxxxxxx']
 
     def tearDown(self):
         pass

@@ -57,6 +57,7 @@ class UnassignedReport(ClinvReport):
                     'rds',
                     's3',
                     'iam_groups',
+                    'vpc',
                 ]
 
         Returns:
@@ -262,6 +263,17 @@ class UnassignedReport(ClinvReport):
 
         self.short_print_resources(unassigned_resources)
 
+    def _unassigned_vpc(self):
+        """
+        Do aggregation of data to print the vpc resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        self._unassigned_aws_resource('vpc')
+
     def output(self, resource_type):
         """
         Method to print the list of unassigned Clinv resources
@@ -306,23 +318,7 @@ class UnassignedReport(ClinvReport):
             self._unassigned_informations()
             self.log.info('Unassigned Security Groups')
             self._unassigned_security_groups()
-        elif resource_type == 'ec2':
-            self._unassigned_ec2()
-        elif resource_type == 'rds':
-            self._unassigned_rds()
-        elif resource_type == 'route53':
-            self._unassigned_route53()
-        elif resource_type == 's3':
-            self._unassigned_s3()
-        elif resource_type == 'services':
-            self._unassigned_services()
-        elif resource_type == 'people':
-            self._unassigned_people()
-        elif resource_type == 'iam_users':
-            self._unassigned_iam_users()
-        elif resource_type == 'iam_groups':
-            self._unassigned_iam_groups()
-        elif resource_type == 'informations':
-            self._unassigned_informations()
-        elif resource_type == 'security_groups':
-            self._unassigned_security_groups()
+            self.log.info('Unassigned VPC')
+            self._unassigned_vpc()
+        else:
+            self.__getattribute__('_unassigned_{}'.format(resource_type))()
