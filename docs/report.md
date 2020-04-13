@@ -65,7 +65,7 @@ class {{ class_name }}(ClinvReport):
     def __init__(self, inventory):
         super().__init__(inventory)
 
-    def output(self, regexp_id):
+    def output(self, resource_id):
         """
         Method to print the report to stdout.
 

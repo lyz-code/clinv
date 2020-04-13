@@ -132,3 +132,17 @@ class TestMain(unittest.TestCase):
             reportMock.return_value.output.assert_called_with('true'),
             None,
         )
+
+    @patch('clinv.UnusedReport')
+    def test_unused_subcommand(self, reportMock):
+        self.parser_args.subcommand = 'unused'
+        main()
+        self.assertTrue(self.inventory.return_value.load.called)
+        self.assertEqual(
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with(),
+            None,
+        )

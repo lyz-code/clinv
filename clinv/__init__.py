@@ -26,6 +26,7 @@ from clinv.reports.print import PrintReport
 from clinv.reports.unassigned import UnassignedReport
 from clinv.reports.search import SearchReport
 from clinv.reports.monitored import MonitoredReport
+from clinv.reports.unused import UnusedReport
 
 
 def main():
@@ -42,6 +43,7 @@ def main():
         'print',
         'search',
         'unassigned',
+        'unused',
     ]:
         return
 
@@ -61,6 +63,8 @@ def main():
             ExportReport(inventory).output(args.export_path)
         elif args.subcommand == 'monitored':
             MonitoredReport(inventory).output(args.monitor_status)
+        elif args.subcommand == 'unused':
+            UnusedReport(inventory).output()
 
 
 if __name__ == "__main__":

@@ -40,6 +40,9 @@ class ClinvReportBaseTestClass(object):
             'iam_users': {
                 'arn:aws:iam::XXXXXXXXXXXX:user/user_1': Mock()
             },
+            'security_groups': {
+                'sg-xxxxxxxx': Mock()
+            },
             'projects': {
                 'pro_01': Mock()
             },
@@ -67,6 +70,8 @@ class ClinvReportBaseTestClass(object):
                 'hosted_zone_id-record1.clinv.org-cname'
             ]
         self.service = self.inventory.inv['services']['ser_01']
+        self.security_group = \
+            self.inventory.inv['security_groups']['sg-xxxxxxxx']
 
     def tearDown(self):
         pass

@@ -73,6 +73,11 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'route53')
 
+    def test_can_specify_unassigned_security_groups_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'security_groups'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'security_groups')
+
     def test_can_specify_list_rds_subcommand(self):
         parsed = self.parser.parse_args(['list', 'rds'])
         self.assertEqual(parsed.subcommand, 'list')
@@ -147,6 +152,10 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['monitored', 'unknown'])
         self.assertEqual(parsed.subcommand, 'monitored')
         self.assertEqual(parsed.monitor_status, 'unknown')
+
+    def test_can_specify_unused_subcommand(self):
+        parsed = self.parser.parse_args(['unused'])
+        self.assertEqual(parsed.subcommand, 'unused')
 
 
 class TestLogger(unittest.TestCase):

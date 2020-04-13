@@ -46,6 +46,7 @@ def load_parser():
             'route53',
             's3',
             'services',
+            'security_groups',
         ],
         default='all'
     )
@@ -99,6 +100,8 @@ def load_parser():
         ],
         default='true'
     )
+
+    subparser.add_parser('unused')
 
     argcomplete.autocomplete(parser)
     return parser
