@@ -227,6 +227,60 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report.output('iam_groups')
         self.assertTrue(unassignMock.called)
 
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_security_groups_prints_instances_if_tbd(
+        self,
+        printMock
+    ):
+        self.security_group.id = 'sg-xxxxxxxx'
+        self.security_group.name = 'resource_name'
+        self.security_group.state = 'tbd'
+
+        self.report._unassigned_security_groups()
+
+        self.assertEqual(
+            printMock.assert_called_with(
+                [self.report.inv['security_groups']['sg-xxxxxxxx']]
+            ),
+            None,
+        )
+
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_security_groups_doesnt_prints_instances_if_active(
+        self,
+        printMock
+    ):
+        self.security_group.id = 'sg-xxxxxxxx'
+        self.security_group.name = 'resource_name'
+        self.security_group.state = 'active'
+
+        self.report._unassigned_security_groups()
+
+        self.assertEqual(
+            printMock.assert_called_with(
+                []
+            ),
+            None,
+        )
+
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_security_groups_doesnt_prints_instances_if_terminated(
+        self,
+        printMock
+    ):
+        self.security_group.id = 'sg-xxxxxxxx'
+        self.security_group.name = 'resource_name'
+        self.security_group.state = 'terminated'
+
+        self.report._unassigned_security_groups()
+
+        self.assertEqual(
+            printMock.assert_called_with(
+                []
+            ),
+            None,
+        )
+
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_s3')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
@@ -237,6 +291,9 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_groups')
     @patch(
         'clinv.reports.unassigned.UnassignedReport._unassigned_informations'
+    )
+    @patch(
+        'clinv.reports.unassigned.UnassignedReport._unassigned_security_groups'
     )
     def test_output_can_test_all(
         self,
@@ -249,6 +306,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         rdsMock,
         route53Mock,
         s3Mock,
+        security_groupMock,
     ):
         self.report.output('all')
         self.assertTrue(informationsMock.called)
@@ -260,3 +318,4 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.assertTrue(rdsMock.called)
         self.assertTrue(route53Mock.called)
         self.assertTrue(s3Mock.called)
+        self.assertTrue(security_groupMock.called)

@@ -57,7 +57,7 @@ class UnusedReport(ClinvReport):
             ]
 
         # Security groups used by other security groups.
-        def is_security_group_related(security_group_id):
+        def is_security_group_related(security_group_id_to_test):
             if security_group_id_to_test in used_resources:
                 return True
             for security_group_id, security_group in \
@@ -66,14 +66,15 @@ class UnusedReport(ClinvReport):
                     used_resources.append(security_group_id_to_test)
                     return True
 
-            # Don't add the VPC/Region default security groups as they can't
-            # be removed.
-            if security_group.name == 'default':
-                return True
             return False
 
         for security_group_id_to_test, security_group_to_test \
                 in self.inv['security_groups'].items():
+            # Don't add the VPC/Region default security groups as they can't
+            # be removed.
+            if security_group_to_test.name == 'default':
+                continue
+
             if not is_security_group_related(security_group_id_to_test):
                 unused_resources.append(security_group_to_test)
 
