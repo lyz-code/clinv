@@ -2015,11 +2015,12 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             call('    - sg-cwfccs17: sg-2'),
             call("  PrivateIP: ['142.33.2.113']"),
             call("  PublicIP: ['32.312.444.22']"),
+            call("  Region: us-east-1"),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(9, len(self.print.mock_calls))
+        self.assertEqual(10, len(self.print.mock_calls))
 
     def test_print_ec2_reason_if_stopped(self):
         self.raw['i-01']['State']['Name'] = 'stopped'
@@ -2035,11 +2036,12 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             call('    - sg-cwfccs17: sg-2'),
             call("  PrivateIP: ['142.33.2.113']"),
             call("  PublicIP: ['32.312.444.22']"),
+            call("  Region: us-east-1"),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(10, len(self.print.mock_calls))
+        self.assertEqual(11, len(self.print.mock_calls))
 
     def test_search_ec2_by_public_ip(self):
         self.assertTrue(self.resource.search('32.312.444.22'))

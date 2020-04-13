@@ -1209,10 +1209,6 @@ class ClinvAWSResource(ClinvGenericResource):
         if super().search(search_string):
             return True
 
-        # Search by security groups
-        if search_string in self.security_groups:
-            return True
-
         # Search by region
         if re.match(search_string, self.region):
             return True
@@ -1401,6 +1397,7 @@ class EC2(ClinvAWSResource):
 
         print('  PrivateIP: {}'.format(self.private_ips))
         print('  PublicIP: {}'.format(self.public_ips))
+        print('  Region: {}'.format(self.region))
 
     def search(self, search_string):
         """
@@ -1532,6 +1529,31 @@ class RDS(ClinvAWSResource):
         print('  Endpoint: {}'.format(self.endpoint)),
         print('  Type: {}'.format(self.type))
         print('  Description: {}'.format(self.description))
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include project specific search.
+
+        Extend to search by:
+            Security groups
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvAWSResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by security group
+        if self._match_list(search_string, self.security_groups):
+            return True
+
+        return False
 
 
 class Route53(ClinvGenericResource):
