@@ -1599,6 +1599,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                     }
                 ],
                 'IpPermissionsEgress': [],
+                'VpcId': 'vpc-xxxxxxxxxxx',
             },
         }
 
@@ -1692,7 +1693,8 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
                         }
                     ],
                     'IpPermissionsEgress': [],
-                    'OwnerId': 'yyyyyyyyyyyy'
+                    'OwnerId': 'yyyyyyyyyyyy',
+                    'VpcId': 'vpc-xxxxxxxxxxx',
                 }
             ]
         }
@@ -2220,6 +2222,12 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
     def test_search_ec2_by_security_group_id(self):
         self.assertTrue(self.resource.search('sg-cw.*'))
 
+    def test_get_vpc(self):
+        self.assertEqual(self.resource.vpc, 'vpc-31084921')
+
+    def test_search_uses_vpc(self):
+        self.assertTrue(self.resource.search('vpc-310.*'))
+
 
 class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def setUp(self):
@@ -2304,6 +2312,9 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
             'rds-name.us-east-1.rds.amazonaws.com:5521',
         )
 
+    def test_vpc_property_works_as_expected(self):
+        self.assertEqual(self.resource.vpc, 'vpc-v2dcp2jh')
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
@@ -2328,6 +2339,9 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
         self.resource.raw['DBSecurityGroups'] = []
 
         self.assertEqual(self.resource.security_groups, ['sg-f23le20g'])
+
+    def test_search_uses_vpc(self):
+        self.assertTrue(self.resource.search('vpc-v2d.*'))
 
 
 class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
@@ -2717,6 +2731,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': -1,
@@ -2725,6 +2740,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': -1,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': 0,
@@ -2733,6 +2749,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     }
                 ],
                 'IpPermissionsEgress': [],
@@ -2744,6 +2761,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': -1,
@@ -2752,6 +2770,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': -1,
+                        'UserIdGroupPairs': [],
                     },
                     {
                         'FromPort': 0,
@@ -2760,9 +2779,11 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                         'Ipv6Ranges': [],
                         'PrefixListIds': [],
                         'ToPort': 65535,
+                        'UserIdGroupPairs': [],
                     }
                 ],
                 'egress': [],
+                'VpcId': 'vpc-xxxxxxxxxxx',
             },
         }
         self.resource = SecurityGroup(self.raw)
@@ -2907,6 +2928,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             call('  Synchronized: True'),
             call('  Destroy: tbd'),
             call('  Region: us-east-1'),
+            call('  VPC: vpc-xxxxxxxxxxx'),
             call('  Ingress:'),
             call('    UDP: 0-65535'),
             call('    ICMP: '),
@@ -2916,7 +2938,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(12, len(self.print.mock_calls))
+        self.assertEqual(13, len(self.print.mock_calls))
 
     def test_is_related_identifies_source_cidrs(self):
         security_rule = {
@@ -3021,6 +3043,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             'ToPort': 65535,
         }
 
+        self.resource.raw['IpPermissions'] = []
         self.resource.raw['IpPermissionsEgress'] = [security_rule]
         self.resource.is_related('.*')
         self.assertEqual(
@@ -3036,6 +3059,20 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             relatedMock.assert_called_with('sg-yyyyyyyy'),
             None,
         )
+
+    def test_vpc_returns_expected_value(self):
+        self.assertEqual(self.resource.vpc, self.resource.raw['VpcId'])
+
+    def test_vpc_returns_none_if_no_vpc(self):
+        self.resource.raw.pop('VpcId', None)
+        self.assertEqual(self.resource.vpc, None)
+
+    def test_search_uses_vpc(self):
+        self.assertTrue(self.resource.search('vpc-xx.*'))
+
+    def test_search_doesnt_fail_if_vpc_is_none(self):
+        self.resource.raw.pop('VpcId', None)
+        self.assertFalse(self.resource.search('vpc-xx.*'))
 
 
 class TestVPC(ClinvGenericResourceTests, unittest.TestCase):

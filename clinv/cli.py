@@ -69,6 +69,7 @@ def load_parser():
             'route53',
             's3',
             'security_groups',
+            'vpc',
         ],
     )
 

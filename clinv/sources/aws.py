@@ -1377,6 +1377,7 @@ class EC2(ClinvAWSResource):
         state: Returns the state of the resource.
         type: Returns the type of the resource.
         state_transition: Returns the reason of the transition of the resource.
+        vpc: Returns the VPC of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1496,6 +1497,17 @@ class EC2(ClinvAWSResource):
         """
         return self._get_field('StateTransitionReason', 'str')
 
+    @property
+    def vpc(self):
+        """
+        Do aggregation of data to return the resource vpc.
+
+        Returns:
+            str: Resource type.
+        """
+
+        return self._get_field('VpcId', 'str')
+
     def print(self):
         """
         Do aggregation of data to print information of the resource.
@@ -1551,6 +1563,10 @@ class EC2(ClinvAWSResource):
 
         # Search by security group
         if self._match_dict(search_string, self.security_groups):
+            return True
+
+        # Search by VPC.
+        if re.match(search_string, self.vpc):
             return True
 
         return False
@@ -1744,6 +1760,7 @@ class RDS(ClinvAWSResource):
         security_groups: Returns the security groups of the resource.
         type: Returns the type of the resource.
         state: Returns the state of the resource.
+        vpc: Returns the VPC of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1816,6 +1833,18 @@ class RDS(ClinvAWSResource):
         endpoint_dict = self._get_field('Endpoint', 'dict')
         return '{}:{}'.format(endpoint_dict['Address'], endpoint_dict['Port'])
 
+    @property
+    def vpc(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self.raw['DBSubnetGroup']['VpcId']
+
     def print(self):
         """
         Override parent method to do aggregation of data to print information
@@ -1840,6 +1869,7 @@ class RDS(ClinvAWSResource):
 
         Extend to search by:
             Security groups
+            VPC
 
         Parameters:
             search_string (str): Regular expression to match with the
@@ -1855,6 +1885,10 @@ class RDS(ClinvAWSResource):
 
         # Search by security group
         if self._match_list(search_string, self.security_groups):
+            return True
+
+        # Search by VPC.
+        if re.match(search_string, self.vpc):
             return True
 
         return False
@@ -2152,6 +2186,7 @@ class SecurityGroup(ClinvGenericResource):
 
     Public properties:
         name: Returns the name of the resource.
+        vpc: VPC id of the resource.
     """
 
     def __init__(self, raw_data):
@@ -2320,6 +2355,7 @@ class SecurityGroup(ClinvGenericResource):
         print('  Destroy: {}'.format(self.to_destroy)),
         print('  Synchronized: {}'.format(str(self.is_synchronized())))
         print('  Region: {}'.format(self._get_field('region', 'str')))
+        print('  VPC: {}'.format(self.vpc))
         print('  Ingress:')
         for security_rule in self._get_field('IpPermissions'):
             self._print_security_rule(security_rule)
@@ -2336,6 +2372,7 @@ class SecurityGroup(ClinvGenericResource):
             CIDR in security group ingress and egress rules.
             Security groups in security group ingress and egress rules.
             Ports in security group ingress and egress rules.
+            VPC.
 
         Parameters:
             search_string (str): Regular expression to match with the
@@ -2353,7 +2390,23 @@ class SecurityGroup(ClinvGenericResource):
         if self.is_related(search_string):
             return True
 
+        # Search by VPC.
+        if self.vpc is not None and re.match(search_string, self.vpc):
+            return True
+
         return False
+
+    @property
+    def vpc(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_optional_field('VpcId')
 
 
 class VPC(ClinvGenericResource):
