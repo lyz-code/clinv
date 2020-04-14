@@ -1138,12 +1138,15 @@ class SecurityGroupsrc(AWSBasesrc):
         """
 
         for resource_id, resource in self.source_data.items():
-            self.user_data[resource_id] = {
-                'state': 'tbd',
-                'to_destroy': 'tbd',
-                'ingress': resource['IpPermissions'],
-                'egress': resource['IpPermissionsEgress'],
-            }
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'ingress': resource['IpPermissions'],
+                    'egress': resource['IpPermissionsEgress'],
+                }
 
         return self.user_data
 
@@ -1245,11 +1248,14 @@ class VPCsrc(AWSBasesrc):
         """
 
         for resource_id, resource in self.source_data.items():
-            self.user_data[resource_id] = {
-                'state': 'tbd',
-                'to_destroy': 'tbd',
-                'description': 'tbd',
-            }
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'description': 'tbd',
+                }
 
         return self.user_data
 
@@ -1756,6 +1762,7 @@ class RDS(ClinvAWSResource):
 
     Public properties:
         endpoint: Return the database endpoint.
+        engine: Return the database type and version.
         name: Returns the name of the resource.
         security_groups: Returns the security groups of the resource.
         type: Returns the type of the resource.
@@ -1769,6 +1776,21 @@ class RDS(ClinvAWSResource):
         """
 
         super().__init__(raw_data)
+
+    @property
+    def engine(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        type and version of the resource database.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return '{} {}'.format(
+            self._get_field('Engine', 'str'),
+            self._get_field('EngineVersion', 'str'),
+        )
 
     @property
     def name(self):
@@ -1861,6 +1883,7 @@ class RDS(ClinvAWSResource):
         print('  Name: {}'.format(self.name))
         print('  Endpoint: {}'.format(self.endpoint)),
         print('  Type: {}'.format(self.type))
+        print('  Engine: {}'.format(self.engine))
         print('  Description: {}'.format(self.description))
 
     def search(self, search_string):

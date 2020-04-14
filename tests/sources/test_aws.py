@@ -2315,6 +2315,9 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def test_vpc_property_works_as_expected(self):
         self.assertEqual(self.resource.vpc, 'vpc-v2dcp2jh')
 
+    def test_engine_property_works_as_expected(self):
+        self.assertEqual(self.resource.engine, 'mariadb 1.2')
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
@@ -2322,12 +2325,13 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
             call('  Name: resource_name'),
             call('  Endpoint: rds-name.us-east-1.rds.amazonaws.com:5521'),
             call('  Type: c4.4xlarge'),
+            call('  Engine: mariadb 1.2'),
             call('  Description: This is in the description of the instance'),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(5, len(self.print.mock_calls))
+        self.assertEqual(6, len(self.print.mock_calls))
 
     def test_security_groups_property_gets_dbsecurity_groups(self):
         self.resource.raw['DBSecurityGroups'] = ['sg-yyyyyyyy']
