@@ -1885,6 +1885,9 @@ class RDS(ClinvAWSResource):
         print('  Type: {}'.format(self.type))
         print('  Engine: {}'.format(self.engine))
         print('  Description: {}'.format(self.description))
+        print('  SecurityGroups:')
+        for security_group in self.security_groups:
+            print('    - {}'.format(security_group))
 
     def search(self, search_string):
         """

@@ -2327,11 +2327,14 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
             call('  Type: c4.4xlarge'),
             call('  Engine: mariadb 1.2'),
             call('  Description: This is in the description of the instance'),
+            call('  SecurityGroups:'),
+            call('    - sg-f2234gf6'),
+            call('    - sg-f23le20g')
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(6, len(self.print.mock_calls))
+        self.assertEqual(9, len(self.print.mock_calls))
 
     def test_security_groups_property_gets_dbsecurity_groups(self):
         self.resource.raw['DBSecurityGroups'] = ['sg-yyyyyyyy']
