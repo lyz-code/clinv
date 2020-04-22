@@ -311,6 +311,9 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
                     ],
                 },
                 'description': 'This is the description',
+                'dependencies': [
+                    'ser_02'
+                ],
                 'endpoints': [
                     'https://endpoint1.com'
                 ],
@@ -343,8 +346,18 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
     def test_get_aws(self):
         self.assertEqual(self.resource.aws, {'ec2': ['i-01']})
 
+    def test_get_dependencies(self):
+        self.assertEqual(self.resource.dependencies, ['ser_02'])
+
     def test_search_matches_aws_resources(self):
         self.assertTrue(self.resource.search('i-01'))
+
+    def test_search_matches_service_dependencies(self):
+        self.assertTrue(self.resource.search('ser_02'))
+
+    def test_search_works_without_defined_dependencies(self):
+        self.resource.raw.pop('dependencies')
+        self.assertFalse(self.resource.search('ser_02'))
 
     def test_print_resource_information(self):
         self.resource.print()
