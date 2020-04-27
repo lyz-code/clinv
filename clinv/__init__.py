@@ -20,6 +20,7 @@
 
 from clinv.cli import load_logger, load_parser
 from clinv.inventory import Inventory
+from clinv.reports.active import ActiveReport
 from clinv.reports.export import ExportReport
 from clinv.reports.list import ListReport
 from clinv.reports.print import PrintReport
@@ -36,6 +37,7 @@ def main():
 
     inventory = Inventory(args.data_path)
     if args.subcommand not in [
+        'active',
         'export',
         'generate',
         'list',
@@ -53,6 +55,8 @@ def main():
         inventory.load()
         if args.subcommand == 'search':
             SearchReport(inventory).output(args.search_string)
+        elif args.subcommand == 'active':
+            ActiveReport(inventory).output(args.resource_type)
         elif args.subcommand == 'unassigned':
             UnassignedReport(inventory).output(args.resource_type)
         elif args.subcommand == 'print':
