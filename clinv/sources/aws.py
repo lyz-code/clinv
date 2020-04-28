@@ -2248,6 +2248,31 @@ class SecurityGroup(ClinvGenericResource):
             return True
         return False
 
+    def _print_security_group_pairs_information(self, security_group_pair):
+        """
+        Print the information of the UserIdGroupPairs security rule part.
+
+        Input:
+            security_group_pair (dict): Security group pair dictionary,
+                for example:
+
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                    'Description': 'sg description',
+                }
+
+        Return:
+            stdout: Print the information with a defined format.
+        """
+        try:
+            print('      - {}: {}'.format(
+                security_group_pair['GroupId'],
+                security_group_pair['Description'],
+            ))
+        except KeyError:
+            print('      - {}'.format(security_group_pair['GroupId']))
+
     def _print_security_rule(self, security_rule):
         """
         Print the information of a security rule.
@@ -2295,7 +2320,10 @@ class SecurityGroup(ClinvGenericResource):
         try:
             if len(security_rule['UserIdGroupPairs']) > 0:
                 for security_group in security_rule['UserIdGroupPairs']:
-                    print('      - {}'.format(security_group['GroupId']))
+                    self._print_security_group_pairs_information(
+                        security_group
+                    )
+
         except KeyError:
             pass
 

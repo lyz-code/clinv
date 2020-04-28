@@ -2925,6 +2925,33 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
             self.print.mock_calls
         )
 
+    def test_print_security_rule_supports_sg_sources_with_description(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+            'UserIdGroupPairs': [
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                    'Description': 'sg description',
+                }
+            ],
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [
+                call('    TCP: 443'),
+                call('      - sg-yyyyyyyy: sg description'),
+            ],
+            self.print.mock_calls
+        )
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
