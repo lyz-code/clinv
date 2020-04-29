@@ -1512,7 +1512,7 @@ class EC2(ClinvAWSResource):
             str: Resource type.
         """
 
-        return self._get_field('VpcId', 'str')
+        return self._get_optional_field('VpcId', 'str')
 
     def print(self):
         """
