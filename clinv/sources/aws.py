@@ -1572,7 +1572,7 @@ class EC2(ClinvAWSResource):
             return True
 
         # Search by VPC.
-        if re.match(search_string, self.vpc):
+        if self.vpc is not None and re.match(search_string, self.vpc):
             return True
 
         return False

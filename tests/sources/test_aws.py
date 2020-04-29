@@ -2232,6 +2232,10 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
     def test_search_uses_vpc(self):
         self.assertTrue(self.resource.search('vpc-310.*'))
 
+    def test_search_by_vpc_doesnt_fail_if_none(self):
+        self.resource.raw.pop('VpcId')
+        self.assertFalse(self.resource.search('vpc-310.*'))
+
 
 class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def setUp(self):
