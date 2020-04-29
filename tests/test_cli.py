@@ -73,6 +73,21 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, 'unassigned')
         self.assertEqual(parsed.resource_type, 'route53')
 
+    def test_can_specify_unassigned_security_groups_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'security_groups'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'security_groups')
+
+    def test_can_specify_unassigned_vpc_subcommand(self):
+        parsed = self.parser.parse_args(['unassigned', 'vpc'])
+        self.assertEqual(parsed.subcommand, 'unassigned')
+        self.assertEqual(parsed.resource_type, 'vpc')
+
+    def test_can_specify_list_subcommand(self):
+        parsed = self.parser.parse_args(['list'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, None)
+
     def test_can_specify_list_rds_subcommand(self):
         parsed = self.parser.parse_args(['list', 'rds'])
         self.assertEqual(parsed.subcommand, 'list')
@@ -102,6 +117,16 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['list', 'iam_users'])
         self.assertEqual(parsed.subcommand, 'list')
         self.assertEqual(parsed.resource_type, 'iam_users')
+
+    def test_can_specify_list_security_groups_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'security_groups'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'security_groups')
+
+    def test_can_specify_list_vpc_subcommand(self):
+        parsed = self.parser.parse_args(['list', 'vpc'])
+        self.assertEqual(parsed.subcommand, 'list')
+        self.assertEqual(parsed.resource_type, 'vpc')
 
     def test_can_specify_export_subcommand(self):
         parsed = self.parser.parse_args(['export'])
@@ -142,6 +167,20 @@ class TestArgparse(unittest.TestCase):
         parsed = self.parser.parse_args(['monitored', 'unknown'])
         self.assertEqual(parsed.subcommand, 'monitored')
         self.assertEqual(parsed.monitor_status, 'unknown')
+
+    def test_can_specify_unused_subcommand(self):
+        parsed = self.parser.parse_args(['unused'])
+        self.assertEqual(parsed.subcommand, 'unused')
+
+    def test_can_specify_active_subcommand(self):
+        parsed = self.parser.parse_args(['active'])
+        self.assertEqual(parsed.subcommand, 'active')
+        self.assertEqual(parsed.resource_type, None)
+
+    def test_can_specify_active_resource_type(self):
+        parsed = self.parser.parse_args(['active', 'ec2'])
+        self.assertEqual(parsed.subcommand, 'active')
+        self.assertEqual(parsed.resource_type, 'ec2')
 
 
 class TestLogger(unittest.TestCase):

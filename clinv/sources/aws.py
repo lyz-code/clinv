@@ -3,17 +3,34 @@ Module to store the AWS sources used by Clinv.
 
 Classes:
     AWSBasesrc: Class to gather the common methods for the AWS sources.
-    Route53src: Class to gather and manipulate the AWS Route53 resources.
-    RDSsrc: Class to gather and manipulate the AWS RDS resources.
+    EC2src: Class to gather and manipulate the AWS EC2 sources.
+    IAMGroupsrc: Class to gather and manipulate the AWS IAM Groups sources.
+    IAMUsersrc: Class to gather and manipulate the AWS IAM Users sources.
+    RDSsrc: Class to gather and manipulate the AWS RDS sources.
+    Route53src: Class to gather and manipulate the AWS Route53 sources.
+    S3src: Class to gather and manipulate the AWS S3 sources.
+    SecurityGroupsrc: Class to gather and manipulate the AWS Security Groups
+        sources.
+    VPCsrc: Class to gather and manipulate the AWS VPC sources.
 
     ClinvAWSResource: Abstract class to extend ClinvGenericResource, it gathers
         common method and attributes for the AWS resources.
     EC2: Abstract class to extend ClinvAWSResource, it gathers method and
         attributes for the EC2 resources.
+    IAMGroup: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the IAM Group resources.
+    IAMUser: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the IAM User resources.
     RDS: Abstract class to extend ClinvAWSResource, it gathers method and
         attributes for the RDS resources.
-    Route53: Abstract class to extend ClinvAWSResource, it gathers method and
-        attributes for the Route53 resources.
+    Route53: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the Route53 resources.
+    S3: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the S3 resources.
+    SecurityGroup: Abstract class to extend ClinvGenericResource, it gathers
+        method and attributes for the SecurityGroup resources.
+    VPC: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the VPC resources.
 """
 
 from clinv.sources import ClinvSourcesrc, ClinvGenericResource
@@ -190,17 +207,12 @@ class EC2src(AWSBasesrc):
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
                 for instance in resource['Instances']:
-                    for prune_key in prune_keys:
-                        try:
-                            instance.pop(prune_key)
-                        except KeyError:
-                            pass
+                    instance = self.prune_dictionary(instance, prune_keys)
                     for interface in instance['NetworkInterfaces']:
-                        for prune_key in network_prune_keys:
-                            try:
-                                interface.pop(prune_key)
-                            except KeyError:
-                                pass
+                        interface = self.prune_dictionary(
+                            interface,
+                            network_prune_keys
+                        )
         return self.source_data
 
     def generate_user_data(self):
@@ -260,6 +272,251 @@ class EC2src(AWSBasesrc):
                             instance_id: instance
                         }
                     )
+        return inventory
+
+
+class IAMGroupsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the IAMGroup resources.
+
+    Parameters:
+        source_data (dict): IAMGroupsrc compatible source_data
+        dictionary.
+        user_data (dict): IAMGroupsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'iam_groups'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching IAMGroup inventory')
+        self.source_data = {}
+
+        iam = boto3.client('iam')
+        iam_group_names = [
+            group['GroupName']
+            for group in iam.list_groups()['Groups']
+        ]
+
+        for group_name in iam_group_names:
+            group_data = iam.get_group(GroupName=group_name)
+            group_id = group_data['Group']['Arn']
+            self.source_data[group_id] = group_data['Group']
+            self.source_data[group_id].pop('Arn')
+            self.source_data[group_id]['Users'] = [
+                user['Arn']
+                for user in group_data['Users']
+            ]
+            self.source_data[group_id]['InlinePolicies'] = [
+                policy
+                for policy in iam.list_group_policies(
+                    GroupName=group_name
+                )['PolicyNames']
+            ]
+            self.source_data[group_id]['AttachedPolicies'] = [
+                policy['PolicyArn']
+                for policy in iam.list_attached_group_policies(
+                    GroupName=group_name
+                )['AttachedPolicies']
+            ]
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'name': resource['GroupName'],
+                    'description': 'tbd',
+                    'to_destroy': 'tbd',
+                    'state': 'tbd',
+                    'desired_users': resource['Users']
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with IAMGroup resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: IAMGroup inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = IAMGroup({resource_id: resource})
+
+        return inventory
+
+
+class IAMUsersrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the IAM User resources.
+
+    Parameters:
+        source_data (dict): IAMUsersrc compatible source_data
+        dictionary.
+        user_data (dict): IAMUsersrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'iam_users'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                    'UserName': 'User 1'
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                },
+                'arn:aws:iam::XXXXXXXXXXXX:user/user_2': {
+                    'UserName': 'User 2'
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching IAM users inventory')
+        self.source_data = {}
+
+        iam = boto3.client('iam')
+        iam_users = iam.list_users()['Users']
+
+        for record in iam_users:
+            user_id = record['Arn']
+            record.pop('Arn')
+            try:
+                record.pop('PasswordLastUsed')
+            except KeyError:
+                pass
+            self.source_data[user_id] = record
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'name': resource['UserName'],
+                    'description': 'tbd',
+                    'to_destroy': 'tbd',
+                    'state': 'tbd',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with IAM resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: IAM inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = IAMUser({resource_id: resource})
+
         return inventory
 
 
@@ -383,16 +640,11 @@ class RDSsrc(AWSBasesrc):
             'PerformanceInsightsRetentionPeriod',
             'ReadReplicaDBInstanceIdentifiers',
             'StorageType',
-            'VpcSecurityGroups',
         ]
 
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                for prune_key in prune_keys:
-                    try:
-                        resource.pop(prune_key)
-                    except KeyError:
-                        pass
+                resource = self.prune_dictionary(resource, prune_keys)
 
         return self.source_data
 
@@ -531,11 +783,7 @@ class Route53src(AWSBasesrc):
         # Prune unneeded information
         prune_keys = ['CallerReference']
         for zone in self.source_data['hosted_zones']:
-            for prune_key in prune_keys:
-                try:
-                    zone.pop(prune_key)
-                except KeyError:
-                    pass
+            zone = self.prune_dictionary(zone, prune_keys)
 
         # Fetch the records
         for zone in self.source_data['hosted_zones']:
@@ -797,14 +1045,14 @@ class S3src(AWSBasesrc):
         return inventory
 
 
-class IAMGroupsrc(AWSBasesrc):
+class SecurityGroupsrc(AWSBasesrc):
     """
-    Class to gather and manipulate the IAMGroup resources.
+    Class to gather and manipulate the SecurityGroup resources.
 
     Parameters:
-        source_data (dict): IAMGroupsrc compatible source_data
+        source_data (dict): SecurityGroupsrc compatible source_data
         dictionary.
-        user_data (dict): IAMGroupsrc compatible user_data dictionary.
+        user_data (dict): SecurityGroupsrc compatible user_data dictionary.
 
     Public methods:
         generate_source_data: Generates the source_data attribute and returns
@@ -822,49 +1070,58 @@ class IAMGroupsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'iam_groups'
+        self.id = 'security_groups'
 
     def generate_source_data(self):
         """
         Do aggregation of the source data to generate the source dictionary
         into self.source_data, with the following structure:
             {
+                'sg-xxxxxxxx': {
+                    'description': 'default group',
+                    'GroupName': 'default',
+                    'region': 'us-east-1',
+                    'IpPermissions': [
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'udp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                            'UserIdGroupPairs': [],
+                        },
+                        ...
+                    ],
+                    'IpPermissionsEgress': [],
+                },
             }
 
         Returns:
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching IAMGroup inventory')
+        self.log.info('Fetching SecurityGroup inventory')
         self.source_data = {}
+        raw_data = {}
 
-        iam = boto3.client('iam')
-        iam_group_names = [
-            group['GroupName']
-            for group in iam.list_groups()['Groups']
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            raw_data[region] = ec2.describe_security_groups()['SecurityGroups']
+
+        prune_keys = [
+            'GroupId',
+            'OwnerId',
+            'Description',
         ]
 
-        for group_name in iam_group_names:
-            group_data = iam.get_group(GroupName=group_name)
-            group_id = group_data['Group']['Arn']
-            self.source_data[group_id] = group_data['Group']
-            self.source_data[group_id].pop('Arn')
-            self.source_data[group_id]['Users'] = [
-                user['Arn']
-                for user in group_data['Users']
-            ]
-            self.source_data[group_id]['InlinePolicies'] = [
-                policy
-                for policy in iam.list_group_policies(
-                    GroupName=group_name
-                )['PolicyNames']
-            ]
-            self.source_data[group_id]['AttachedPolicies'] = [
-                policy['PolicyArn']
-                for policy in iam.list_attached_group_policies(
-                    GroupName=group_name
-                )['AttachedPolicies']
-            ]
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                security_group_id = resource['GroupId']
+                resource['description'] = resource['Description']
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                self.source_data[security_group_id] = resource
 
         return self.source_data
 
@@ -881,16 +1138,14 @@ class IAMGroupsrc(AWSBasesrc):
         """
 
         for resource_id, resource in self.source_data.items():
-            # Define the default user_data of the record
             try:
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'name': resource['GroupName'],
-                    'description': 'tbd',
-                    'to_destroy': 'tbd',
                     'state': 'tbd',
-                    'desired_users': resource['Users']
+                    'to_destroy': 'tbd',
+                    'ingress': resource['IpPermissions'],
+                    'egress': resource['IpPermissionsEgress'],
                 }
 
         return self.user_data
@@ -898,14 +1153,14 @@ class IAMGroupsrc(AWSBasesrc):
     def generate_inventory(self):
         """
         Do aggregation of the user and source data to populate the self.inv
-        attribute with IAMGroup resources.
+        attribute with SecurityGroup resources.
 
         It needs the information of self.source_data and self.user_data,
         therefore it should be called after generate_source_data and
         generate_user_data.
 
         Returns:
-            dict: IAMGroup inventory with user and source data
+            dict: SecurityGroup inventory with user and source data
         """
 
         inventory = {}
@@ -915,19 +1170,19 @@ class IAMGroupsrc(AWSBasesrc):
             for key, value in self.user_data[resource_id].items():
                 resource[key] = value
 
-            inventory[resource_id] = IAMGroup({resource_id: resource})
+            inventory[resource_id] = SecurityGroup({resource_id: resource})
 
         return inventory
 
 
-class IAMUsersrc(AWSBasesrc):
+class VPCsrc(AWSBasesrc):
     """
-    Class to gather and manipulate the IAM User resources.
+    Class to gather and manipulate the VPC resources.
 
     Parameters:
-        source_data (dict): IAMUsersrc compatible source_data
+        source_data (dict): VPCsrc compatible source_data
         dictionary.
-        user_data (dict): IAMUsersrc compatible user_data dictionary.
+        user_data (dict): VPCsrc compatible user_data dictionary.
 
     Public methods:
         generate_source_data: Generates the source_data attribute and returns
@@ -945,49 +1200,38 @@ class IAMUsersrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'iam_users'
+        self.id = 'vpc'
 
     def generate_source_data(self):
         """
         Do aggregation of the source data to generate the source dictionary
         into self.source_data, with the following structure:
             {
-                'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                    'UserName': 'User 1'
-                    'Path': '/',
-                    'CreateDate': datetime.datetime(
-                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                    ),
-                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                },
-                'arn:aws:iam::XXXXXXXXXXXX:user/user_2': {
-                    'UserName': 'User 2'
-                    'Path': '/',
-                    'CreateDate': datetime.datetime(
-                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                    ),
-                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                },
             }
 
         Returns:
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching IAM users inventory')
-        self.source_data = {}
+        self.log.info('Fetching VPC inventory')
+        raw_data = {}
 
-        iam = boto3.client('iam')
-        iam_users = iam.list_users()['Users']
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            raw_data[region] = ec2.describe_vpcs()['Vpcs']
 
-        for record in iam_users:
-            user_id = record['Arn']
-            record.pop('Arn')
-            try:
-                record.pop('PasswordLastUsed')
-            except KeyError:
-                pass
-            self.source_data[user_id] = record
+        prune_keys = [
+            'CidrBlockAssociationSet',
+            'OwnerId',
+            'VpcId',
+        ]
+
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                vpc_id = resource['VpcId']
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                self.source_data[vpc_id] = resource
 
         return self.source_data
 
@@ -1004,15 +1248,13 @@ class IAMUsersrc(AWSBasesrc):
         """
 
         for resource_id, resource in self.source_data.items():
-            # Define the default user_data of the record
             try:
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'name': resource['UserName'],
-                    'description': 'tbd',
-                    'to_destroy': 'tbd',
                     'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'description': 'tbd',
                 }
 
         return self.user_data
@@ -1020,14 +1262,14 @@ class IAMUsersrc(AWSBasesrc):
     def generate_inventory(self):
         """
         Do aggregation of the user and source data to populate the self.inv
-        attribute with IAM resources.
+        attribute with VPC resources.
 
         It needs the information of self.source_data and self.user_data,
         therefore it should be called after generate_source_data and
         generate_user_data.
 
         Returns:
-            dict: IAM inventory with user and source data
+            dict: VPC inventory with user and source data
         """
 
         inventory = {}
@@ -1037,7 +1279,7 @@ class IAMUsersrc(AWSBasesrc):
             for key, value in self.user_data[resource_id].items():
                 resource[key] = value
 
-            inventory[resource_id] = IAMUser({resource_id: resource})
+            inventory[resource_id] = VPC({resource_id: resource})
 
         return inventory
 
@@ -1095,10 +1337,6 @@ class ClinvAWSResource(ClinvGenericResource):
         if super().search(search_string):
             return True
 
-        # Search by security groups
-        if search_string in self.security_groups:
-            return True
-
         # Search by region
         if re.match(search_string, self.region):
             return True
@@ -1130,12 +1368,12 @@ class ClinvAWSResource(ClinvGenericResource):
 
 class EC2(ClinvAWSResource):
     """
-    Abstract class to extend ClinvAWSResource, it gathers method and attributes
-    for the EC2 resources.
+    Class to extend the ClinvAWSResource abstract class. It gathers methods and
+    attributes for the EC2 resources.
 
     Public methods:
         search: Search in the resource data if a string matches.
-        print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the resource.
@@ -1145,6 +1383,7 @@ class EC2(ClinvAWSResource):
         state: Returns the state of the resource.
         type: Returns the type of the resource.
         state_transition: Returns the reason of the transition of the resource.
+        vpc: Returns the VPC of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1180,13 +1419,14 @@ class EC2(ClinvAWSResource):
         Do aggregation of data to return the security groups of the resource.
 
         Returns:
-            list: Security groups of the resource.
+            dict: Security groups of the resource.
         """
 
         try:
-            return [security_group['GroupId']
-                    for security_group in self.raw['SecurityGroups']
-                    ]
+            return {
+                security_group['GroupId']: security_group['GroupName']
+                for security_group in self.raw['SecurityGroups']
+            }
         except KeyError:
             pass
 
@@ -1263,6 +1503,17 @@ class EC2(ClinvAWSResource):
         """
         return self._get_field('StateTransitionReason', 'str')
 
+    @property
+    def vpc(self):
+        """
+        Do aggregation of data to return the resource vpc.
+
+        Returns:
+            str: Resource type.
+        """
+
+        return self._get_optional_field('VpcId', 'str')
+
     def print(self):
         """
         Do aggregation of data to print information of the resource.
@@ -1279,9 +1530,14 @@ class EC2(ClinvAWSResource):
         if self.state != 'running':
             print('  State Reason: {}'.format(self.state_transition))
         print('  Type: {}'.format(self.type))
-        print('  SecurityGroups: {}'.format(self.security_groups))
+
+        print('  SecurityGroups: ')
+        for sg_id, sg_name in self.security_groups.items():
+            print('    - {}: {}'.format(sg_id, sg_name))
+
         print('  PrivateIP: {}'.format(self.private_ips))
         print('  PublicIP: {}'.format(self.public_ips))
+        print('  Region: {}'.format(self.region))
 
     def search(self, search_string):
         """
@@ -1311,20 +1567,31 @@ class EC2(ClinvAWSResource):
         if self._match_list(search_string, self.private_ips):
             return True
 
+        # Search by security group
+        if self._match_dict(search_string, self.security_groups):
+            return True
+
+        # Search by VPC.
+        if self.vpc is not None and re.match(search_string, self.vpc):
+            return True
+
         return False
 
 
-class RDS(ClinvAWSResource):
+class IAMGroup(ClinvGenericResource):
     """
-    Abstract class to extend ClinvAWSResource, it gathers method and attributes
-    for the RDS resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the IAMGroup resources.
+
+    Public methods:
+        print: Prints information of the resource.
 
     Public properties:
-        endpoint: Return the database endpoint.
-        name: Returns the name of the resource.
-        security_groups: Returns the security groups of the resource.
-        type: Returns the type of the resource.
-        state: Returns the state of the resource.
+        name: Returns the name of the record.
+        users: Return the real users of the group.
+        desired_users: Return the desired users of the group.
+        inline_policies: Return the inline policies of the group.
+        attached_policies: Return the attached policies of the group.
     """
 
     def __init__(self, raw_data):
@@ -1333,6 +1600,197 @@ class RDS(ClinvAWSResource):
         """
 
         super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('GroupName', 'str')
+
+    @property
+    def users(self):
+        """
+        Do aggregation of data to return the real users of the group.
+
+        Returns:
+            list: List of user ids.
+        """
+
+        return self._get_field('Users', 'list')
+
+    @property
+    def desired_users(self):
+        """
+        Do aggregation of data to return the desired users of the group.
+
+        Returns:
+            list: List of user ids.
+        """
+
+        return self._get_field('desired_users', 'list')
+
+    @property
+    def inline_policies(self):
+        """
+        Do aggregation of data to return the inline policies of the group.
+
+        Returns:
+            list: List of policy ids.
+        """
+
+        return self._get_field('InlinePolicies', 'list')
+
+    @property
+    def attached_policies(self):
+        """
+        Do aggregation of data to return the attached policies of the group.
+
+        Returns:
+            list: List of policy ids.
+        """
+
+        return self._get_field('AttachedPolicies', 'list')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  Users:'),
+        for user_id in self.users:
+            print('    - {}'.format(user_id))
+        print('  AttachedPolicies:'),
+        for policy_id in self.attached_policies:
+            print('    - {}'.format(policy_id))
+        print('  InlinePolicies:'),
+        for policy_id in self.inline_policies:
+            print('    - {}'.format(policy_id))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include iam group specific search.
+
+        Extend to search by:
+            users in group
+            Policies ids
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvAWSResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by user ids
+        if self._match_list(search_string, self.users) or \
+                self._match_list(search_string, self.desired_users):
+            return True
+
+        # Search by policy ids
+        if self._match_list(search_string, self.attached_policies) or \
+                self._match_list(search_string, self.inline_policies):
+            return True
+
+        return False
+
+
+class IAMUser(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the IAMUser resources.
+
+    Public properties:
+        name: Returns the name of the user.
+
+    Public methods:
+        print: Prints information of the resource.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+
+
+class RDS(ClinvAWSResource):
+    """
+    Class to extend the ClinvAWSResource abstract class. It gathers methods
+    and attributes for the RDS resources.
+
+    Public properties:
+        endpoint: Return the database endpoint.
+        engine: Return the database type and version.
+        name: Returns the name of the resource.
+        security_groups: Returns the security groups of the resource.
+        type: Returns the type of the resource.
+        state: Returns the state of the resource.
+        vpc: Returns the VPC of the resource.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def engine(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        type and version of the resource database.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return '{} {}'.format(
+            self._get_field('Engine', 'str'),
+            self._get_field('EngineVersion', 'str'),
+        )
 
     @property
     def name(self):
@@ -1367,7 +1825,12 @@ class RDS(ClinvAWSResource):
             list: Security groups of the resource.
         """
 
-        return self._get_field('DBSecurityGroups', 'list')
+        security_groups = self._get_field('DBSecurityGroups', 'list')
+
+        for security_group in self._get_field('VpcSecurityGroups', 'list'):
+            security_groups.append(security_group['VpcSecurityGroupId'])
+
+        return security_groups
 
     @property
     def type(self):
@@ -1392,6 +1855,18 @@ class RDS(ClinvAWSResource):
         endpoint_dict = self._get_field('Endpoint', 'dict')
         return '{}:{}'.format(endpoint_dict['Address'], endpoint_dict['Port'])
 
+    @property
+    def vpc(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self.raw['DBSubnetGroup']['VpcId']
+
     def print(self):
         """
         Override parent method to do aggregation of data to print information
@@ -1408,13 +1883,47 @@ class RDS(ClinvAWSResource):
         print('  Name: {}'.format(self.name))
         print('  Endpoint: {}'.format(self.endpoint)),
         print('  Type: {}'.format(self.type))
+        print('  Engine: {}'.format(self.engine))
         print('  Description: {}'.format(self.description))
+        print('  SecurityGroups:')
+        for security_group in self.security_groups:
+            print('    - {}'.format(security_group))
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include project specific search.
+
+        Extend to search by:
+            Security groups
+            VPC
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvAWSResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by security group
+        if self._match_list(search_string, self.security_groups):
+            return True
+
+        # Search by VPC.
+        if re.match(search_string, self.vpc):
+            return True
+
+        return False
 
 
 class Route53(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the Route53 resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the Route53 resources.
 
     Public properties:
         name: Returns the name of the record.
@@ -1424,8 +1933,8 @@ class Route53(ClinvGenericResource):
         hosted_zone_id: Returns the hosted zone id of the resource.
         monitored: Returns if the resource is being monitored.
         private: Returns if the resource is private.
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
+        short_print: Prints the resource id.
     """
 
     def __init__(self, raw_data):
@@ -1608,14 +2117,13 @@ class Route53(ClinvGenericResource):
 
 class S3(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the S3 resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the S3 resources.
 
     Public properties:
         name: Returns the name of the resource.
         monitored: Returns if the resource is monitored.
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1683,21 +2191,28 @@ class S3(ClinvGenericResource):
         print('  Destroy: {}'.format(self.to_destroy))
 
 
-class IAMGroup(ClinvGenericResource):
+class SecurityGroup(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the IAMGroup resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the SecurityGroup resources.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
+        is_related: Return if the security group is related with the contents
+            of a regular expression.
+        is_synchronized: Check if the real state of the security group
+            is the same as the expected.
+        search: Extend the parent search method to include security_groups
+            specific search.
+
+    Private methods:
+        _print_security_rule: print the information of a security rule.
+        _is_security_rule_related: Return if the security rule is related with
+            the contents of a regular expression.
 
     Public properties:
-        name: Returns the name of the record.
-        users: Return the real users of the group.
-        desired_users: Return the desired users of the group.
-        inline_policies: Return the inline policies of the group.
-        attached_policies: Return the attached policies of the group.
+        name: Returns the name of the resource.
+        vpc: VPC id of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1717,59 +2232,171 @@ class IAMGroup(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_field('GroupName', 'str')
+        return self._get_field('GroupName')
 
-    @property
-    def users(self):
+    def is_synchronized(self):
         """
-        Do aggregation of data to return the real users of the group.
+        Check if the real state of the security group is the same as the
+        expected.
 
         Returns:
-            list: List of user ids.
+            bool: If the state is synchronized.
         """
 
-        return self._get_field('Users', 'list')
+        if self.raw['ingress'] == self.raw['IpPermissions'] and \
+                self.raw['egress'] == self.raw['IpPermissionsEgress']:
+            return True
+        return False
 
-    @property
-    def desired_users(self):
+    def _print_security_group_pairs_information(self, security_group_pair):
         """
-        Do aggregation of data to return the desired users of the group.
+        Print the information of the UserIdGroupPairs security rule part.
 
-        Returns:
-            list: List of user ids.
+        Input:
+            security_group_pair (dict): Security group pair dictionary,
+                for example:
+
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                    'Description': 'sg description',
+                }
+
+        Return:
+            stdout: Print the information with a defined format.
+        """
+        try:
+            print('      - {}: {}'.format(
+                security_group_pair['GroupId'],
+                security_group_pair['Description'],
+            ))
+        except KeyError:
+            print('      - {}'.format(security_group_pair['GroupId']))
+
+    def _print_security_rule(self, security_rule):
+        """
+        Print the information of a security rule.
+
+        Input:
+            security_rule (dict): Security rule dictionary, for example:
+
+                {
+                    'FromPort': 0,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': [],
+                    'Ipv6Ranges': [],
+                    'PrefixListIds': [],
+                    'ToPort': 65535,
+                }
+
+        Return:
+            stdout: Print the information with a defined format.
+        """
+        protocol = security_rule['IpProtocol'].upper()
+
+        if protocol == 'ICMP':
+            port_string = ''
+        elif protocol == '-1':
+            protocol = 'All Traffic'
+            port_string = ''
+        else:
+            if security_rule['FromPort'] == security_rule['ToPort']:
+                port_string = security_rule['FromPort']
+            else:
+                port_string = '{}-{}'.format(
+                    security_rule['FromPort'],
+                    security_rule['ToPort'],
+                )
+
+        print('    {}: {}'.format(protocol, port_string))
+
+        try:
+            if len(security_rule['IpRanges']) > 0:
+                for cidr in security_rule['IpRanges']:
+                    print('      - {}'.format(cidr['CidrIp']))
+        except KeyError:
+            pass
+
+        try:
+            if len(security_rule['UserIdGroupPairs']) > 0:
+                for security_group in security_rule['UserIdGroupPairs']:
+                    self._print_security_group_pairs_information(
+                        security_group
+                    )
+
+        except KeyError:
+            pass
+
+    def _is_security_rule_related(self, regexp, security_rule):
+        """
+        Return if the security rule is related with the contents of a
+        regular expression.
+
+        It checks in the security group rules CIDRs, related security groups
+        and ports.
+
+        Input:
+            regexp (dict): Regular expression to test.
+            security_rule (dict): Security rule dictionary, for example:
+
+                {
+                    'FromPort': 0,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': [],
+                    'Ipv6Ranges': [],
+                    'PrefixListIds': [],
+                    'ToPort': 65535,
+                }
+
+        Return:
+            bool: If it's related
+        """
+        # Check regular expression in the associated IPv4s.
+        for cidr in security_rule['IpRanges']:
+            if re.match(regexp, cidr['CidrIp']):
+                return True
+
+        # Check regular expression in the associated ports.
+        try:
+            port_to_test = int(regexp)
+            if port_to_test >= security_rule['FromPort'] and \
+                    port_to_test <= security_rule['ToPort']:
+                return True
+        except ValueError:
+            pass
+
+        # Check regular expression in the associated security groups
+        for security_group in security_rule['UserIdGroupPairs']:
+            if re.match(regexp, security_group['GroupId']):
+                return True
+
+    def is_related(self, regexp):
+        """
+        Return if the security group is related with the contents of a
+        regular expression.
+
+        It checks in the security group rules CIDRs, related security groups
+        and ports.
+
+        Input:
+            regexp (dict): Regular expression to test.
+
+        Return:
+            bool: If it's related
         """
 
-        return self._get_field('desired_users', 'list')
+        for security_rule in self._get_field('IpPermissions'):
+            if self._is_security_rule_related(regexp, security_rule):
+                return True
 
-    @property
-    def inline_policies(self):
-        """
-        Do aggregation of data to return the inline policies of the group.
-
-        Returns:
-            list: List of policy ids.
-        """
-
-        return self._get_field('InlinePolicies', 'list')
-
-    @property
-    def attached_policies(self):
-        """
-        Do aggregation of data to return the attached policies of the group.
-
-        Returns:
-            list: List of policy ids.
-        """
-
-        return self._get_field('AttachedPolicies', 'list')
+        for security_rule in self._get_field('IpPermissionsEgress'):
+            if self._is_security_rule_related(regexp, security_rule):
+                return True
 
     def print(self):
         """
         Override parent method to do aggregation of data to print information
         of the resource.
-
-        Is more verbose than short_print but less verbose than the describe
-        method.
 
         Returns:
             stdout: Prints information of the resource.
@@ -1778,25 +2405,28 @@ class IAMGroup(ClinvGenericResource):
         print(self.id)
         print('  Name: {}'.format(self.name))
         print('  Description: {}'.format(self.description))
-        print('  Users:'),
-        for user_id in self.users:
-            print('    - {}'.format(user_id))
-        print('  AttachedPolicies:'),
-        for policy_id in self.attached_policies:
-            print('    - {}'.format(policy_id))
-        print('  InlinePolicies:'),
-        for policy_id in self.inline_policies:
-            print('    - {}'.format(policy_id))
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Synchronized: {}'.format(str(self.is_synchronized())))
+        print('  Region: {}'.format(self._get_field('region', 'str')))
+        print('  VPC: {}'.format(self.vpc))
+        print('  Ingress:')
+        for security_rule in self._get_field('IpPermissions'):
+            self._print_security_rule(security_rule)
+        print('  Egress:')
+        for security_rule in self._get_field('IpPermissionsEgress'):
+            self._print_security_rule(security_rule)
 
     def search(self, search_string):
         """
-        Extend the parent search method to include iam group specific search.
+        Extend the parent search method to include security_groups specific
+        search.
 
         Extend to search by:
-            users in group
-            Policies ids
+            CIDR in security group ingress and egress rules.
+            Security groups in security group ingress and egress rules.
+            Ports in security group ingress and egress rules.
+            VPC.
 
         Parameters:
             search_string (str): Regular expression to match with the
@@ -1806,34 +2436,43 @@ class IAMGroup(ClinvGenericResource):
             bool: If the search_string matches resource data.
         """
 
-        # Perform the ClinvAWSResource searches
+        # Perform the ClinvGenericResource searches.
         if super().search(search_string):
             return True
 
-        # Search by user ids
-        if self._match_list(search_string, self.users) or \
-                self._match_list(search_string, self.desired_users):
+        # Search by CIDR, port and security groups in the rules.
+        if self.is_related(search_string):
             return True
 
-        # Search by policy ids
-        if self._match_list(search_string, self.attached_policies) or \
-                self._match_list(search_string, self.inline_policies):
+        # Search by VPC.
+        if self.vpc is not None and re.match(search_string, self.vpc):
             return True
 
         return False
 
+    @property
+    def vpc(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
 
-class IAMUser(ClinvGenericResource):
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_optional_field('VpcId')
+
+
+class VPC(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the IAMUser resources.
-
-    Public properties:
-        name: Returns the name of the user.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the VPC resources.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
+
+    Public properties:
+        name: Returns the name of the record.
     """
 
     def __init__(self, raw_data):
@@ -1843,13 +2482,41 @@ class IAMUser(ClinvGenericResource):
 
         super().__init__(raw_data)
 
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        try:
+            for tag in self.raw['Tags']:
+                if tag['Key'] == 'Name':
+                    return tag['Value']
+        except KeyError:
+            pass
+        except TypeError:
+            pass
+        return 'none'
+
+    @property
+    def cidr(self):
+        """
+        Do aggregation of data to return the VPC CIDR.
+
+        Returns:
+            str: CIDR.
+        """
+
+        return self._get_field('CidrBlock', 'str')
+
     def print(self):
         """
         Override parent method to do aggregation of data to print information
         of the resource.
-
-        Is more verbose than short_print but less verbose than the describe
-        method.
 
         Returns:
             stdout: Prints information of the resource.
@@ -1860,3 +2527,5 @@ class IAMUser(ClinvGenericResource):
         print('  Description: {}'.format(self.description))
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Region: {}'.format(self._get_field('region', 'str')))
+        print('  CIDR: {}'.format(self.cidr))

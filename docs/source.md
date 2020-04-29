@@ -14,9 +14,9 @@ If you want to see similar sources go to `clinv/sources/`.
 
 To ensure the expected behavior of the sources, the class must follow a common
 interface. Don't worry if you don't understand yet what does each element mean,
-you'll discover it as you read the hole doc.
+you'll discover it as you read the hole document.
 
-Must have the following attributes:
+It must have the following attributes:
 
 * id (str): ID of the resource.
 * source_data (dict): Aggregated source supplied data.
@@ -68,6 +68,8 @@ class Test{{ class_name }}Source(ClinvSourceBaseTestClass, unittest.TestCase):
         super().tearDown()
 
     def test_generate_source_data_creates_expected_source_data_attrib(self):
+        # Mock here the call to your provider
+
         self.src.source_data = {}
 
         generated_source_data = self.src.generate_source_data()
@@ -118,7 +120,7 @@ class Test{{ class_name }}Source(ClinvSourceBaseTestClass, unittest.TestCase):
         self,
         resource_mock
     ):
-        resource_id = 's3_bucket_name'
+        resource_id = '{{ resource_id }}'
         self.src.user_data = self.desired_user_data
 
         desired_mock_input = {
@@ -237,6 +239,9 @@ class {{ class_name }}src(ClinvSourcesrc):
         return inventory
 ```
 
+If you need to clean the dictionary created by your provider, use the
+`self.prune_dictionary` method.
+
 #### Create the generate_source_data method
 
 This method is meant to extract the information from your source, for example
@@ -258,7 +263,7 @@ After initializing all the objects they are returned.
 
 #### Add your source to the loaded sources
 
-Import it in `clinv/clinv.py` and add it into the `active_source_plugins`
+Import it in `clinv/inventory.py` and add it into the `active_source_plugins`
 variable
 
 ### Create the resource class
@@ -269,12 +274,11 @@ On `clinv/sources/` create your source class from this template. Substitute
 ```python
 class {{ class_name }}(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the {{ class_name }} resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the {{ class_name }} resources.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the record.
@@ -293,10 +297,13 @@ class {{ class_name }}(ClinvGenericResource):
 ```python
 class Test{{ class_name }}(ClinvGenericResourceTests, unittest.TestCase):
     def setUp(self):
+        self.module_name = '{{ module_name }}'
+        self.id = '{{ class_id }}'
+
         super().setUp()
 
-        self.id = ''
         self.raw = {
+            # Example of the dictionary to initialize the object.
         }
         self.resource = {{ class_name }}(self.raw)
 
@@ -306,17 +313,12 @@ class Test{{ class_name }}(ClinvGenericResourceTests, unittest.TestCase):
 
 Think if you can add more search filters in the object `search` method.
 
-### Add source to the active_source_plugins
-
-Add it to the `clinv/inventory.py` `active_source_plugins` variable.
-
 ### Add resource to the reports
 
 There are some reports that are generic, such as `list` or `print`, but there
 are some that still aren't.
 
 So you'll need to manually add your resource to `export` and `unassigned`.
-
 
 ### Add resource to the cli
 

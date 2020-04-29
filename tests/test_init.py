@@ -88,6 +88,21 @@ class TestMain(unittest.TestCase):
             None,
         )
 
+    @patch('clinv.ActiveReport')
+    def test_active_subcommand(self, reportMock):
+        self.parser_args.resource_type = 'ec2'
+        self.parser_args.subcommand = 'active'
+        main()
+        self.assertTrue(self.inventory.return_value.load.called)
+        self.assertEqual(
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with('ec2'),
+            None,
+        )
+
     @patch('clinv.ExportReport')
     def test_export_subcommand(self, reportMock):
         self.parser_args.subcommand = 'export'
@@ -130,5 +145,19 @@ class TestMain(unittest.TestCase):
         )
         self.assertEqual(
             reportMock.return_value.output.assert_called_with('true'),
+            None,
+        )
+
+    @patch('clinv.UnusedReport')
+    def test_unused_subcommand(self, reportMock):
+        self.parser_args.subcommand = 'unused'
+        main()
+        self.assertTrue(self.inventory.return_value.load.called)
+        self.assertEqual(
+            reportMock.assert_called_with(self.inventory.return_value),
+            None,
+        )
+        self.assertEqual(
+            reportMock.return_value.output.assert_called_with(),
             None,
         )

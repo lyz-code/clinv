@@ -1,17 +1,18 @@
 """
-Module to store the ListReport.
+Module to store the ActiveReport.
 
 Classes:
-  ListReport: Class to gather methods to print the list of Clinv resources.
+  ActiveReport: Class to gather methods to print the list of active Clinv
+    resources.
 
 """
 
 from clinv.reports import ClinvReport
 
 
-class ListReport(ClinvReport):
+class ActiveReport(ClinvReport):
     """
-    Class to gather methods to print the list of Clinv resources.
+    Class to gather methods to print the list of active Clinv resources.
 
     Parameters:
         inventory (Inventory): Clinv inventory object.
@@ -44,7 +45,8 @@ class ListReport(ClinvReport):
                 ]. If not specified it will print all resources.
 
         Returns:
-            stdout: Prints the list of items of that resource in the inventory.
+            stdout: Prints the list of active items of that resource in the
+                inventory.
         """
 
         resources_to_print = []
@@ -54,6 +56,7 @@ class ListReport(ClinvReport):
                     or desired_resource_type is None:
                 for resource_id, resource \
                         in sorted(self.inv[resource_type].items()):
-                    resources_to_print.append(resource)
+                    if resource.state == 'active':
+                        resources_to_print.append(resource)
 
         self.short_print_resources(resources_to_print)
