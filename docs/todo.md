@@ -5,7 +5,6 @@
 ### H
 
 * Add `clinv verify` to test:
-  * S3 buckets still have the required access policy
   * No user has changed it's policies attached
   * No group has changed it's policies attached
   * The group members are the ones that we desired

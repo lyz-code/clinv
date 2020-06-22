@@ -461,6 +461,17 @@ class Service(ClinvActiveResource):
 
         return self._get_field('aws', 'dict')
 
+    @property
+    def dependencies(self):
+        """
+        Do aggregation of data to return the dependencies of this service.
+
+        Returns:
+            list: Group of service ids.
+        """
+
+        return self._get_optional_field('dependencies', 'list')
+
     def search(self, search_string):
         """
         Extend the parent search method to include service specific search.
@@ -487,6 +498,11 @@ class Service(ClinvActiveResource):
             for resource_id in self.aws[resource_type]
         ]
         if self._match_list(search_string, service_aws_resources):
+            return True
+
+        # Search by service dependency
+        if self.dependencies is not None and \
+                self._match_list(search_string, self.dependencies):
             return True
 
     def print(self):

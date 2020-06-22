@@ -46,6 +46,8 @@ def load_parser():
             'route53',
             's3',
             'services',
+            'security_groups',
+            'vpc',
         ],
         default='all'
     )
@@ -66,7 +68,35 @@ def load_parser():
             'projects',
             'route53',
             's3',
+            'security_groups',
+            'vpc',
+            None
         ],
+        nargs='?',
+    )
+
+    active_parser = subparser.add_parser('active')
+    active_parser.add_argument(
+        "resource_type",
+        type=str,
+        help='String used to search',
+        default=None,
+        choices=[
+            'ec2',
+            'rds',
+            'services',
+            'iam_groups',
+            'iam_users',
+            'informations',
+            'people',
+            'projects',
+            'route53',
+            's3',
+            'security_groups',
+            'vpc',
+            None
+        ],
+        nargs='?',
     )
 
     export_parser = subparser.add_parser('export')
@@ -84,6 +114,23 @@ def load_parser():
         type=str,
         help='Regexp of a Clinv resource ID',
     )
+
+    monitored_parser = subparser.add_parser('monitored')
+    monitored_parser.add_argument(
+        "monitor_status",
+        type=str,
+        nargs='?',
+        help='Monitor status of the resources',
+        choices=[
+            'true',
+            'false',
+            'unknown',
+        ],
+        default='true'
+    )
+
+    subparser.add_parser('unused')
+
     argcomplete.autocomplete(parser)
     return parser
 

@@ -6,13 +6,14 @@
 
 # Features
 
-* Manage an inventory of risk management resources (Projects, Services,
+* Manage a dynamic inventory of risk management resources (Projects, Services,
   Information, People) and infrastructure resources (EC2, RDS, S3, Route53, IAM
   users, IAM groups...).
 * Add risk management metadata to your AWS resources.
 * Monitor if there are resources that are not inside your inventory.
 * Perform regular expression searches on all your resources.
 * Get all your resources information.
+* Works from the command line.
 
 # Install
 
@@ -78,6 +79,12 @@ If `resource_type` is `ec2`, `rds`, `s3`, `route53`, it will search for
 instances that aren't assigned in a `service`.
 If `resource_type` is `people`, `service` or `information`, it will search for instances
 that aren't assigned to a `project`.
+
+## Monitored
+
+`clinv monitored monitor_status` will show a list of id and names of elements
+that have the specified `monitor_status`. The `monitor_status` can be one of:
+`true`, `false` and `unknown`.
 
 ## Export
 

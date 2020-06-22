@@ -3,17 +3,34 @@ Module to store the AWS sources used by Clinv.
 
 Classes:
     AWSBasesrc: Class to gather the common methods for the AWS sources.
-    Route53src: Class to gather and manipulate the AWS Route53 resources.
-    RDSsrc: Class to gather and manipulate the AWS RDS resources.
+    EC2src: Class to gather and manipulate the AWS EC2 sources.
+    IAMGroupsrc: Class to gather and manipulate the AWS IAM Groups sources.
+    IAMUsersrc: Class to gather and manipulate the AWS IAM Users sources.
+    RDSsrc: Class to gather and manipulate the AWS RDS sources.
+    Route53src: Class to gather and manipulate the AWS Route53 sources.
+    S3src: Class to gather and manipulate the AWS S3 sources.
+    SecurityGroupsrc: Class to gather and manipulate the AWS Security Groups
+        sources.
+    VPCsrc: Class to gather and manipulate the AWS VPC sources.
 
     ClinvAWSResource: Abstract class to extend ClinvGenericResource, it gathers
         common method and attributes for the AWS resources.
     EC2: Abstract class to extend ClinvAWSResource, it gathers method and
         attributes for the EC2 resources.
+    IAMGroup: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the IAM Group resources.
+    IAMUser: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the IAM User resources.
     RDS: Abstract class to extend ClinvAWSResource, it gathers method and
         attributes for the RDS resources.
-    Route53: Abstract class to extend ClinvAWSResource, it gathers method and
-        attributes for the Route53 resources.
+    Route53: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the Route53 resources.
+    S3: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the S3 resources.
+    SecurityGroup: Abstract class to extend ClinvGenericResource, it gathers
+        method and attributes for the SecurityGroup resources.
+    VPC: Abstract class to extend ClinvGenericResource, it gathers method
+        and attributes for the VPC resources.
 """
 
 from clinv.sources import ClinvSourcesrc, ClinvGenericResource
@@ -190,17 +207,12 @@ class EC2src(AWSBasesrc):
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
                 for instance in resource['Instances']:
-                    for prune_key in prune_keys:
-                        try:
-                            instance.pop(prune_key)
-                        except KeyError:
-                            pass
+                    instance = self.prune_dictionary(instance, prune_keys)
                     for interface in instance['NetworkInterfaces']:
-                        for prune_key in network_prune_keys:
-                            try:
-                                interface.pop(prune_key)
-                            except KeyError:
-                                pass
+                        interface = self.prune_dictionary(
+                            interface,
+                            network_prune_keys
+                        )
         return self.source_data
 
     def generate_user_data(self):
@@ -226,6 +238,7 @@ class EC2src(AWSBasesrc):
                             'description': '',
                             'to_destroy': 'tbd',
                             'environment': 'tbd',
+                            'monitored': 'tbd',
                             'region': region,
                         }
 
@@ -259,538 +272,6 @@ class EC2src(AWSBasesrc):
                             instance_id: instance
                         }
                     )
-        return inventory
-
-
-class RDSsrc(AWSBasesrc):
-    """
-    Class to gather and manipulate the AWS RDS resources.
-
-    Parameters:
-        source_data (dict): RDSsrc compatible source_data
-        dictionary.
-        user_data (dict): RDSsrc compatible user_data dictionary.
-
-    Public methods:
-        generate_source_data: Generates the source_data attribute and returns
-            it.
-        generate_user_data: Generates the user_data attribute and returns it.
-        generate_inventory: Generates the inventory dictionary with the source
-            resource.
-
-    Public attributes:
-        id (str): ID of the resource.
-        source_data (dict): Aggregated source supplied data.
-        user_data (dict): Aggregated user supplied data.
-        log (logging object):
-    """
-
-    def __init__(self, source_data={}, user_data={}):
-        super().__init__(source_data, user_data)
-        self.id = 'rds'
-
-    def generate_source_data(self):
-        """
-        Do aggregation of the source data to generate the source dictionary
-        into self.source_data, with the following structure:
-            {
-            'us-east-1': [
-                {
-                    'AllocatedStorage': 100,
-                    'AssociatedRoles': [],
-                    'AutoMinorVersionUpgrade': True,
-                    'AvailabilityZone': 'us-east-1a',
-                    'BackupRetentionPeriod': 7,
-                    'CACertificateIdentifier': 'rds-ca-2015',
-                    'DBInstanceArn': 'arn:aws:rds:us-east-1:224119285:db:db',
-                    'DBInstanceClass': 'db.t2.micro',
-                    'DBInstanceIdentifier': 'rds-name',
-                    'DBInstanceStatus': 'available',
-                    'DBSecurityGroups': [],
-                    'DBSubnetGroup': {
-                        'DBSubnetGroupDescription': 'Created from the RDS '
-                        'Management Console',
-                        'DBSubnetGroupName': 'default-vpc-v2dcp2jh',
-                        'SubnetGroupStatus': 'Complete',
-                        'Subnets': [
-                            {
-                                'SubnetAvailabilityZone': {
-                                    'Name': 'us-east-1a'
-                                },
-                                'SubnetIdentifier': 'subnet-42sfl222',
-                                'SubnetStatus': 'Active'
-                            },
-                            {
-                                'SubnetAvailabilityZone': {
-                                    'Name': 'us-east-1e'
-                                },
-                                'SubnetIdentifier': 'subnet-42sfl221',
-                                'SubnetStatus': 'Active'
-                            },
-                        ],
-                        'VpcId': 'vpc-v2dcp2jh'},
-                    'DbiResourceId': 'db-YDFL2',
-                    'DeletionProtection': True,
-                    'Endpoint': {
-                        'Address': 'rds-name.us-east-1.rds.amazonaws.com',
-                        'HostedZoneId': '202FGHSL2JKCFW',
-                        'Port': 5521
-                    },
-                    'Engine': 'mariadb',
-                    'EngineVersion': '1.2',
-                    'InstanceCreateTime': datetime.datetime(
-                        2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
-                    ),
-                    'Iops': 1000,
-                    'MasterUsername': 'root',
-                    'MultiAZ': True,
-                    'PreferredBackupWindow': '03:00-04:00',
-                    'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
-                    'PubliclyAccessible': False,
-                    'StorageEncrypted': True,
-                },
-            ],
-        }
-
-        Returns:
-            dict: content of self.source_data.
-        """
-
-        self.log.info('Fetching RDS inventory')
-        self.source_data = {}
-
-        for region in self.regions:
-            rds = boto3.client('rds', region_name=region)
-            self.source_data[region] = \
-                rds.describe_db_instances()['DBInstances']
-
-        prune_keys = [
-            'CopyTagsToSnapshot',
-            'DBParameterGroups',
-            'DbInstancePort',
-            'DomainMemberships',
-            'EnhancedMonitoringResourceArn',
-            'IAMDatabaseAuthenticationEnabled',
-            'LatestRestorableTime',
-            'LicenseModel',
-            'MonitoringInterval',
-            'MonitoringRoleArn',
-            'OptionGroupMemberships',
-            'PendingModifiedValues',
-            'PerformanceInsightsEnabled',
-            'PerformanceInsightsKMSKeyId',
-            'PerformanceInsightsRetentionPeriod',
-            'ReadReplicaDBInstanceIdentifiers',
-            'StorageType',
-            'VpcSecurityGroups',
-        ]
-
-        for region in self.source_data.keys():
-            for resource in self.source_data[region]:
-                for prune_key in prune_keys:
-                    try:
-                        resource.pop(prune_key)
-                    except KeyError:
-                        pass
-
-        return self.source_data
-
-    def generate_user_data(self):
-        """
-        Do aggregation of the user data to populate the self.user_data
-        attribute with the user_data.yaml information or with default values.
-
-        It needs the information of self.source_data, therefore it should be
-        called after generate_source_data.
-
-        Returns:
-            dict: content of self.user_data.
-        """
-
-        for region in self.source_data.keys():
-            for resource in self.source_data[region]:
-                resource_id = resource['DbiResourceId']
-                # Define the default user_data of the resource
-                try:
-                    self.user_data[resource_id]
-                except KeyError:
-                    self.user_data[resource_id] = {
-                        'description': '',
-                        'to_destroy': 'tbd',
-                        'environment': 'tbd',
-                        'region': region,
-                    }
-        return self.user_data
-
-    def generate_inventory(self):
-        """
-        Do aggregation of the user and source data to populate the self.inv
-        attribute with RDS resources.
-
-        It needs the information of self.source_data and self.user_data,
-        therefore it should be called after generate_source_data and
-        generate_user_data.
-
-        Returns:
-            dict: RDS inventory with user and source data
-        """
-
-        inventory = {}
-
-        for region in self.source_data.keys():
-            for resource in self.source_data[region]:
-                resource_id = resource['DbiResourceId']
-
-                for key, value in \
-                        self.user_data[resource_id].items():
-                    resource[key] = value
-
-                inventory[resource_id] = RDS(
-                    {
-                        resource_id: resource
-                    }
-                )
-
-        return inventory
-
-
-class Route53src(AWSBasesrc):
-    """
-    Class to gather and manipulate the AWS Route53 resources.
-
-    Parameters:
-        source_data (dict): Route53src compatible source_data dictionary.
-        user_data (dict): Route53src compatible user_data dictionary.
-
-    Public methods:
-        generate_source_data: Generates the source_data attribute and returns
-            it.
-        generate_user_data: Generates the user_data attribute and returns it.
-        generate_inventory: Generates the inventory dictionary with the source
-            resource.
-
-    Public attributes:
-        id (str): ID of the resource.
-        source_data (dict): Aggregated source supplied data.
-        user_data (dict): Aggregated user supplied data.
-        log (logging object):
-    """
-
-    def __init__(self, source_data={}, user_data={}):
-        super().__init__(source_data, user_data)
-        self.id = 'route53'
-
-    def generate_source_data(self):
-        """
-        Do aggregation of the source data to generate the source dictionary
-        into self.source_data, with the following structure:
-            {
-                'hosted_zones': [
-                    {
-                        'Config': {
-                            'Comment': 'This is the description',
-                            'PrivateZone': False,
-                        },
-                        'Id': '/hostedzone/hosted_zone_id',
-                        'Name': 'hostedzone.org',
-                        'ResourceRecordSetCount': 1,
-                        'records': [
-                            {
-                                'Name': 'record1.clinv.org',
-                                'ResourceRecords': [
-                                    {
-                                        'Value': '127.0.0.1'
-                                    },
-                                    {
-                                        'Value': 'localhost'
-                                    },
-                                ],
-                                'TTL': 172800,
-                                'Type': 'CNAME'
-                            },
-                        ],
-                    },
-                ],
-            }
-
-        Returns:
-            dict: content of self.source_data.
-        """
-
-        self.log.info('Fetching Route53 inventory')
-        self.source_data = {}
-
-        route53 = boto3.client('route53')
-
-        # Fetch the hosted zones
-        self.source_data['hosted_zones'] = \
-            route53.list_hosted_zones()['HostedZones']
-
-        # Prune unneeded information
-        prune_keys = ['CallerReference']
-        for zone in self.source_data['hosted_zones']:
-            for prune_key in prune_keys:
-                try:
-                    zone.pop(prune_key)
-                except KeyError:
-                    pass
-
-        # Fetch the records
-        for zone in self.source_data['hosted_zones']:
-            raw_records = route53.list_resource_record_sets(
-                HostedZoneId=zone['Id'],
-            )
-
-            zone['records'] = raw_records['ResourceRecordSets']
-
-            while raw_records['IsTruncated']:
-                raw_records = route53.list_resource_record_sets(
-                    HostedZoneId=zone['Id'],
-                    StartRecordName=raw_records['NextRecordName'],
-                    StartRecordType=raw_records['NextRecordType'],
-                )
-                for record in raw_records['ResourceRecordSets']:
-                    zone['records'].append(record)
-
-        return self.source_data
-
-    def generate_user_data(self):
-        """
-        Do aggregation of the user data to populate the self.user_data
-        attribute with the user_data.yaml information or with default values.
-
-        It needs the information of self.source_data, therefore it should be
-        called after generate_source_data.
-
-        Returns:
-            dict: content of self.user_data.
-        """
-
-        for zone in self.source_data['hosted_zones']:
-            for record in zone['records']:
-                record_id = '{}-{}-{}'.format(
-                    re.sub(r'/hostedzone/', '', zone['Id']),
-                    re.sub(r'\.$', '', record['Name']),
-                    record['Type'].lower(),
-                )
-
-                # Define the default user_data of the record
-                try:
-                    self.user_data[record_id]
-                except KeyError:
-                    self.user_data[record_id] = {
-                        'description': 'tbd',
-                        'to_destroy': 'tbd',
-                        'state': 'active',
-                    }
-        return self.user_data
-
-    def generate_inventory(self):
-        """
-        Do aggregation of the user and source data to populate the self.inv
-        attribute with Route53 resources.
-
-        It needs the information of self.source_data and self.user_data,
-        therefore it should be called after generate_source_data and
-        generate_user_data.
-
-        Returns:
-            dict: Route53 inventory with user and source data
-        """
-
-        inventory = {}
-
-        for zone in self.source_data['hosted_zones']:
-            for record in zone['records']:
-                record_id = '{}-{}-{}'.format(
-                    re.sub(r'/hostedzone/', '', zone['Id']),
-                    re.sub(r'\.$', '', record['Name']),
-                    record['Type'].lower(),
-                )
-
-                # Load the user_data into the source_data record
-                for key, value in self.user_data[record_id].items():
-                    record[key] = value
-
-                # Add clinv needed information
-                record['hosted_zone'] = {
-                    'id': zone['Id'],
-                    'name': zone['Name'],
-                    'private': zone['Config']['PrivateZone'],
-                }
-
-                inventory[record_id] = Route53({record_id: record})
-        return inventory
-
-
-class S3src(AWSBasesrc):
-    """
-    Class to gather and manipulate the S3 resources.
-
-    Parameters:
-        source_data (dict): S3src compatible source_data
-        dictionary.
-        user_data (dict): S3src compatible user_data dictionary.
-
-    Public methods:
-        generate_source_data: Generates the source_data attribute and returns
-            it.
-        generate_user_data: Generates the user_data attribute and returns it.
-        generate_inventory: Generates the inventory dictionary with the source
-            resource.
-
-    Public attributes:
-        id (str): ID of the resource.
-        source_data (dict): Aggregated source supplied data.
-        user_data (dict): Aggregated user supplied data.
-        log (logging object):
-    """
-
-    def __init__(self, source_data={}, user_data={}):
-        super().__init__(source_data, user_data)
-        self.id = 's3'
-
-    def generate_source_data(self):
-        """
-        Do aggregation of the source data to generate the source dictionary
-        into self.source_data, with the following structure:
-            {
-                's3_bucket_name': {
-                    'CreationDate': datetime.datetime(
-                        2012, 12, 12, 0, 7, 46, tzinfo=tzutc()
-                    ),
-                    'Name': 's3_bucket_name',
-                    'permissions': {
-                        'read': 'public',
-                        'write': 'private',
-                    },
-                    'Grants': [
-                        {
-                            'Grantee': {
-                                'DisplayName': 'admin',
-                                'ID': 'admin_id',
-                                'Type': 'CanonicalUser'
-                            },
-                            'Permission': 'READ'
-                        },
-                        {
-                            'Grantee': {
-                                'DisplayName': 'admin',
-                                'ID': 'admin_id',
-                                'Type': 'CanonicalUser'
-                            },
-                            'Permission': 'WRITE'
-                        },
-                        {
-                            'Grantee': {
-                                'Type': 'Group',
-                                'URI': 'http://acs.amazonaws.com/'
-                                        'groups/global/AllUsers'
-                            },
-                            'Permission': 'READ'
-                        },
-                    ],
-                },
-            }
-
-        Returns:
-            dict: content of self.source_data.
-        """
-
-        self.log.info('Fetching S3 inventory')
-        self.source_data = {}
-
-        public_acl_indicator = \
-            'http://acs.amazonaws.com/groups/global/AllUsers'
-        permissions_to_check = ['READ', 'WRITE']
-
-        # Create S3 client, describe buckets.
-        s3 = boto3.client('s3')
-        list_bucket_response = s3.list_buckets()
-
-        for bucket_dictionary in list_bucket_response['Buckets']:
-            bucket_dictionary['Grants'] = s3.get_bucket_acl(
-                Bucket=bucket_dictionary['Name']
-            )['Grants']
-            bucket_dictionary['permissions'] = {}
-
-            # Check if there is any public access to the bucket
-            for grant in bucket_dictionary['Grants']:
-                for (key, value) in grant.items():
-                    if key == 'Permission' and any(
-                        permission in value
-                        for permission in permissions_to_check
-                    ):
-                        for (grantee_attribute_key, grantee_attribute_value) \
-                                in grant['Grantee'].items():
-                            if 'URI' in grantee_attribute_key and \
-                                    grant['Grantee']['URI'] == \
-                                    public_acl_indicator:
-                                bucket_dictionary['permissions'][value] = \
-                                    'public'
-
-            # If there is no public access, it means it's private
-            for permission in permissions_to_check:
-                try:
-                    bucket_dictionary['permissions'][permission]
-                except KeyError:
-                    bucket_dictionary['permissions'][permission] = \
-                        'private'
-
-            self.source_data[bucket_dictionary['Name']] = bucket_dictionary
-        return self.source_data
-
-    def generate_user_data(self):
-        """
-        Do aggregation of the user data to populate the self.user_data
-        attribute with the user_data.yaml information or with default values.
-
-        It needs the information of self.source_data, therefore it should be
-        called after generate_source_data.
-
-        Returns:
-            dict: content of self.user_data.
-        """
-
-        for resource_id, resource in self.source_data.items():
-            # Define the default user_data of the record
-            try:
-                self.user_data[resource_id]
-            except KeyError:
-                self.user_data[resource_id] = {
-                    'description': '',
-                    'to_destroy': 'tbd',
-                    'environment': 'tbd',
-                    'desired_permissions': {
-                        'read': 'tbd',
-                        'write': 'tbd',
-                    },
-                    'state': 'active',
-                }
-
-        return self.user_data
-
-    def generate_inventory(self):
-        """
-        Do aggregation of the user and source data to populate the self.inv
-        attribute with S3 resources.
-
-        It needs the information of self.source_data and self.user_data,
-        therefore it should be called after generate_source_data and
-        generate_user_data.
-
-        Returns:
-            dict: S3 inventory with user and source data
-        """
-
-        inventory = {}
-        for resource_id, resource in self.source_data.items():
-            # Load the user_data into the source_data record
-            for key, value in self.user_data[resource_id].items():
-                resource[key] = value
-
-            inventory[resource_id] = S3({resource_id: resource})
-
         return inventory
 
 
@@ -1039,6 +520,770 @@ class IAMUsersrc(AWSBasesrc):
         return inventory
 
 
+class RDSsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the AWS RDS resources.
+
+    Parameters:
+        source_data (dict): RDSsrc compatible source_data
+        dictionary.
+        user_data (dict): RDSsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'rds'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            'us-east-1': [
+                {
+                    'AllocatedStorage': 100,
+                    'AssociatedRoles': [],
+                    'AutoMinorVersionUpgrade': True,
+                    'AvailabilityZone': 'us-east-1a',
+                    'BackupRetentionPeriod': 7,
+                    'CACertificateIdentifier': 'rds-ca-2015',
+                    'DBInstanceArn': 'arn:aws:rds:us-east-1:224119285:db:db',
+                    'DBInstanceClass': 'db.t2.micro',
+                    'DBInstanceIdentifier': 'rds-name',
+                    'DBInstanceStatus': 'available',
+                    'DBSecurityGroups': [],
+                    'DBSubnetGroup': {
+                        'DBSubnetGroupDescription': 'Created from the RDS '
+                        'Management Console',
+                        'DBSubnetGroupName': 'default-vpc-v2dcp2jh',
+                        'SubnetGroupStatus': 'Complete',
+                        'Subnets': [
+                            {
+                                'SubnetAvailabilityZone': {
+                                    'Name': 'us-east-1a'
+                                },
+                                'SubnetIdentifier': 'subnet-42sfl222',
+                                'SubnetStatus': 'Active'
+                            },
+                            {
+                                'SubnetAvailabilityZone': {
+                                    'Name': 'us-east-1e'
+                                },
+                                'SubnetIdentifier': 'subnet-42sfl221',
+                                'SubnetStatus': 'Active'
+                            },
+                        ],
+                        'VpcId': 'vpc-v2dcp2jh'},
+                    'DbiResourceId': 'db-YDFL2',
+                    'DeletionProtection': True,
+                    'Endpoint': {
+                        'Address': 'rds-name.us-east-1.rds.amazonaws.com',
+                        'HostedZoneId': '202FGHSL2JKCFW',
+                        'Port': 5521
+                    },
+                    'Engine': 'mariadb',
+                    'EngineVersion': '1.2',
+                    'InstanceCreateTime': datetime.datetime(
+                        2019, 6, 17, 15, 15, 8, 461000, tzinfo=tzutc()
+                    ),
+                    'Iops': 1000,
+                    'MasterUsername': 'root',
+                    'MultiAZ': True,
+                    'PreferredBackupWindow': '03:00-04:00',
+                    'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
+                    'PubliclyAccessible': False,
+                    'StorageEncrypted': True,
+                },
+            ],
+        }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching RDS inventory')
+        self.source_data = {}
+
+        for region in self.regions:
+            rds = boto3.client('rds', region_name=region)
+            self.source_data[region] = \
+                rds.describe_db_instances()['DBInstances']
+
+        prune_keys = [
+            'CopyTagsToSnapshot',
+            'DBParameterGroups',
+            'DbInstancePort',
+            'DomainMemberships',
+            'EnhancedMonitoringResourceArn',
+            'IAMDatabaseAuthenticationEnabled',
+            'LatestRestorableTime',
+            'LicenseModel',
+            'MonitoringInterval',
+            'MonitoringRoleArn',
+            'OptionGroupMemberships',
+            'PendingModifiedValues',
+            'PerformanceInsightsEnabled',
+            'PerformanceInsightsKMSKeyId',
+            'PerformanceInsightsRetentionPeriod',
+            'ReadReplicaDBInstanceIdentifiers',
+            'StorageType',
+        ]
+
+        for region in self.source_data.keys():
+            for resource in self.source_data[region]:
+                resource = self.prune_dictionary(resource, prune_keys)
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for region in self.source_data.keys():
+            for resource in self.source_data[region]:
+                resource_id = resource['DbiResourceId']
+                # Define the default user_data of the resource
+                try:
+                    self.user_data[resource_id]
+                except KeyError:
+                    self.user_data[resource_id] = {
+                        'description': '',
+                        'to_destroy': 'tbd',
+                        'environment': 'tbd',
+                        'monitored': 'tbd',
+                        'region': region,
+                    }
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with RDS resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: RDS inventory with user and source data
+        """
+
+        inventory = {}
+
+        for region in self.source_data.keys():
+            for resource in self.source_data[region]:
+                resource_id = resource['DbiResourceId']
+
+                for key, value in \
+                        self.user_data[resource_id].items():
+                    resource[key] = value
+
+                inventory[resource_id] = RDS(
+                    {
+                        resource_id: resource
+                    }
+                )
+
+        return inventory
+
+
+class Route53src(AWSBasesrc):
+    """
+    Class to gather and manipulate the AWS Route53 resources.
+
+    Parameters:
+        source_data (dict): Route53src compatible source_data dictionary.
+        user_data (dict): Route53src compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'route53'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                'hosted_zones': [
+                    {
+                        'Config': {
+                            'Comment': 'This is the description',
+                            'PrivateZone': False,
+                        },
+                        'Id': '/hostedzone/hosted_zone_id',
+                        'Name': 'hostedzone.org',
+                        'ResourceRecordSetCount': 1,
+                        'records': [
+                            {
+                                'Name': 'record1.clinv.org',
+                                'ResourceRecords': [
+                                    {
+                                        'Value': '127.0.0.1'
+                                    },
+                                    {
+                                        'Value': 'localhost'
+                                    },
+                                ],
+                                'TTL': 172800,
+                                'Type': 'CNAME'
+                            },
+                        ],
+                    },
+                ],
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching Route53 inventory')
+        self.source_data = {}
+
+        route53 = boto3.client('route53')
+
+        # Fetch the hosted zones
+        self.source_data['hosted_zones'] = \
+            route53.list_hosted_zones()['HostedZones']
+
+        # Prune unneeded information
+        prune_keys = ['CallerReference']
+        for zone in self.source_data['hosted_zones']:
+            zone = self.prune_dictionary(zone, prune_keys)
+
+        # Fetch the records
+        for zone in self.source_data['hosted_zones']:
+            raw_records = route53.list_resource_record_sets(
+                HostedZoneId=zone['Id'],
+            )
+
+            zone['records'] = raw_records['ResourceRecordSets']
+
+            while raw_records['IsTruncated']:
+                raw_records = route53.list_resource_record_sets(
+                    HostedZoneId=zone['Id'],
+                    StartRecordName=raw_records['NextRecordName'],
+                    StartRecordType=raw_records['NextRecordType'],
+                )
+                for record in raw_records['ResourceRecordSets']:
+                    zone['records'].append(record)
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for zone in self.source_data['hosted_zones']:
+            for record in zone['records']:
+                record_id = '{}-{}-{}'.format(
+                    re.sub(r'/hostedzone/', '', zone['Id']),
+                    re.sub(r'\.$', '', record['Name']),
+                    record['Type'].lower(),
+                )
+
+                # Define the default user_data of the record
+                try:
+                    self.user_data[record_id]
+                except KeyError:
+                    self.user_data[record_id] = {
+                        'description': 'tbd',
+                        'to_destroy': 'tbd',
+                        'monitored': 'tbd',
+                        'state': 'active',
+                    }
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with Route53 resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: Route53 inventory with user and source data
+        """
+
+        inventory = {}
+
+        for zone in self.source_data['hosted_zones']:
+            for record in zone['records']:
+                record_id = '{}-{}-{}'.format(
+                    re.sub(r'/hostedzone/', '', zone['Id']),
+                    re.sub(r'\.$', '', record['Name']),
+                    record['Type'].lower(),
+                )
+
+                # Load the user_data into the source_data record
+                for key, value in self.user_data[record_id].items():
+                    record[key] = value
+
+                # Add clinv needed information
+                record['hosted_zone'] = {
+                    'id': zone['Id'],
+                    'name': zone['Name'],
+                    'private': zone['Config']['PrivateZone'],
+                }
+
+                inventory[record_id] = Route53({record_id: record})
+        return inventory
+
+
+class S3src(AWSBasesrc):
+    """
+    Class to gather and manipulate the S3 resources.
+
+    Parameters:
+        source_data (dict): S3src compatible source_data
+        dictionary.
+        user_data (dict): S3src compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 's3'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                's3_bucket_name': {
+                    'CreationDate': datetime.datetime(
+                        2012, 12, 12, 0, 7, 46, tzinfo=tzutc()
+                    ),
+                    'Name': 's3_bucket_name',
+                    'permissions': {
+                        'read': 'public',
+                        'write': 'private',
+                    },
+                    'Grants': [
+                        {
+                            'Grantee': {
+                                'DisplayName': 'admin',
+                                'ID': 'admin_id',
+                                'Type': 'CanonicalUser'
+                            },
+                            'Permission': 'READ'
+                        },
+                        {
+                            'Grantee': {
+                                'DisplayName': 'admin',
+                                'ID': 'admin_id',
+                                'Type': 'CanonicalUser'
+                            },
+                            'Permission': 'WRITE'
+                        },
+                        {
+                            'Grantee': {
+                                'Type': 'Group',
+                                'URI': 'http://acs.amazonaws.com/'
+                                        'groups/global/AllUsers'
+                            },
+                            'Permission': 'READ'
+                        },
+                    ],
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching S3 inventory')
+        self.source_data = {}
+
+        public_acl_indicator = \
+            'http://acs.amazonaws.com/groups/global/AllUsers'
+        permissions_to_check = ['READ', 'WRITE']
+
+        # Create S3 client, describe buckets.
+        s3 = boto3.client('s3')
+        list_bucket_response = s3.list_buckets()
+
+        for bucket_dictionary in list_bucket_response['Buckets']:
+            bucket_dictionary['Grants'] = s3.get_bucket_acl(
+                Bucket=bucket_dictionary['Name']
+            )['Grants']
+            bucket_dictionary['permissions'] = {}
+
+            # Check if there is any public access to the bucket
+            for grant in bucket_dictionary['Grants']:
+                for (key, value) in grant.items():
+                    if key == 'Permission' and any(
+                        permission in value
+                        for permission in permissions_to_check
+                    ):
+                        for (grantee_attribute_key, grantee_attribute_value) \
+                                in grant['Grantee'].items():
+                            if 'URI' in grantee_attribute_key and \
+                                    grant['Grantee']['URI'] == \
+                                    public_acl_indicator:
+                                bucket_dictionary['permissions'][value] = \
+                                    'public'
+
+            # If there is no public access, it means it's private
+            for permission in permissions_to_check:
+                try:
+                    bucket_dictionary['permissions'][permission]
+                except KeyError:
+                    bucket_dictionary['permissions'][permission] = \
+                        'private'
+
+            self.source_data[bucket_dictionary['Name']] = bucket_dictionary
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            # Define the default user_data of the record
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'description': '',
+                    'to_destroy': 'tbd',
+                    'environment': 'tbd',
+                    'desired_permissions': {
+                        'read': 'tbd',
+                        'write': 'tbd',
+                    },
+                    'state': 'active',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with S3 resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: S3 inventory with user and source data
+        """
+
+        inventory = {}
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = S3({resource_id: resource})
+
+        return inventory
+
+
+class SecurityGroupsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the SecurityGroup resources.
+
+    Parameters:
+        source_data (dict): SecurityGroupsrc compatible source_data
+        dictionary.
+        user_data (dict): SecurityGroupsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'security_groups'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+                'sg-xxxxxxxx': {
+                    'description': 'default group',
+                    'GroupName': 'default',
+                    'region': 'us-east-1',
+                    'IpPermissions': [
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'udp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                            'UserIdGroupPairs': [],
+                        },
+                        ...
+                    ],
+                    'IpPermissionsEgress': [],
+                },
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching SecurityGroup inventory')
+        self.source_data = {}
+        raw_data = {}
+
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            raw_data[region] = ec2.describe_security_groups()['SecurityGroups']
+
+        prune_keys = [
+            'GroupId',
+            'OwnerId',
+            'Description',
+        ]
+
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                security_group_id = resource['GroupId']
+                resource['description'] = resource['Description']
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                self.source_data[security_group_id] = resource
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'ingress': resource['IpPermissions'],
+                    'egress': resource['IpPermissionsEgress'],
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with SecurityGroup resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: SecurityGroup inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = SecurityGroup({resource_id: resource})
+
+        return inventory
+
+
+class VPCsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the VPC resources.
+
+    Parameters:
+        source_data (dict): VPCsrc compatible source_data
+        dictionary.
+        user_data (dict): VPCsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'vpc'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching VPC inventory')
+        raw_data = {}
+
+        for region in self.regions:
+            ec2 = boto3.client('ec2', region_name=region)
+            raw_data[region] = ec2.describe_vpcs()['Vpcs']
+
+        prune_keys = [
+            'CidrBlockAssociationSet',
+            'OwnerId',
+            'VpcId',
+        ]
+
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                vpc_id = resource['VpcId']
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                self.source_data[vpc_id] = resource
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'description': 'tbd',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with VPC resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: VPC inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = VPC({resource_id: resource})
+
+        return inventory
+
+
 class ASGsrc(AWSBasesrc):
     """
     Class to gather and manipulate the ASG resources.
@@ -1130,6 +1375,7 @@ class ClinvAWSResource(ClinvGenericResource):
         search: Search in the resource data if a string matches.
 
     Public properties:
+        monitored: Returns if the resource is monitored.
         region: Returns the region of the resource.
     """
 
@@ -1173,10 +1419,6 @@ class ClinvAWSResource(ClinvGenericResource):
         if super().search(search_string):
             return True
 
-        # Search by security groups
-        if search_string in self.security_groups:
-            return True
-
         # Search by region
         if re.match(search_string, self.region):
             return True
@@ -1187,15 +1429,33 @@ class ClinvAWSResource(ClinvGenericResource):
 
         return False
 
+    @property
+    def monitored(self):
+        """
+        Do aggregation of data to return if the resource is being monitored.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitored = self._get_field('monitored', 'str')
+            if monitored not in [True, False]:
+                monitored = 'unknown'
+        except KeyError:
+            monitored = 'unknown'
+
+        return monitored
+
 
 class EC2(ClinvAWSResource):
     """
-    Abstract class to extend ClinvAWSResource, it gathers method and attributes
-    for the EC2 resources.
+    Class to extend the ClinvAWSResource abstract class. It gathers methods and
+    attributes for the EC2 resources.
 
     Public methods:
         search: Search in the resource data if a string matches.
-        print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the resource.
@@ -1205,6 +1465,7 @@ class EC2(ClinvAWSResource):
         state: Returns the state of the resource.
         type: Returns the type of the resource.
         state_transition: Returns the reason of the transition of the resource.
+        vpc: Returns the VPC of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1240,13 +1501,14 @@ class EC2(ClinvAWSResource):
         Do aggregation of data to return the security groups of the resource.
 
         Returns:
-            list: Security groups of the resource.
+            dict: Security groups of the resource.
         """
 
         try:
-            return [security_group['GroupId']
-                    for security_group in self.raw['SecurityGroups']
-                    ]
+            return {
+                security_group['GroupId']: security_group['GroupName']
+                for security_group in self.raw['SecurityGroups']
+            }
         except KeyError:
             pass
 
@@ -1323,6 +1585,17 @@ class EC2(ClinvAWSResource):
         """
         return self._get_field('StateTransitionReason', 'str')
 
+    @property
+    def vpc(self):
+        """
+        Do aggregation of data to return the resource vpc.
+
+        Returns:
+            str: Resource type.
+        """
+
+        return self._get_optional_field('VpcId', 'str')
+
     def print(self):
         """
         Do aggregation of data to print information of the resource.
@@ -1339,9 +1612,14 @@ class EC2(ClinvAWSResource):
         if self.state != 'running':
             print('  State Reason: {}'.format(self.state_transition))
         print('  Type: {}'.format(self.type))
-        print('  SecurityGroups: {}'.format(self.security_groups))
+
+        print('  SecurityGroups: ')
+        for sg_id, sg_name in self.security_groups.items():
+            print('    - {}: {}'.format(sg_id, sg_name))
+
         print('  PrivateIP: {}'.format(self.private_ips))
         print('  PublicIP: {}'.format(self.public_ips))
+        print('  Region: {}'.format(self.region))
 
     def search(self, search_string):
         """
@@ -1371,348 +1649,24 @@ class EC2(ClinvAWSResource):
         if self._match_list(search_string, self.private_ips):
             return True
 
-        return False
-
-
-class RDS(ClinvAWSResource):
-    """
-    Abstract class to extend ClinvAWSResource, it gathers method and attributes
-    for the RDS resources.
-
-    Public properties:
-        endpoint: Return the database endpoint.
-        name: Returns the name of the resource.
-        security_groups: Returns the security groups of the resource.
-        type: Returns the type of the resource.
-        state: Returns the state of the resource.
-    """
-
-    def __init__(self, raw_data):
-        """
-        Execute the __init__ of the parent class ClinvActiveResource.
-        """
-
-        super().__init__(raw_data)
-
-    @property
-    def name(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        name of the resource.
-
-        Returns:
-            str: Name of the resource.
-        """
-
-        return self._get_field('DBInstanceIdentifier', 'str')
-
-    @property
-    def state(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        state of the resource.
-
-        Returns:
-            str: State of the resource.
-        """
-
-        return self._get_field('DBInstanceStatus', 'str')
-
-    @property
-    def security_groups(self):
-        """
-        Do aggregation of data to return the security groups of the resource.
-
-        Returns:
-            list: Security groups of the resource.
-        """
-
-        return self._get_field('DBSecurityGroups', 'list')
-
-    @property
-    def type(self):
-        """
-        Do aggregation of data to return the resource type.
-
-        Returns:
-            str: Resource type.
-        """
-
-        return self._get_field('DBInstanceClass', 'str')
-
-    @property
-    def endpoint(self):
-        """
-        Do aggregation of data to return the resource endpoint.
-
-        Returns:
-            str: Resource type.
-        """
-
-        endpoint_dict = self._get_field('Endpoint', 'dict')
-        return '{}:{}'.format(endpoint_dict['Address'], endpoint_dict['Port'])
-
-    def print(self):
-        """
-        Override parent method to do aggregation of data to print information
-        of the resource.
-
-        Is more verbose than short_print but less verbose than the describe
-        method.
-
-        Returns:
-            stdout: Prints information of the resource.
-        """
-
-        print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Endpoint: {}'.format(self.endpoint)),
-        print('  Type: {}'.format(self.type))
-        print('  Description: {}'.format(self.description))
-
-
-class Route53(ClinvGenericResource):
-    """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the Route53 resources.
-
-    Public properties:
-        name: Returns the name of the record.
-        value: Returns the value of the record.
-        type: Returns the type of the record.
-        hosted_zone: Returns the hosted zone name of the resource.
-        hosted_zone_id: Returns the hosted zone id of the resource.
-        private: Returns if the resource is private.
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
-    """
-
-    def __init__(self, raw_data):
-        """
-        Execute the __init__ of the parent class ClinvActiveResource.
-        """
-
-        super().__init__(raw_data)
-
-    @property
-    def name(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        name of the resource.
-
-        Returns:
-            str: Name of the resource.
-        """
-
-        return self._get_field('Name', 'str')
-
-    @property
-    def to_destroy(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        if we want to destroy the resource.
-
-        Returns:
-            str: If we want to destroy the resource
-        """
-
-        return self._get_field('to_destroy', 'str')
-
-    @property
-    def value(self):
-        """
-        Do aggregation of data to return the value of the record.
-
-        Returns:
-            list: Value of the record set
-        """
-
-        try:
-            return [record['Value'] for record in self.raw['ResourceRecords']]
-        except KeyError:
-            return [self.raw['AliasTarget']['DNSName']]
-
-    @property
-    def type(self):
-        """
-        Do aggregation of data to return the resource type.
-
-        Returns:
-            str: Resource type.
-        """
-
-        return self._get_field('Type', 'str')
-
-    @property
-    def hosted_zone(self):
-        """
-        Do aggregation of data to return the resource hosted zone name.
-
-        Returns:
-            str: Resource hosted zone name.
-        """
-
-        return self.raw['hosted_zone']['name']
-
-    @property
-    def hosted_zone_id(self):
-        """
-        Do aggregation of data to return the resource hosted zone id.
-
-        Returns:
-            str: Resource hosted zone id.
-        """
-
-        return self.raw['hosted_zone']['id']
-
-    @property
-    def access(self):
-        """
-        Do aggregation of data to return if the resource is private.
-
-        Returns:
-            str: Returns 'public' or 'private'
-        """
-
-        if self.raw['hosted_zone']['private']:
-            return 'private'
-        else:
-            return 'public'
-
-    def short_print(self):
-        """
-        Override parent method to do aggregation of data to print the id of the
-        resource.
-
-        Is less verbose than print and describe methods.
-
-        Returns:
-            stdout: Prints 'id: name' of the resource.
-        """
-
-        print(self.id)
-
-    def print(self):
-        """
-        Override parent method to do aggregation of data to print information
-        of the resource.
-
-        Is more verbose than short_print but less verbose than the describe
-        method.
-
-        Returns:
-            stdout: Prints information of the resource.
-        """
-
-        print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Value:')
-        for value in self.value:
-            print('    {}'.format(value))
-        print('  Type: {}'.format(self.type))
-        print('  Zone: {}'.format(self.hosted_zone_id))
-        print('  Access: {}'.format(self.access))
-        print('  Description: {}'.format(self.description))
-        print('  Destroy: {}'.format(self.to_destroy))
-
-    def search(self, search_string):
-        """
-        Extend the parent search method to include project specific search.
-
-        Extend to search by:
-            Record value
-            Record type
-
-        Parameters:
-            search_string (str): Regular expression to match with the
-                resource data.
-
-        Returns:
-            bool: If the search_string matches resource data.
-        """
-
-        # Perform the parent searches
-        if super().search(search_string):
+        # Search by security group
+        if self._match_dict(search_string, self.security_groups):
             return True
 
-        # Search by value
-        for value in self.value:
-            if re.match(search_string, value):
-                return True
-
-        # Search by type
-        if re.match(search_string, self.type, re.IGNORECASE):
+        # Search by VPC.
+        if self.vpc is not None and re.match(search_string, self.vpc):
             return True
 
         return False
-
-
-class S3(ClinvGenericResource):
-    """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the S3 resources.
-
-    Public properties:
-        name: Returns the name of the resource.
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
-    """
-
-    def __init__(self, raw_data):
-        """
-        Execute the __init__ of the parent class ClinvActiveResource.
-        """
-
-        super().__init__(raw_data)
-
-    @property
-    def name(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        name of the resource.
-
-        Returns:
-            str: Name of the resource.
-        """
-
-        return self._get_field('Name', 'str')
-
-    def print(self):
-        """
-        Override parent method to do aggregation of data to print information
-        of the resource.
-
-        Is more verbose than short_print but less verbose than the describe
-        method.
-
-        Returns:
-            stdout: Prints information of the resource.
-        """
-
-        print(self.id)
-        print('  Description: {}'.format(self.description))
-        print('  Permissions: desired/real'),
-        print('      READ: {}/{}'.format(
-            self.raw['desired_permissions']['read'],
-            self.raw['permissions']['READ']
-        )),
-        print('      WRITE: {}/{}'.format(
-            self.raw['desired_permissions']['write'],
-            self.raw['permissions']['WRITE']
-        )),
-        print('  Environment: {}'.format(self.raw['environment'])),
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy))
 
 
 class IAMGroup(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the IAMGroup resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the IAMGroup resources.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the record.
@@ -1847,15 +1801,14 @@ class IAMGroup(ClinvGenericResource):
 
 class IAMUser(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the IAMUser resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the IAMUser resources.
 
     Public properties:
         name: Returns the name of the user.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
     """
 
     def __init__(self, raw_data):
@@ -1882,6 +1835,782 @@ class IAMUser(ClinvGenericResource):
         print('  Description: {}'.format(self.description))
         print('  State: {}'.format(self.state)),
         print('  Destroy: {}'.format(self.to_destroy)),
+
+
+class RDS(ClinvAWSResource):
+    """
+    Class to extend the ClinvAWSResource abstract class. It gathers methods
+    and attributes for the RDS resources.
+
+    Public properties:
+        endpoint: Return the database endpoint.
+        engine: Return the database type and version.
+        name: Returns the name of the resource.
+        security_groups: Returns the security groups of the resource.
+        type: Returns the type of the resource.
+        state: Returns the state of the resource.
+        vpc: Returns the VPC of the resource.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def engine(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        type and version of the resource database.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return '{} {}'.format(
+            self._get_field('Engine', 'str'),
+            self._get_field('EngineVersion', 'str'),
+        )
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('DBInstanceIdentifier', 'str')
+
+    @property
+    def state(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        state of the resource.
+
+        Returns:
+            str: State of the resource.
+        """
+
+        return self._get_field('DBInstanceStatus', 'str')
+
+    @property
+    def security_groups(self):
+        """
+        Do aggregation of data to return the security groups of the resource.
+
+        Returns:
+            list: Security groups of the resource.
+        """
+
+        security_groups = self._get_field('DBSecurityGroups', 'list')
+
+        for security_group in self._get_field('VpcSecurityGroups', 'list'):
+            security_groups.append(security_group['VpcSecurityGroupId'])
+
+        return security_groups
+
+    @property
+    def type(self):
+        """
+        Do aggregation of data to return the resource type.
+
+        Returns:
+            str: Resource type.
+        """
+
+        return self._get_field('DBInstanceClass', 'str')
+
+    @property
+    def endpoint(self):
+        """
+        Do aggregation of data to return the resource endpoint.
+
+        Returns:
+            str: Resource type.
+        """
+
+        endpoint_dict = self._get_field('Endpoint', 'dict')
+        return '{}:{}'.format(endpoint_dict['Address'], endpoint_dict['Port'])
+
+    @property
+    def vpc(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self.raw['DBSubnetGroup']['VpcId']
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Endpoint: {}'.format(self.endpoint)),
+        print('  Type: {}'.format(self.type))
+        print('  Engine: {}'.format(self.engine))
+        print('  Description: {}'.format(self.description))
+        print('  SecurityGroups:')
+        for security_group in self.security_groups:
+            print('    - {}'.format(security_group))
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include project specific search.
+
+        Extend to search by:
+            Security groups
+            VPC
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvAWSResource searches
+        if super().search(search_string):
+            return True
+
+        # Search by security group
+        if self._match_list(search_string, self.security_groups):
+            return True
+
+        # Search by VPC.
+        if re.match(search_string, self.vpc):
+            return True
+
+        return False
+
+
+class Route53(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the Route53 resources.
+
+    Public properties:
+        name: Returns the name of the record.
+        value: Returns the value of the record.
+        type: Returns the type of the record.
+        hosted_zone: Returns the hosted zone name of the resource.
+        hosted_zone_id: Returns the hosted zone id of the resource.
+        monitored: Returns if the resource is being monitored.
+        private: Returns if the resource is private.
+        print: Prints information of the resource.
+        short_print: Prints the resource id.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('Name', 'str')
+
+    @property
+    def to_destroy(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        if we want to destroy the resource.
+
+        Returns:
+            str: If we want to destroy the resource
+        """
+
+        return self._get_field('to_destroy', 'str')
+
+    @property
+    def value(self):
+        """
+        Do aggregation of data to return the value of the record.
+
+        Returns:
+            list: Value of the record set
+        """
+
+        try:
+            return [record['Value'] for record in self.raw['ResourceRecords']]
+        except KeyError:
+            return [self.raw['AliasTarget']['DNSName']]
+
+    @property
+    def type(self):
+        """
+        Do aggregation of data to return the resource type.
+
+        Returns:
+            str: Resource type.
+        """
+
+        return self._get_field('Type', 'str')
+
+    @property
+    def hosted_zone(self):
+        """
+        Do aggregation of data to return the resource hosted zone name.
+
+        Returns:
+            str: Resource hosted zone name.
+        """
+
+        return self.raw['hosted_zone']['name']
+
+    @property
+    def hosted_zone_id(self):
+        """
+        Do aggregation of data to return the resource hosted zone id.
+
+        Returns:
+            str: Resource hosted zone id.
+        """
+
+        return self.raw['hosted_zone']['id']
+
+    @property
+    def access(self):
+        """
+        Do aggregation of data to return if the resource is private.
+
+        Returns:
+            str: Returns 'public' or 'private'
+        """
+
+        if self.raw['hosted_zone']['private']:
+            return 'private'
+        else:
+            return 'public'
+
+    @property
+    def monitored(self):
+        """
+        Do aggregation of data to return if the resource is being monitored.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitored = self._get_field('monitored', 'str')
+            if monitored not in [True, False]:
+                monitored = 'unknown'
+        except KeyError:
+            monitored = 'unknown'
+
+        return monitored
+
+    def short_print(self):
+        """
+        Override parent method to do aggregation of data to print the id of the
+        resource.
+
+        Is less verbose than print and describe methods.
+
+        Returns:
+            stdout: Prints 'id: name' of the resource.
+        """
+
+        print(self.id)
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Value:')
+        for value in self.value:
+            print('    {}'.format(value))
+        print('  Type: {}'.format(self.type))
+        print('  Zone: {}'.format(self.hosted_zone_id))
+        print('  Access: {}'.format(self.access))
+        print('  Description: {}'.format(self.description))
+        print('  Destroy: {}'.format(self.to_destroy))
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include project specific search.
+
+        Extend to search by:
+            Record value
+            Record type
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the parent searches
+        if super().search(search_string):
+            return True
+
+        # Search by value
+        for value in self.value:
+            if re.match(search_string, value):
+                return True
+
+        # Search by type
+        if re.match(search_string, self.type, re.IGNORECASE):
+            return True
+
+        return False
+
+
+class S3(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the S3 resources.
+
+    Public properties:
+        name: Returns the name of the resource.
+        monitored: Returns if the resource is monitored.
+        print: Prints information of the resource.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('Name', 'str')
+
+    @property
+    def monitored(self):
+        """
+        Do aggregation of data to return if the resource is being monitored.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitored = self._get_field('monitored', 'str')
+            if monitored not in [True, False]:
+                monitored = 'unknown'
+        except KeyError:
+            monitored = 'unknown'
+
+        return monitored
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Is more verbose than short_print but less verbose than the describe
+        method.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Description: {}'.format(self.description))
+        print('  Permissions: desired/real'),
+        print('      READ: {}/{}'.format(
+            self.raw['desired_permissions']['read'],
+            self.raw['permissions']['READ']
+        )),
+        print('      WRITE: {}/{}'.format(
+            self.raw['desired_permissions']['write'],
+            self.raw['permissions']['WRITE']
+        )),
+        print('  Environment: {}'.format(self.raw['environment'])),
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy))
+
+
+class SecurityGroup(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the SecurityGroup resources.
+
+    Public methods:
+        print: Prints information of the resource.
+        is_related: Return if the security group is related with the contents
+            of a regular expression.
+        is_synchronized: Check if the real state of the security group
+            is the same as the expected.
+        search: Extend the parent search method to include security_groups
+            specific search.
+
+    Private methods:
+        _print_security_rule: print the information of a security rule.
+        _is_security_rule_related: Return if the security rule is related with
+            the contents of a regular expression.
+
+    Public properties:
+        name: Returns the name of the resource.
+        vpc: VPC id of the resource.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('GroupName')
+
+    def is_synchronized(self):
+        """
+        Check if the real state of the security group is the same as the
+        expected.
+
+        Returns:
+            bool: If the state is synchronized.
+        """
+
+        if self.raw['ingress'] == self.raw['IpPermissions'] and \
+                self.raw['egress'] == self.raw['IpPermissionsEgress']:
+            return True
+        return False
+
+    def _print_security_group_pairs_information(self, security_group_pair):
+        """
+        Print the information of the UserIdGroupPairs security rule part.
+
+        Input:
+            security_group_pair (dict): Security group pair dictionary,
+                for example:
+
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                    'Description': 'sg description',
+                }
+
+        Return:
+            stdout: Print the information with a defined format.
+        """
+        try:
+            print('      - {}: {}'.format(
+                security_group_pair['GroupId'],
+                security_group_pair['Description'],
+            ))
+        except KeyError:
+            print('      - {}'.format(security_group_pair['GroupId']))
+
+    def _print_security_rule(self, security_rule):
+        """
+        Print the information of a security rule.
+
+        Input:
+            security_rule (dict): Security rule dictionary, for example:
+
+                {
+                    'FromPort': 0,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': [],
+                    'Ipv6Ranges': [],
+                    'PrefixListIds': [],
+                    'ToPort': 65535,
+                }
+
+        Return:
+            stdout: Print the information with a defined format.
+        """
+        protocol = security_rule['IpProtocol'].upper()
+
+        if protocol == 'ICMP':
+            port_string = ''
+        elif protocol == '-1':
+            protocol = 'All Traffic'
+            port_string = ''
+        else:
+            if security_rule['FromPort'] == security_rule['ToPort']:
+                port_string = security_rule['FromPort']
+            else:
+                port_string = '{}-{}'.format(
+                    security_rule['FromPort'],
+                    security_rule['ToPort'],
+                )
+
+        print('    {}: {}'.format(protocol, port_string))
+
+        try:
+            if len(security_rule['IpRanges']) > 0:
+                for cidr in security_rule['IpRanges']:
+                    print('      - {}'.format(cidr['CidrIp']))
+        except KeyError:
+            pass
+
+        try:
+            if len(security_rule['UserIdGroupPairs']) > 0:
+                for security_group in security_rule['UserIdGroupPairs']:
+                    self._print_security_group_pairs_information(
+                        security_group
+                    )
+
+        except KeyError:
+            pass
+
+    def _is_security_rule_related(self, regexp, security_rule):
+        """
+        Return if the security rule is related with the contents of a
+        regular expression.
+
+        It checks in the security group rules CIDRs, related security groups
+        and ports.
+
+        Input:
+            regexp (dict): Regular expression to test.
+            security_rule (dict): Security rule dictionary, for example:
+
+                {
+                    'FromPort': 0,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': [],
+                    'Ipv6Ranges': [],
+                    'PrefixListIds': [],
+                    'ToPort': 65535,
+                }
+
+        Return:
+            bool: If it's related
+        """
+        # Check regular expression in the associated IPv4s.
+        for cidr in security_rule['IpRanges']:
+            if re.match(regexp, cidr['CidrIp']):
+                return True
+
+        # Check regular expression in the associated ports.
+        try:
+            port_to_test = int(regexp)
+            if port_to_test >= security_rule['FromPort'] and \
+                    port_to_test <= security_rule['ToPort']:
+                return True
+        except ValueError:
+            pass
+
+        # Check regular expression in the associated security groups
+        for security_group in security_rule['UserIdGroupPairs']:
+            if re.match(regexp, security_group['GroupId']):
+                return True
+
+    def is_related(self, regexp):
+        """
+        Return if the security group is related with the contents of a
+        regular expression.
+
+        It checks in the security group rules CIDRs, related security groups
+        and ports.
+
+        Input:
+            regexp (dict): Regular expression to test.
+
+        Return:
+            bool: If it's related
+        """
+
+        for security_rule in self._get_field('IpPermissions'):
+            if self._is_security_rule_related(regexp, security_rule):
+                return True
+
+        for security_rule in self._get_field('IpPermissionsEgress'):
+            if self._is_security_rule_related(regexp, security_rule):
+                return True
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Synchronized: {}'.format(str(self.is_synchronized())))
+        print('  Region: {}'.format(self._get_field('region', 'str')))
+        print('  VPC: {}'.format(self.vpc))
+        print('  Ingress:')
+        for security_rule in self._get_field('IpPermissions'):
+            self._print_security_rule(security_rule)
+        print('  Egress:')
+        for security_rule in self._get_field('IpPermissionsEgress'):
+            self._print_security_rule(security_rule)
+
+    def search(self, search_string):
+        """
+        Extend the parent search method to include security_groups specific
+        search.
+
+        Extend to search by:
+            CIDR in security group ingress and egress rules.
+            Security groups in security group ingress and egress rules.
+            Ports in security group ingress and egress rules.
+            VPC.
+
+        Parameters:
+            search_string (str): Regular expression to match with the
+                resource data.
+
+        Returns:
+            bool: If the search_string matches resource data.
+        """
+
+        # Perform the ClinvGenericResource searches.
+        if super().search(search_string):
+            return True
+
+        # Search by CIDR, port and security groups in the rules.
+        if self.is_related(search_string):
+            return True
+
+        # Search by VPC.
+        if self.vpc is not None and re.match(search_string, self.vpc):
+            return True
+
+        return False
+
+    @property
+    def vpc(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_optional_field('VpcId')
+
+
+class VPC(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the VPC resources.
+
+    Public methods:
+        print: Prints information of the resource.
+
+    Public properties:
+        name: Returns the name of the record.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        try:
+            for tag in self.raw['Tags']:
+                if tag['Key'] == 'Name':
+                    return tag['Value']
+        except KeyError:
+            pass
+        except TypeError:
+            pass
+        return 'none'
+
+    @property
+    def cidr(self):
+        """
+        Do aggregation of data to return the VPC CIDR.
+
+        Returns:
+            str: CIDR.
+        """
+
+        return self._get_field('CidrBlock', 'str')
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Region: {}'.format(self._get_field('region', 'str')))
+        print('  CIDR: {}'.format(self.cidr))
 
 
 class ASG(ClinvGenericResource):

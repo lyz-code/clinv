@@ -3,10 +3,20 @@ from clinv.sources.aws import \
     EC2src, \
     IAMUsersrc,\
     IAMGroupsrc, \
-    Route53src, \
     RDSsrc, \
-    S3src
-from clinv.sources.aws import EC2, RDS, Route53, S3, IAMUser, IAMGroup
+    Route53src, \
+    S3src, \
+    SecurityGroupsrc, \
+    VPCsrc
+from clinv.sources.aws import \
+    EC2, \
+    IAMUser, \
+    IAMGroup, \
+    RDS, \
+    Route53, \
+    S3, \
+    SecurityGroup, \
+    VPC
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
 from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
@@ -117,6 +127,7 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
                 'description': '',
                 'to_destroy': 'tbd',
                 'environment': 'tbd',
+                'monitored': 'tbd',
                 'region': 'us-east-1',
             },
         }
@@ -363,6 +374,324 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
 
+class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMUser source implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMUsersrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'Path': '/',
+                'CreateDate': datetime.datetime(
+                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                ),
+                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'UserName': 'User 1'
+            },
+        }
+        self.desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        self.boto.client.return_value.list_users.return_value = {
+            'Users': [
+                {
+                    'UserName': 'User 1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                },
+            ]
+        }
+
+        self.src.source_data = {}
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
+                'name': 'User 1',
+                'description': 'User 1 description',
+                'to_destroy': False,
+            },
+        }
+
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMUser')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the IAMGroup implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = IAMGroupsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'Administrator',
+                'Path': '/',
+                'Users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ],
+                'InlinePolicies': [
+                    'Inlinepolicy'
+                ],
+                'AttachedPolicies': [
+                    'arn:aws:iam::aws:policy/Attachedpolicy'
+                ],
+            },
+        }
+        self.desired_user_data = {
+            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
+                'name': 'Administrator',
+                'description': 'tbd',
+                'to_destroy': 'tbd',
+                'state': 'tbd',
+                'desired_users': [
+                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                ]
+            },
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        boto_mock = self.boto.client.return_value
+        boto_mock.list_groups.return_value = {
+            'Groups': [
+                {
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
+                    'CreateDate': datetime.datetime(
+                        2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                    ),
+                    'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'GroupName': 'Administrator',
+                    'Path': '/',
+                }
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+
+        boto_mock.get_group.return_value = {
+            'Group': {
+                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
+                'CreateDate': datetime.datetime(
+                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
+                ),
+                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
+                'GroupName': 'Administrator',
+                'Path': '/',
+            },
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+            'Users': [
+                {
+                    'UserName': 'User 1',
+                    'Path': '/',
+                    'CreateDate': datetime.datetime(
+                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
+                    ),
+                    'PasswordLastUsed': datetime.datetime(
+                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
+                    ),
+                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
+                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
+                }
+            ],
+        }
+        boto_mock.list_group_policies.return_value = {
+            'PolicyNames': ['Inlinepolicy'],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+        boto_mock.list_attached_group_policies.return_value = {
+            'AttachedPolicies': [
+                {
+                    'PolicyArn': 'arn:aws:iam::aws:policy/Attachedpolicy',
+                    'PolicyName': 'AttachedPolicy'
+                },
+            ],
+            'IsTruncated': False,
+            'ResponseMetadata': {},
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.IAMGroup')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
 class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
     '''
     Test the RDS implementation in the inventory.
@@ -433,6 +762,12 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                     'PreferredMaintenanceWindow': 'fri:04:00-fri:05:00',
                     'PubliclyAccessible': False,
                     'StorageEncrypted': True,
+                    'VpcSecurityGroups': [
+                        {
+                            'Status': 'active',
+                            'VpcSecurityGroupId': 'sg-f23le20g'
+                        }
+                    ],
                 },
             ],
         }
@@ -441,6 +776,7 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                 'description': '',
                 'to_destroy': 'tbd',
                 'environment': 'tbd',
+                'monitored': 'tbd',
                 'region': 'us-east-1',
             },
         }
@@ -667,6 +1003,7 @@ class TestRoute53Source(AWSSourceBaseTestClass, unittest.TestCase):
             'hosted_zone_id-record1.clinv.org-cname': {
                 'description': 'tbd',
                 'to_destroy': 'tbd',
+                'monitored': 'tbd',
                 'state': 'active',
             },
         }
@@ -1212,14 +1549,15 @@ class TestS3Source(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
 
-class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
+class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
     '''
-    Test the IAMUser source implementation in the inventory.
+    Test the SecurityGroup implementation in the inventory.
     '''
 
     def setUp(self):
+        self.module_name = 'aws'
+        self.source_obj = SecurityGroupsrc
         super().setUp()
-        self.source_obj = IAMUsersrc
 
         # Initialize object to test
         source_data = {}
@@ -1228,21 +1566,78 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
 
         # What data we want to aggregate to our inventory
         self.desired_source_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                'Path': '/',
-                'CreateDate': datetime.datetime(
-                    2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                ),
-                'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'UserName': 'User 1'
+            'sg-xxxxxxxx': {
+                'description': 'default group',
+                'GroupName': 'default',
+                'region': 'us-east-1',
+                'IpPermissions': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    }
+                ],
+                'IpPermissionsEgress': [],
+                'VpcId': 'vpc-xxxxxxxxxxx',
             },
         }
+
         self.desired_user_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                'name': 'User 1',
-                'description': 'tbd',
-                'to_destroy': 'tbd',
+            'sg-xxxxxxxx': {
                 'state': 'tbd',
+                'to_destroy': 'tbd',
+                'ingress': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    }
+                ],
+                'egress': [],
             },
         }
 
@@ -1252,210 +1647,57 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
         super().tearDown()
 
     def test_generate_source_data_creates_expected_source_data_attrib(self):
-        self.boto.client.return_value.list_users.return_value = {
-            'Users': [
+        # Mock here the call to your provider
+        boto_mock = self.boto.client.return_value
+
+        # Simulate only one region
+        boto_mock.describe_regions.return_value = {
+            'Regions': [
                 {
-                    'UserName': 'User 1',
-                    'Path': '/',
-                    'CreateDate': datetime.datetime(
-                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                    ),
-                    'PasswordLastUsed': datetime.datetime(
-                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
-                    ),
-                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                },
+                    'RegionName': 'us-east-1'
+                }
             ]
         }
-
-        self.src.source_data = {}
-        generated_source_data = self.src.generate_source_data()
-
-        self.assertEqual(
-            self.src.source_data,
-            self.desired_source_data,
-        )
-        self.assertEqual(
-            generated_source_data,
-            self.desired_source_data,
-        )
-
-    def test_generate_user_data_creates_expected_user_data_attrib(self):
-        generated_user_data = self.src.generate_user_data()
-
-        self.assertEqual(
-            self.src.user_data,
-            self.desired_user_data,
-        )
-        self.assertEqual(
-            generated_user_data,
-            self.desired_user_data,
-        )
-
-    def test_generate_user_data_doesnt_loose_existing_data(self):
-        desired_user_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:user/user_1': {
-                'name': 'User 1',
-                'description': 'User 1 description',
-                'to_destroy': False,
-            },
-        }
-
-        self.src.user_data = desired_user_data
-
-        self.src.generate_user_data()
-
-        self.assertEqual(
-            self.src.user_data,
-            desired_user_data,
-        )
-
-    def test_generate_inventory_return_empty_dict_if_no_data(self):
-        self.src.source_data = {}
-        self.assertEqual(self.src.generate_inventory(), {})
-
-    @patch('clinv.sources.aws.IAMUser')
-    def test_generate_inventory_creates_expected_dictionary(
-        self,
-        resource_mock
-    ):
-        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-        self.src.user_data = self.desired_user_data
-
-        desired_mock_input = {
-            **self.src.user_data[resource_id],
-            **self.src.source_data[resource_id],
-        }
-
-        desired_inventory = self.src.generate_inventory()
-        self.assertEqual(
-            resource_mock.assert_called_with(
+        boto_mock.describe_security_groups.return_value = {
+            'SecurityGroups': [
                 {
-                    resource_id: desired_mock_input
-                },
-            ),
-            None,
-        )
-
-        self.assertEqual(
-            desired_inventory,
-            {
-                resource_id: resource_mock.return_value
-            },
-        )
-
-
-class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
-    '''
-    Test the IAMGroup implementation in the inventory.
-    '''
-
-    def setUp(self):
-        super().setUp()
-        self.source_obj = IAMGroupsrc
-
-        # Initialize object to test
-        source_data = {}
-        user_data = {}
-        self.src = self.source_obj(source_data, user_data)
-
-        # What data we want to aggregate to our inventory
-        self.desired_source_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
-                'CreateDate': datetime.datetime(
-                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
-                ),
-                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'GroupName': 'Administrator',
-                'Path': '/',
-                'Users': [
-                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                ],
-                'InlinePolicies': [
-                    'Inlinepolicy'
-                ],
-                'AttachedPolicies': [
-                    'arn:aws:iam::aws:policy/Attachedpolicy'
-                ],
-            },
-        }
-        self.desired_user_data = {
-            'arn:aws:iam::XXXXXXXXXXXX:group/Administrator': {
-                'name': 'Administrator',
-                'description': 'tbd',
-                'to_destroy': 'tbd',
-                'state': 'tbd',
-                'desired_users': [
-                    'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                ]
-            },
-        }
-
-        self.src.source_data = self.desired_source_data
-
-    def tearDown(self):
-        super().tearDown()
-
-    def test_generate_source_data_creates_expected_source_data_attrib(self):
-        boto_mock = self.boto.client.return_value
-        boto_mock.list_groups.return_value = {
-            'Groups': [
-                {
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
-                    'CreateDate': datetime.datetime(
-                        2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
-                    ),
-                    'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'GroupName': 'Administrator',
-                    'Path': '/',
+                    'Description': 'default group',
+                    'GroupId': 'sg-xxxxxxxx',
+                    'GroupName': 'default',
+                    'IpPermissions': [
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'udp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                            'UserIdGroupPairs': [],
+                        },
+                        {
+                            'FromPort': -1,
+                            'IpProtocol': 'icmp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': -1,
+                            'UserIdGroupPairs': [],
+                        },
+                        {
+                            'FromPort': 0,
+                            'IpProtocol': 'tcp',
+                            'IpRanges': [],
+                            'Ipv6Ranges': [],
+                            'PrefixListIds': [],
+                            'ToPort': 65535,
+                            'UserIdGroupPairs': [],
+                        }
+                    ],
+                    'IpPermissionsEgress': [],
+                    'OwnerId': 'yyyyyyyyyyyy',
+                    'VpcId': 'vpc-xxxxxxxxxxx',
                 }
-            ],
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-        }
-
-        boto_mock.get_group.return_value = {
-            'Group': {
-                'Arn': 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator',
-                'CreateDate': datetime.datetime(
-                    2019, 11, 4, 12, 41, 24, tzinfo=tzutc()
-                ),
-                'GroupId': 'XXXXXXXXXXXXXXXXXXXXX',
-                'GroupName': 'Administrator',
-                'Path': '/',
-            },
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-            'Users': [
-                {
-                    'UserName': 'User 1',
-                    'Path': '/',
-                    'CreateDate': datetime.datetime(
-                        2019, 2, 7, 12, 15, 57, tzinfo=tzutc()
-                    ),
-                    'PasswordLastUsed': datetime.datetime(
-                        2019, 11, 5, 9, 10, 59, tzinfo=tzutc()
-                    ),
-                    'UserId': 'XXXXXXXXXXXXXXXXXXXXX',
-                    'Arn': 'arn:aws:iam::XXXXXXXXXXXX:user/user_1'
-                }
-            ],
-        }
-        boto_mock.list_group_policies.return_value = {
-            'PolicyNames': ['Inlinepolicy'],
-            'IsTruncated': False,
-            'ResponseMetadata': {},
-        }
-        boto_mock.list_attached_group_policies.return_value = {
-            'AttachedPolicies': [
-                {
-                    'PolicyArn': 'arn:aws:iam::aws:policy/Attachedpolicy',
-                    'PolicyName': 'AttachedPolicy'
-                },
-            ],
-            'IsTruncated': False,
-            'ResponseMetadata': {},
+            ]
         }
 
         self.src.source_data = {}
@@ -1499,12 +1741,170 @@ class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
         self.src.source_data = {}
         self.assertEqual(self.src.generate_inventory(), {})
 
-    @patch('clinv.sources.aws.IAMGroup')
+    @patch('clinv.sources.aws.SecurityGroup')
     def test_generate_inventory_creates_expected_dictionary(
         self,
         resource_mock
     ):
-        resource_id = 'arn:aws:iam::XXXXXXXXXXXX:group/Administrator'
+        resource_id = 'sg-xxxxxxxx'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
+class TestVPCSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the VPC implementation in the inventory.
+    '''
+
+    def setUp(self):
+        self.module_name = 'aws'
+        super().setUp()
+        self.source_obj = VPCsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'vpc-xxxxxxxxxxxx': {
+                'CidrBlock': '172.16.0.0/16',
+                'DhcpOptionsId': 'dopt-xxxxxxxx',
+                'InstanceTenancy': 'default',
+                'IsDefault': False,
+                'region': 'us-east-1',
+                'State': 'available',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'vpc name'
+                    }
+                ],
+            }
+        }
+        self.desired_user_data = {
+            'vpc-xxxxxxxxxxxx': {
+                'state': 'tbd',
+                'to_destroy': 'tbd',
+                'description': 'tbd',
+            }
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        # Mock here the call to your provider
+        boto_mock = self.boto.client.return_value
+
+        # Simulate only one region
+        boto_mock.describe_regions.return_value = {
+            'Regions': [
+                {
+                    'RegionName': 'us-east-1'
+                }
+            ]
+        }
+        boto_mock.describe_vpcs.return_value = {
+            'Vpcs': [
+                {
+                    'CidrBlock': '172.16.0.0/16',
+                    'CidrBlockAssociationSet': [
+                        {
+                            'AssociationId': 'vpc-cidr-assoc-xxxxxxxxx',
+                            'CidrBlock': '172.16.0.0/16',
+                            'CidrBlockState': {
+                                'State': 'associated'
+                            }
+                        }
+                    ],
+                    'DhcpOptionsId': 'dopt-xxxxxxxx',
+                    'InstanceTenancy': 'default',
+                    'IsDefault': False,
+                    'OwnerId': 'xxxxxxxxxxxx',
+                    'State': 'available',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': 'vpc name'
+                        }
+                    ],
+                    'VpcId': 'vpc-xxxxxxxxxxxx'
+                }
+            ],
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.VPC')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'vpc-xxxxxxxxxxxx'
         self.src.user_data = self.desired_user_data
 
         desired_mock_input = {
@@ -1764,7 +2164,6 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
 
     And the following properties must be set:
         * resource name: resource_name
-        * security groups: ['sg-f2234gf6', 'sg-cwfccs17']
         * type: 'c4.4xlarge'
         * region: 'us-east-1'
     '''
@@ -1775,12 +2174,6 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
 
     def tearDown(self):
         super().tearDown()
-
-    def test_get_security_groups(self):
-        self.assertEqual(
-            self.resource.security_groups,
-            ['sg-f2234gf6', 'sg-cwfccs17']
-        )
 
     def test_get_type(self):
         self.assertEqual(self.resource.type, 'c4.4xlarge')
@@ -1799,6 +2192,22 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
 
     def test_search_by_type(self):
         self.assertTrue(self.resource.search('c4.4xlarge'))
+
+    def test_monitored_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop('monitored')
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw['monitored'] = 'tbd'
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_set_to_bool_true(self):
+        self.resource.raw['monitored'] = True
+        self.assertEqual(self.resource.monitored, True)
+
+    def test_monitored_property_works_as_expected_if_set_to_bool_false(self):
+        self.resource.raw['monitored'] = False
+        self.assertEqual(self.resource.monitored, False)
 
 
 class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
@@ -1931,6 +2340,7 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
                 'description': 'This is in the description of the instance',
                 'region': 'us-east-1',
                 'to_destroy': 'tbd',
+                'monitored': 'true',
                 'environment': 'tbd',
             }
         }
@@ -1988,14 +2398,17 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             call('  Name: resource_name'),
             call('  State: running'),
             call('  Type: c4.4xlarge'),
-            call("  SecurityGroups: ['sg-f2234gf6', 'sg-cwfccs17']"),
+            call('  SecurityGroups: '),
+            call('    - sg-f2234gf6: sg-1'),
+            call('    - sg-cwfccs17: sg-2'),
             call("  PrivateIP: ['142.33.2.113']"),
             call("  PublicIP: ['32.312.444.22']"),
+            call("  Region: us-east-1"),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(7, len(self.print.mock_calls))
+        self.assertEqual(10, len(self.print.mock_calls))
 
     def test_print_ec2_reason_if_stopped(self):
         self.raw['i-01']['State']['Name'] = 'stopped'
@@ -2006,20 +2419,49 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
             call('  State: stopped'),
             call('  State Reason: reason'),
             call('  Type: c4.4xlarge'),
-            call("  SecurityGroups: ['sg-f2234gf6', 'sg-cwfccs17']"),
+            call('  SecurityGroups: '),
+            call('    - sg-f2234gf6: sg-1'),
+            call('    - sg-cwfccs17: sg-2'),
             call("  PrivateIP: ['142.33.2.113']"),
             call("  PublicIP: ['32.312.444.22']"),
+            call("  Region: us-east-1"),
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(8, len(self.print.mock_calls))
+        self.assertEqual(11, len(self.print.mock_calls))
 
     def test_search_ec2_by_public_ip(self):
         self.assertTrue(self.resource.search('32.312.444.22'))
 
     def test_search_ec2_by_private_ip(self):
         self.assertTrue(self.resource.search('142.33.2.113'))
+
+    def test_get_security_groups(self):
+        self.assertEqual(
+            self.resource.security_groups,
+            {
+                'sg-f2234gf6': 'sg-1',
+                'sg-cwfccs17': 'sg-2'
+            }
+        )
+
+    def test_search_ec2_by_security_group_id(self):
+        self.assertTrue(self.resource.search('sg-cw.*'))
+
+    def test_get_vpc(self):
+        self.assertEqual(self.resource.vpc, 'vpc-31084921')
+
+    def test_get_vpc_doesnt_fail_if_it_doesnt_exist(self):
+        self.resource.raw.pop('VpcId')
+        self.assertEqual(self.resource.vpc, None)
+
+    def test_search_uses_vpc(self):
+        self.assertTrue(self.resource.search('vpc-310.*'))
+
+    def test_search_by_vpc_doesnt_fail_if_none(self):
+        self.resource.raw.pop('VpcId')
+        self.assertFalse(self.resource.search('vpc-310.*'))
 
 
 class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
@@ -2039,7 +2481,7 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 'DBInstanceClass': 'c4.4xlarge',
                 'DBInstanceIdentifier': 'resource_name',
                 'DBInstanceStatus': 'active',
-                'DBSecurityGroups': ['sg-f2234gf6', 'sg-cwfccs17'],
+                'DBSecurityGroups': ['sg-f2234gf6'],
                 'DBSubnetGroup': {
                     'DBSubnetGroupDescription': 'Created from the RDS '
                     'Management Console',
@@ -2084,7 +2526,14 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 'description': 'This is in the description of the instance',
                 'region': 'us-east-1',
                 'to_destroy': 'tbd',
+                'monitored': 'true',
                 'environment': 'production',
+                'VpcSecurityGroups': [
+                    {
+                        'Status': 'active',
+                        'VpcSecurityGroupId': 'sg-f23le20g'
+                    }
+                ],
             }
         }
         self.resource = RDS(self.raw)
@@ -2098,6 +2547,12 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
             'rds-name.us-east-1.rds.amazonaws.com:5521',
         )
 
+    def test_vpc_property_works_as_expected(self):
+        self.assertEqual(self.resource.vpc, 'vpc-v2dcp2jh')
+
+    def test_engine_property_works_as_expected(self):
+        self.assertEqual(self.resource.engine, 'mariadb 1.2')
+
     def test_print_resource_information(self):
         self.resource.print()
         print_calls = (
@@ -2105,12 +2560,30 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
             call('  Name: resource_name'),
             call('  Endpoint: rds-name.us-east-1.rds.amazonaws.com:5521'),
             call('  Type: c4.4xlarge'),
+            call('  Engine: mariadb 1.2'),
             call('  Description: This is in the description of the instance'),
+            call('  SecurityGroups:'),
+            call('    - sg-f2234gf6'),
+            call('    - sg-f23le20g')
         )
 
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
-        self.assertEqual(5, len(self.print.mock_calls))
+        self.assertEqual(9, len(self.print.mock_calls))
+
+    def test_security_groups_property_gets_dbsecurity_groups(self):
+        self.resource.raw['DBSecurityGroups'] = ['sg-yyyyyyyy']
+        self.resource.raw['VpcSecurityGroups'] = {}
+
+        self.assertEqual(self.resource.security_groups, ['sg-yyyyyyyy'])
+
+    def test_security_groups_property_gets_vpc_security_groups(self):
+        self.resource.raw['DBSecurityGroups'] = []
+
+        self.assertEqual(self.resource.security_groups, ['sg-f23le20g'])
+
+    def test_search_uses_vpc(self):
+        self.assertTrue(self.resource.search('vpc-v2d.*'))
 
 
 class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
@@ -2135,6 +2608,7 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
                 'description': 'This is the description',
                 'to_destroy': 'tbd',
                 'state': 'active',
+                'monitored': 'true',
                 'hosted_zone': {
                     'id': '/hostedzone/hosted_zone_id',
                     'private': False,
@@ -2249,6 +2723,22 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
 
     def test_search_resource_by_type_insensitive(self):
         self.assertTrue(self.resource.search('cname'))
+
+    def test_monitored_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop('monitored')
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw['monitored'] = 'tbd'
+        self.assertEqual(self.resource.monitored, 'unknown')
+
+    def test_monitored_property_works_as_expected_if_set_to_true(self):
+        self.resource.raw['monitored'] = True
+        self.assertEqual(self.resource.monitored, True)
+
+    def test_monitored_property_works_as_expected_if_set_to_false(self):
+        self.resource.raw['monitored'] = False
+        self.assertEqual(self.resource.monitored, False)
 
 
 class TestS3(ClinvGenericResourceTests, unittest.TestCase):
@@ -2459,3 +2949,451 @@ class TestIAMUser(ClinvGenericResourceTests, unittest.TestCase):
         for print_call in print_calls:
             self.assertIn(print_call, self.print.mock_calls)
         self.assertEqual(5, len(self.print.mock_calls))
+
+
+class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        self.id = 'sg-xxxxxxxx'
+
+        super().setUp()
+
+        self.raw = {
+            'sg-xxxxxxxx': {
+                'state': 'active',
+                'to_destroy': 'tbd',
+                'description': 'This is the description',
+                'GroupName': 'resource_name',
+                'region': 'us-east-1',
+                'IpPermissions': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    }
+                ],
+                'IpPermissionsEgress': [],
+                'ingress': [
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'udp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': -1,
+                        'IpProtocol': 'icmp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': -1,
+                        'UserIdGroupPairs': [],
+                    },
+                    {
+                        'FromPort': 0,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [],
+                        'Ipv6Ranges': [],
+                        'PrefixListIds': [],
+                        'ToPort': 65535,
+                        'UserIdGroupPairs': [],
+                    }
+                ],
+                'egress': [],
+                'VpcId': 'vpc-xxxxxxxxxxx',
+            },
+        }
+        self.resource = SecurityGroup(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_is_synchronized_returns_true_if_is_synchronized(self):
+        self.assertTrue(self.resource.is_synchronized())
+
+    def test_is_synchronized_returns_false_if_ingress_not_in_sync(self):
+        self.resource.raw['ingress'].pop()
+        self.assertFalse(self.resource.is_synchronized())
+
+    def test_is_synchronized_returns_false_if_egress_not_in_sync(self):
+        self.resource.raw['egress'] = self.resource.raw['ingress']
+        self.assertFalse(self.resource.is_synchronized())
+
+    def test_print_security_rule_prints_tcp_with_range_of_ports(self):
+        security_rule = {
+            'FromPort': 0,
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 65535,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    TCP: 0-65535')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_prints_tcp_with_one_port(self):
+        security_rule = {
+            'FromPort': 443,
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 443,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    TCP: 443')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_prints_icmp_without_ip_range(self):
+        security_rule = {
+            'FromPort': -1,
+            'IpProtocol': 'icmp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': -1,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    ICMP: ')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_supports_all_traffic(self):
+        security_rule = {
+            'IpProtocol': '-1',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [call('    All Traffic: ')],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_supports_ipranges(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [
+                {
+                    'CidrIp': '0.0.0.0/0',
+                }
+            ],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [
+                call('    TCP: 443'),
+                call('      - 0.0.0.0/0'),
+            ],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_supports_security_group_sources(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+            'UserIdGroupPairs': [
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                }
+            ],
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [
+                call('    TCP: 443'),
+                call('      - sg-yyyyyyyy'),
+            ],
+            self.print.mock_calls
+        )
+
+    def test_print_security_rule_supports_sg_sources_with_description(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+            'UserIdGroupPairs': [
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                    'Description': 'sg description',
+                }
+            ],
+        }
+
+        self.resource._print_security_rule(security_rule)
+
+        self.assertEqual(
+            [
+                call('    TCP: 443'),
+                call('      - sg-yyyyyyyy: sg description'),
+            ],
+            self.print.mock_calls
+        )
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('sg-xxxxxxxx'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Synchronized: True'),
+            call('  Destroy: tbd'),
+            call('  Region: us-east-1'),
+            call('  VPC: vpc-xxxxxxxxxxx'),
+            call('  Ingress:'),
+            call('    UDP: 0-65535'),
+            call('    ICMP: '),
+            call('    TCP: 0-65535'),
+            call('  Egress:'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(13, len(self.print.mock_calls))
+
+    def test_is_related_identifies_source_cidrs(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [
+                {
+                    'CidrIp': '0.0.0.0/0',
+                }
+            ],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('0.0.0.0.*', security_rule)
+        )
+
+    def test_is_related_identifies_source_ports(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('443', security_rule)
+        )
+
+    def test_is_related_identifies_source_range_of_ports(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 441,
+            'ToPort': 445,
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('443', security_rule)
+        )
+
+    def test_is_related_identifies__security_group_sources(self):
+        security_rule = {
+            'IpProtocol': 'tcp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'FromPort': 443,
+            'ToPort': 443,
+            'UserIdGroupPairs': [
+                {
+                    'GroupId': 'sg-yyyyyyyy',
+                    'UserId': 'zzzzzzzzzzzz',
+                }
+            ],
+        }
+
+        self.assertTrue(
+            self.resource._is_security_rule_related('sg-yyy.*', security_rule)
+        )
+
+    @patch('clinv.sources.aws.SecurityGroup._is_security_rule_related')
+    def test_is_related_uses_is_related_security_group_on_ingress(
+        self,
+        relatedMock,
+    ):
+
+        security_rule = {
+            'FromPort': 0,
+            'IpProtocol': 'udp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 65535,
+        }
+
+        self.resource.raw['IpPermissions'] = [security_rule]
+        self.resource.is_related('.*')
+        self.assertEqual(
+            relatedMock.assert_called_with('.*', security_rule),
+            None,
+        )
+
+    @patch('clinv.sources.aws.SecurityGroup._is_security_rule_related')
+    def test_is_related_uses_is_related_security_group_on_egress(
+        self,
+        relatedMock,
+    ):
+
+        security_rule = {
+            'FromPort': 0,
+            'IpProtocol': 'udp',
+            'IpRanges': [],
+            'Ipv6Ranges': [],
+            'PrefixListIds': [],
+            'ToPort': 65535,
+        }
+
+        self.resource.raw['IpPermissions'] = []
+        self.resource.raw['IpPermissionsEgress'] = [security_rule]
+        self.resource.is_related('.*')
+        self.assertEqual(
+            relatedMock.assert_called_with('.*', security_rule),
+            None,
+        )
+
+    @patch('clinv.sources.aws.SecurityGroup.is_related')
+    def test_search_uses_is_related(self, relatedMock):
+
+        self.resource.search('sg-yyyyyyyy')
+        self.assertEqual(
+            relatedMock.assert_called_with('sg-yyyyyyyy'),
+            None,
+        )
+
+    def test_vpc_returns_expected_value(self):
+        self.assertEqual(self.resource.vpc, self.resource.raw['VpcId'])
+
+    def test_vpc_returns_none_if_no_vpc(self):
+        self.resource.raw.pop('VpcId', None)
+        self.assertEqual(self.resource.vpc, None)
+
+    def test_search_uses_vpc(self):
+        self.assertTrue(self.resource.search('vpc-xx.*'))
+
+    def test_search_doesnt_fail_if_vpc_is_none(self):
+        self.resource.raw.pop('VpcId', None)
+        self.assertFalse(self.resource.search('vpc-xx.*'))
+
+
+class TestVPC(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        self.id = 'vpc-xxxxxxxxxxxx'
+
+        super().setUp()
+
+        self.raw = {
+            'vpc-xxxxxxxxxxxx': {
+                'CidrBlock': '172.16.0.0/16',
+                'DhcpOptionsId': 'dopt-xxxxxxxx',
+                'InstanceTenancy': 'default',
+                'IsDefault': False,
+                'region': 'us-east-1',
+                'State': 'available',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'resource_name'
+                    }
+                ],
+                'state': 'active',
+                'to_destroy': 'tbd',
+                'description': 'This is the description',
+            }
+        }
+        self.resource = VPC(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_instance_name_return_null_if_empty(self):
+        self.raw['vpc-xxxxxxxxxxxx'].pop('Tags', None)
+        self.assertEqual(self.resource.name, 'none')
+
+    def test_cidr_returns_expected_value(self):
+        self.assertEqual(self.resource.cidr, self.resource.raw['CidrBlock'])
+
+    def test_print_resource_information(self):
+        self.resource.print()
+        print_calls = (
+            call('vpc-xxxxxxxxxxxx'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Destroy: tbd'),
+            call('  Region: us-east-1'),
+            call('  CIDR: 172.16.0.0/16'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(7, len(self.print.mock_calls))

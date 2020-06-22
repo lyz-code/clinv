@@ -1,4 +1,38 @@
 
+0.7.0 / 2020-04-29
+==================
+
+  New features:
+
+  * Add SecurityGroup support
+  * Add VPC support
+  * Search by security group in the EC2
+  * Check for CIDR, port, and security groups with is_related and search methods
+  * Test VPC security groups in RDS instances
+  * Search in EC2 RDS and Securitygroups by VPC
+  * Add RDS engine information at print
+  * Print security groups in RDS information
+  * Added service dependencies to services
+  * Created Active report
+  * Created Unused report
+
+  Fixes:
+
+  * Refactor code to prune_dictionary abstract class method
+  * Added _match_dict method to ClinvGenericResource and Improved EC2 security group print support.
+  * Added region to the EC2 print report
+  * Improved security groups search on RDS
+
+
+0.6.2 / 2020-04-06
+==================
+
+  * Deprecate python 3.5
+  * Updated requirements
+  * Small fixes on the monitored repo
+  * Add first version of the MonitoredReport
+  * Unassigned reports don't show terminated resources
+
 0.6.1 / 2019-11-27
 ==================
 

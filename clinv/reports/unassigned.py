@@ -35,6 +35,8 @@ class UnassignedReport(ClinvReport):
             resources that are not associated to any project.
         _unassigned_informations: Do aggregation of data to print the
             informations resources that are not associated to any project.
+        _unassigned_security_groups: Do aggregation of data to print the
+            security_groups resources that are not associated to any instance.
 
     Public attributes:
         inv (Inventory): Clinv inventory.
@@ -55,6 +57,7 @@ class UnassignedReport(ClinvReport):
                     'rds',
                     's3',
                     'iam_groups',
+                    'vpc',
                 ]
 
         Returns:
@@ -161,7 +164,8 @@ class UnassignedReport(ClinvReport):
 
         unassigned_resources = []
         for resource_id, resource in sorted(self.inv[resource_type].items()):
-            if resource_id not in all_assigned_resources:
+            if resource_id not in all_assigned_resources and \
+                    resource.state != 'terminated':
                 unassigned_resources.append(resource)
         self.short_print_resources(unassigned_resources)
 
@@ -230,6 +234,46 @@ class UnassignedReport(ClinvReport):
 
         self._unassigned_aws_resource('iam_groups')
 
+    def _unassigned_security_groups(self):
+        """
+        Do aggregation of data to print the security_group resources that are
+        not being imported to the inventory.
+
+        This method tests if the `state` property is different than active or
+        terminated. That's the default value of the property, so it means that
+        the resource has not been verified by a human.
+
+        I've thought of adding a `security_groups` key under the `aws` one of
+        the services, but I feel it would add a lot of work when adding new
+        services without giving too much value.
+
+        The policy enforcement of the security groups should be done through
+        the `is_synchronized` methods.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        unassigned_resources = []
+
+        for security_group_id, security_group in \
+                self.inv['security_groups'].items():
+            if security_group.state not in ['active', 'terminated']:
+                unassigned_resources.append(security_group)
+
+        self.short_print_resources(unassigned_resources)
+
+    def _unassigned_vpc(self):
+        """
+        Do aggregation of data to print the vpc resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        self._unassigned_aws_resource('vpc')
+
     def output(self, resource_type):
         """
         Method to print the list of unassigned Clinv resources
@@ -246,6 +290,7 @@ class UnassignedReport(ClinvReport):
                     'informations',
                     'people',
                     'projects',
+                    'security_groups',
                 ], if it's set to 'all' it will test all kind of resources
 
         Returns:
@@ -271,21 +316,9 @@ class UnassignedReport(ClinvReport):
             self._unassigned_iam_groups()
             self.log.info('Unassigned Informations')
             self._unassigned_informations()
-        elif resource_type == 'ec2':
-            self._unassigned_ec2()
-        elif resource_type == 'rds':
-            self._unassigned_rds()
-        elif resource_type == 'route53':
-            self._unassigned_route53()
-        elif resource_type == 's3':
-            self._unassigned_s3()
-        elif resource_type == 'services':
-            self._unassigned_services()
-        elif resource_type == 'people':
-            self._unassigned_people()
-        elif resource_type == 'iam_users':
-            self._unassigned_iam_users()
-        elif resource_type == 'iam_groups':
-            self._unassigned_iam_groups()
-        elif resource_type == 'informations':
-            self._unassigned_informations()
+            self.log.info('Unassigned Security Groups')
+            self._unassigned_security_groups()
+            self.log.info('Unassigned VPC')
+            self._unassigned_vpc()
+        else:
+            self.__getattribute__('_unassigned_{}'.format(resource_type))()

@@ -53,6 +53,20 @@ class ClinvSourceBaseTestClass(object):
     def test_id_property_works_as_expected(self):
         self.assertEqual(type(self.src.id), str)
 
+    def test_prune_dictionary_removes_keys(self):
+        dictionary = {'a': 'b', 'c': 'd'}
+        self.assertEqual(
+            self.src.prune_dictionary(dictionary, 'a'),
+            {'c': 'd'}
+        )
+
+    def test_prune_dictionary_doesnt_fail_if_key_doesnt_exist(self):
+        dictionary = {'a': 'b', 'c': 'd'}
+        self.assertEqual(
+            self.src.prune_dictionary(dictionary, 'f'),
+            dictionary
+        )
+
 
 class ClinvGenericResourceTests(object):
     '''
@@ -214,3 +228,18 @@ class ClinvGenericResourceTests(object):
 
     def test_match_list_returns_false_if_no_match(self):
         self.assertFalse(self.resource._match_list('a.c', ['0', '1']))
+
+    def test_match_dict_detects_regular_expression_in_key(self):
+        self.assertTrue(self.resource._match_dict('a.c', {'abcd': '1'}))
+
+    def test_match_dict_is_case_insensitive_in_key(self):
+        self.assertTrue(self.resource._match_dict('a.c', {'AbCd': '1'}))
+
+    def test_match_dict_detects_regular_expression_in_value(self):
+        self.assertTrue(self.resource._match_dict('a.c', {'1': 'abcd'}))
+
+    def test_match_dict_is_case_insensitive_in_value(self):
+        self.assertTrue(self.resource._match_dict('a.c', {'1': 'AbCd'}))
+
+    def test_match_dict_returns_false_if_no_match_in_key_and_value(self):
+        self.assertFalse(self.resource._match_dict('a.c', {'0': '1'}))
