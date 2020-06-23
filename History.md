@@ -1,4 +1,17 @@
 
+0.8.0 / 2020-06-23
+==================
+
+  New features:
+
+  * Added ASG support
+
+  Fixes:
+
+  * Upgrade requirements
+  * Improve installation method
+  * Improve logging definition
+
 0.7.0 / 2020-04-29
 ==================
 
