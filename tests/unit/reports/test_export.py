@@ -1,6 +1,6 @@
+from . import ClinvReportBaseTestClass
 from clinv.reports.export import ExportReport
 from collections import OrderedDict
-from tests.reports import ClinvReportBaseTestClass
 from unittest.mock import patch
 import unittest
 

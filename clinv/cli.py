@@ -37,6 +37,7 @@ def load_parser():
         help='String used to search',
         choices=[
             'all',
+            'asg',
             'ec2',
             'iam_groups',
             'iam_users',
@@ -58,6 +59,7 @@ def load_parser():
         type=str,
         help='String used to search',
         choices=[
+            'asg',
             'ec2',
             'rds',
             'services',
@@ -82,6 +84,7 @@ def load_parser():
         help='String used to search',
         default=None,
         choices=[
+            'asg',
             'ec2',
             'rds',
             'services',
@@ -141,6 +144,6 @@ def load_logger():
     logging.addLevelName(logging.DEBUG, "[\033[32mDEBUG\033[0m]")
     logging.addLevelName(logging.WARNING, "[\033[33mWARNING\033[0m]")
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.WARNING,
         format="  %(levelname)s %(message)s"
     )

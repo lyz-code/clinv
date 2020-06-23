@@ -160,7 +160,10 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_patch = patch('clinv.inventory.Route53src', autospect=True)
+        self.source_patch = patch(
+            'clinv.inventory.aws.Route53src',
+            autospect=True
+        )
         self.source = self.source_patch.start()
         self.source.return_value.id = 'source_id'
         self.source_plugins = [self.source]
@@ -170,6 +173,7 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
+        self.source_patch.stop()
 
     def test_load_plugins_creates_expected_list_if_user_data(self):
         self.inv.user_data = {'source_id': {'user': 'data'}}

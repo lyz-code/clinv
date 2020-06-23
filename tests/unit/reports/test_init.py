@@ -1,5 +1,5 @@
+from . import ClinvReportBaseTestClass
 from clinv.reports import ClinvReport
-from tests.reports import ClinvReportBaseTestClass
 import unittest
 
 

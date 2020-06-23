@@ -1,6 +1,6 @@
-from tests.reports import ClinvReportBaseTestClass
+from . import ClinvReportBaseTestClass
 from clinv.reports.unassigned import UnassignedReport
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 import unittest
 
 
@@ -20,6 +20,22 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report._unassigned_ec2()
 
         self.assertTrue(self.ec2instance.short_print.called)
+
+    def test_unassigned_ec2_doesnt_print_asg_instances(self):
+        type(self.report.inv['asg']['asg-resource_name']).instances = \
+            PropertyMock(
+                return_value={
+                    'i-023desldk394995ss': {}
+                }
+            )
+        self.report._unassigned_ec2()
+
+        self.assertFalse(self.ec2instance.short_print.called)
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_ec2')
+    def test_general_unassigned_can_use_ec2_resource(self, unassignMock):
+        self.report.output('ec2')
+        self.assertTrue(unassignMock.called)
 
     def test_unassigned_rds_prints_instances(self):
         self.rdsinstance.id = 'db-YDFL2'
@@ -112,11 +128,6 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
             ),
             None,
         )
-
-    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_ec2')
-    def test_general_unassigned_can_use_ec2_resource(self, unassignMock):
-        self.report.output('ec2')
-        self.assertTrue(unassignMock.called)
 
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
     def test_general_unassigned_can_use_rds_resource(self, unassignMock):
@@ -291,6 +302,16 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.report.output('vpc')
         self.assertTrue(unassignMock.called)
 
+    @patch('clinv.reports.unassigned.UnassignedReport.short_print_resources')
+    def test_unassigned_asg_prints_instances(self, printMock):
+        self.report._unassigned_asg()
+        self.assertTrue(self.asg.short_print.called)
+
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_asg')
+    def test_general_unassigned_can_use_asg_resource(self, unassignMock):
+        self.report.output('asg')
+        self.assertTrue(unassignMock.called)
+
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_s3')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_route53')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_rds')
@@ -299,6 +320,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_people')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_users')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_iam_groups')
+    @patch('clinv.reports.unassigned.UnassignedReport._unassigned_asg')
     @patch('clinv.reports.unassigned.UnassignedReport._unassigned_vpc')
     @patch(
         'clinv.reports.unassigned.UnassignedReport._unassigned_informations'
@@ -318,6 +340,7 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         route53Mock,
         s3Mock,
         security_groupMock,
+        asgMock,
         vpcMock,
     ):
         self.report.output('all')
@@ -332,3 +355,4 @@ class TestUnassignedReport(ClinvReportBaseTestClass, unittest.TestCase):
         self.assertTrue(s3Mock.called)
         self.assertTrue(security_groupMock.called)
         self.assertTrue(vpcMock.called)
+        self.assertTrue(asgMock.called)

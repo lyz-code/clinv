@@ -1,24 +1,8 @@
-from clinv.sources.aws import \
-    EC2src, \
-    IAMUsersrc,\
-    IAMGroupsrc, \
-    RDSsrc, \
-    Route53src, \
-    S3src, \
-    SecurityGroupsrc, \
-    VPCsrc
-from clinv.sources.aws import \
-    EC2, \
-    IAMUser, \
-    IAMGroup, \
-    RDS, \
-    Route53, \
-    S3, \
-    SecurityGroup, \
-    VPC
+from clinv.sources import aws
 from dateutil.tz import tzutc
 from unittest.mock import patch, call, PropertyMock
-from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
+from . import ClinvSourceBaseTestClass, ClinvGenericResourceTests
+
 import datetime
 import unittest
 
@@ -57,6 +41,243 @@ class AWSSourceBaseTestClass(ClinvSourceBaseTestClass):
         self.assertEqual(self.src.regions, ['us-east-1', 'eu-west-1'])
 
 
+class TestASGSource(AWSSourceBaseTestClass, unittest.TestCase):
+    '''
+    Test the ASG implementation in the inventory.
+    '''
+
+    def setUp(self):
+        super().setUp()
+        self.source_obj = aws.ASGsrc
+
+        # Initialize object to test
+        source_data = {}
+        user_data = {}
+        self.src = self.source_obj(source_data, user_data)
+
+        # What data we want to aggregate to our inventory
+        self.desired_source_data = {
+            'asg-autoscaler_name': {
+                'AutoScalingGroupARN': 'arn:aws:autoscaler_arn',
+                'AutoScalingGroupName': 'autoscaler_name',
+                'AvailabilityZones': ['us-east-1a'],
+                'CreatedTime': datetime.datetime(
+                    2015, 10, 10, 10, 36, 41, 398000, tzinfo=tzutc()
+                ),
+                'DesiredCapacity': 2,
+                'HealthCheckGracePeriod': 300,
+                'HealthCheckType': 'EC2',
+                'Instances': [
+                    {
+                        'AvailabilityZone': 'eu-east-1a',
+                        'HealthStatus': 'Healthy',
+                        'InstanceId': 'i-xxxxxxxxxxxxxxxx1',
+                        'LaunchConfigurationName': 'lc_name',
+                        'LifecycleState': 'InService',
+                        'ProtectedFromScaleIn': False
+                    },
+                    {
+                        'AvailabilityZone': 'eu-east-1a',
+                        'HealthStatus': 'Healthy',
+                        'InstanceId': 'i-xxxxxxxxxxxxxxxx2',
+                        'LaunchConfigurationName': 'lc_name',
+                        'LifecycleState': 'InService',
+                        'ProtectedFromScaleIn': False
+                    },
+                ],
+                'LaunchConfigurationName': 'lc_name',
+                'LoadBalancerNames': [],
+                'MaxSize': 10,
+                'MinSize': 2,
+                'ServiceLinkedRoleARN': 'service_role_arn',
+                'TargetGroupARNs': [
+                    'target_group_arn'
+                ],
+                'VPCZoneIdentifier': 'subnet-xxxxxxxx',
+                'region': 'us-east-1',
+            },
+        }
+        self.desired_user_data = {
+            'asg-autoscaler_name': {
+                'state': 'tbd',
+                'to_destroy': 'tbd',
+                'description': 'tbd',
+            }
+        }
+
+        self.src.source_data = self.desired_source_data
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_generate_source_data_creates_expected_source_data_attrib(self):
+        # Mock here the call to your provider
+        boto_mock = self.boto.client.return_value
+
+        # Simulate only one region
+        boto_mock.describe_regions.return_value = {
+            'Regions': [
+                {
+                    'RegionName': 'us-east-1'
+                }
+            ]
+        }
+        boto_mock.describe_auto_scaling_groups.return_value = {
+            'AutoScalingGroups': [
+                {
+                    'AutoScalingGroupARN': 'arn:aws:autoscaler_arn',
+                    'AutoScalingGroupName': 'autoscaler_name',
+                    'AvailabilityZones': ['us-east-1a'],
+                    'CreatedTime': datetime.datetime(
+                        2015, 10, 10, 10, 36, 41, 398000, tzinfo=tzutc()
+                    ),
+                    'DefaultCooldown': 300,
+                    'DesiredCapacity': 2,
+                    'EnabledMetrics': [{'Granularity': '1Minute',
+                                        'Metric': 'GroupInServiceInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupDesiredCapacity'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupPendingInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupTerminatingInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupTotalInstances'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupMinSize'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupMaxSize'},
+                                       {'Granularity': '1Minute',
+                                        'Metric': 'GroupStandbyInstances'}],
+                    'HealthCheckGracePeriod': 300,
+                    'HealthCheckType': 'EC2',
+                    'Instances': [
+                        {
+                            'AvailabilityZone': 'eu-east-1a',
+                            'HealthStatus': 'Healthy',
+                            'InstanceId': 'i-xxxxxxxxxxxxxxxx1',
+                            'LaunchConfigurationName': 'lc_name',
+                            'LifecycleState': 'InService',
+                            'ProtectedFromScaleIn': False
+                        },
+                        {
+                            'AvailabilityZone': 'eu-east-1a',
+                            'HealthStatus': 'Healthy',
+                            'InstanceId': 'i-xxxxxxxxxxxxxxxx2',
+                            'LaunchConfigurationName': 'lc_name',
+                            'LifecycleState': 'InService',
+                            'ProtectedFromScaleIn': False
+                        },
+                    ],
+                    'LaunchConfigurationName': 'lc_name',
+                    'LoadBalancerNames': [],
+                    'MaxSize': 10,
+                    'MinSize': 2,
+                    'NewInstancesProtectedFromScaleIn': False,
+                    'ServiceLinkedRoleARN': 'service_role_arn',
+                    'SuspendedProcesses': [],
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'PropagateAtLaunch': True,
+                            'ResourceId': 'austoscaler_name',
+                            'ResourceType': 'auto-scaling-group',
+                            'Value': 'autoscaler_name'
+                        },
+                    ],
+                    'TargetGroupARNs': [
+                        'target_group_arn'
+                    ],
+                    'TerminationPolicies': ['Default'],
+                    'VPCZoneIdentifier': 'subnet-xxxxxxxx',
+                },
+            ],
+            'ResponseMetadata': {
+                'HTTPHeaders': {
+                    'content-length': '11839',
+                    'content-type': 'text/xml',
+                    'date': 'Tue, 03 Dec 2019 13:36:12 GMT',
+                    'vary': 'Accept-Encoding',
+                    'x-amzn-requestid': 'df092cb4-15d1-11ea-8543-9febaca0a9c9'
+                },
+                'HTTPStatusCode': 200,
+                'RequestId': 'df092cb4-15d1-11ea-8543-9febaca0a9c9',
+                'RetryAttempts': 0
+            },
+        }
+
+        self.src.source_data = {}
+
+        generated_source_data = self.src.generate_source_data()
+
+        self.assertEqual(
+            self.src.source_data,
+            self.desired_source_data,
+        )
+        self.assertEqual(
+            generated_source_data,
+            self.desired_source_data,
+        )
+
+    def test_generate_user_data_creates_expected_user_data_attrib(self):
+        generated_user_data = self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            self.desired_user_data,
+        )
+        self.assertEqual(
+            generated_user_data,
+            self.desired_user_data,
+        )
+
+    def test_generate_user_data_doesnt_loose_existing_data(self):
+        user_key = [key for key in self.desired_user_data.keys()][0]
+        desired_user_data = {user_key: {}}
+        self.src.user_data = desired_user_data
+
+        self.src.generate_user_data()
+
+        self.assertEqual(
+            self.src.user_data,
+            desired_user_data,
+        )
+
+    def test_generate_inventory_return_empty_dict_if_no_data(self):
+        self.src.source_data = {}
+        self.assertEqual(self.src.generate_inventory(), {})
+
+    @patch('clinv.sources.aws.ASG')
+    def test_generate_inventory_creates_expected_dictionary(
+        self,
+        resource_mock
+    ):
+        resource_id = 'asg-autoscaler_name'
+        self.src.user_data = self.desired_user_data
+
+        desired_mock_input = {
+            **self.src.user_data[resource_id],
+            **self.src.source_data[resource_id],
+        }
+
+        desired_inventory = self.src.generate_inventory()
+        self.assertEqual(
+            resource_mock.assert_called_with(
+                {
+                    resource_id: desired_mock_input
+                },
+            ),
+            None,
+        )
+
+        self.assertEqual(
+            desired_inventory,
+            {
+                resource_id: resource_mock.return_value
+            },
+        )
+
+
 class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
     '''
     Test the EC2 implementation in the inventory.
@@ -64,7 +285,7 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = EC2src
+        self.source_obj = aws.EC2src
 
         # Initialize object to test
         source_data = {}
@@ -380,7 +601,7 @@ class TestIAMUserSource(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = IAMUsersrc
+        self.source_obj = aws.IAMUsersrc
 
         # Initialize object to test
         source_data = {}
@@ -514,7 +735,7 @@ class TestIAMGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = IAMGroupsrc
+        self.source_obj = aws.IAMGroupsrc
 
         # Initialize object to test
         source_data = {}
@@ -698,7 +919,7 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = RDSsrc
+        self.source_obj = aws.RDSsrc
 
         # Initialize object to test
         source_data = {}
@@ -962,7 +1183,7 @@ class TestRoute53Source(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = Route53src
+        self.source_obj = aws.Route53src
 
         # Initialize object to test
         source_data = {}
@@ -1093,12 +1314,12 @@ class TestRoute53SourceFetch(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = Route53src
+        self.source_obj = aws.Route53src
 
         # Initialize object to test
         source_data = {}
         user_data = {}
-        self.src = Route53src(source_data, user_data)
+        self.src = aws.Route53src(source_data, user_data)
 
         self.boto_client = self.boto.client.return_value
 
@@ -1349,7 +1570,7 @@ class TestS3Source(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.source_obj = S3src
+        self.source_obj = aws.S3src
 
         # Initialize object to test
         source_data = {}
@@ -1555,7 +1776,7 @@ class TestSecurityGroupSource(AWSSourceBaseTestClass, unittest.TestCase):
 
     def setUp(self):
         self.module_name = 'aws'
-        self.source_obj = SecurityGroupsrc
+        self.source_obj = aws.SecurityGroupsrc
         super().setUp()
 
         # Initialize object to test
@@ -1779,7 +2000,7 @@ class TestVPCSource(AWSSourceBaseTestClass, unittest.TestCase):
     def setUp(self):
         self.module_name = 'aws'
         super().setUp()
-        self.source_obj = VPCsrc
+        self.source_obj = aws.VPCsrc
 
         # Initialize object to test
         source_data = {}
@@ -1983,6 +2204,142 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
         self.assertEqual(self.resource.monitored, False)
 
 
+class TestASG(ClinvGenericResourceTests, unittest.TestCase):
+    def setUp(self):
+        self.module_name = 'aws'
+        self.id = 'asg-resource_name'
+
+        super().setUp()
+
+        self.raw = {
+            'asg-resource_name': {
+                'AutoScalingGroupARN': 'arn:aws:autoscaler_arn',
+                'AutoScalingGroupName': 'resource_name',
+                'AvailabilityZones': ['us-east-1a', 'us-east-1b'],
+                'CreatedTime': datetime.datetime(
+                    2015, 10, 10, 10, 36, 41, 398000, tzinfo=tzutc()
+                ),
+                'DesiredCapacity': 2,
+                'HealthCheckGracePeriod': 300,
+                'HealthCheckType': 'EC2',
+                'Instances': [
+                    {
+                        'AvailabilityZone': 'eu-east-1a',
+                        'HealthStatus': 'Healthy',
+                        'InstanceId': 'i-xxxxxxxxxxxxxxxx1',
+                        'LaunchConfigurationName': 'lc_name',
+                        'LifecycleState': 'InService',
+                        'ProtectedFromScaleIn': False
+                    },
+                    {
+                        'AvailabilityZone': 'eu-east-1a',
+                        'HealthStatus': 'Healthy',
+                        'InstanceId': 'i-xxxxxxxxxxxxxxxx2',
+                        'LaunchConfigurationName': 'lc_name',
+                        'LifecycleState': 'InService',
+                        'ProtectedFromScaleIn': False
+                    },
+                ],
+                'LaunchConfigurationName': 'lc_name',
+                'LoadBalancerNames': [],
+                'MaxSize': 10,
+                'MinSize': 2,
+                'ServiceLinkedRoleARN': 'service_role_arn',
+                'TargetGroupARNs': [
+                    'target_group_arn'
+                ],
+                'VPCZoneIdentifier': 'subnet-xxxxxxxx',
+                'region': 'us-east-1',
+                'state': 'active',
+                'to_destroy': 'tbd',
+                'description': 'This is the description',
+            }
+        }
+        self.resource = aws.ASG(self.raw)
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_instances_returns_expected_dictionary(self):
+        self.assertEqual(
+            self.resource.instances,
+            {
+                'i-xxxxxxxxxxxxxxxx1': {
+                    'AvailabilityZone': 'eu-east-1a',
+                    'HealthStatus': 'Healthy',
+                    'LaunchConfigurationName': 'lc_name',
+                    'LifecycleState': 'InService',
+                    'ProtectedFromScaleIn': False
+                },
+                'i-xxxxxxxxxxxxxxxx2': {
+                    'AvailabilityZone': 'eu-east-1a',
+                    'HealthStatus': 'Healthy',
+                    'LaunchConfigurationName': 'lc_name',
+                    'LifecycleState': 'InService',
+                    'ProtectedFromScaleIn': False
+                },
+            }
+        )
+
+    def test_print_instances_prints_expected_information(self):
+        with patch('clinv.sources.aws.tabulate') as tabulateMock:
+            self.resource.print_instances()
+
+        # Status formats the data in a table
+        expected_headers = [
+            'Instance',
+            'Status',
+            'Zones',
+            'LaunchConfiguration',
+        ]
+        expected_data = [
+            [
+                'i-xxxxxxxxxxxxxxxx1',
+                'Healthy/InService',
+                'eu-east-1a',
+                'lc_name',
+            ],
+            [
+                'i-xxxxxxxxxxxxxxxx2',
+                'Healthy/InService',
+                'eu-east-1a',
+                'lc_name',
+            ],
+        ]
+        tabulateMock.assert_called_once_with(
+            expected_data,
+            headers=expected_headers,
+            tablefmt='simple',
+        )
+
+        self.assertEqual(
+            self.print.assert_called_once_with(tabulateMock.return_value),
+            None,
+        )
+
+    @patch('clinv.sources.aws.ASG.print_instances')
+    def test_print_resource_information(self, printinstancesMock):
+        self.resource.print()
+        print_calls = (
+            call('asg-resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Destroy: tbd'),
+            call('  Zones: us-east-1a, us-east-1b'),
+            call('  Launch Configuration: lc_name'),
+            call('  Healthcheck: EC2'),
+            call('  Capacity: 2'),
+            call('    Desired: 2'),
+            call('    Max: 10'),
+            call('    Min: 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(12, len(self.print.mock_calls))
+        self.assertTrue(printinstancesMock.called)
+
+
 class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -2117,7 +2474,7 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
                 'environment': 'tbd',
             }
         }
-        self.resource = EC2(self.raw)
+        self.resource = aws.EC2(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -2309,7 +2666,7 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 ],
             }
         }
-        self.resource = RDS(self.raw)
+        self.resource = aws.RDS(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -2389,7 +2746,7 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
                 },
             },
         }
-        self.resource = Route53(self.raw)
+        self.resource = aws.Route53(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -2444,7 +2801,7 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
                 },
             },
         }
-        self.resource = Route53(self.raw)
+        self.resource = aws.Route53(self.raw)
         self.assertEqual(self.resource.value, ['aliasdns.org'])
 
     def test_type_property_works_as_expected(self):
@@ -2566,7 +2923,7 @@ class TestS3(ClinvGenericResourceTests, unittest.TestCase):
                 'state': 'active',
             },
         }
-        self.resource = S3(self.raw)
+        self.resource = aws.S3(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -2622,7 +2979,7 @@ class TestIAMGroup(ClinvGenericResourceTests, unittest.TestCase):
                 ]
             },
         }
-        self.resource = IAMGroup(self.raw)
+        self.resource = aws.IAMGroup(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -2704,7 +3061,7 @@ class TestIAMUser(ClinvGenericResourceTests, unittest.TestCase):
                 'to_destroy': 'tbd',
             },
         }
-        self.resource = IAMUser(self.raw)
+        self.resource = aws.IAMUser(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -2801,7 +3158,7 @@ class TestSecurityGroup(ClinvGenericResourceTests, unittest.TestCase):
                 'VpcId': 'vpc-xxxxxxxxxxx',
             },
         }
-        self.resource = SecurityGroup(self.raw)
+        self.resource = aws.SecurityGroup(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -3143,7 +3500,7 @@ class TestVPC(ClinvGenericResourceTests, unittest.TestCase):
                 'description': 'This is the description',
             }
         }
-        self.resource = VPC(self.raw)
+        self.resource = aws.VPC(self.raw)
 
     def tearDown(self):
         super().tearDown()

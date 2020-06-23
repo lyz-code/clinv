@@ -146,8 +146,6 @@ class Test{{ class_name }}Source(ClinvSourceBaseTestClass, unittest.TestCase):
         )
 ```
 
-Import `{{ class_name}}src` on this file.
-
 ### Create the source class
 
 On `clinv/sources/` create your source class from this template. Substitute

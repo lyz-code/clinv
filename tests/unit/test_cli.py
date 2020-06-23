@@ -212,7 +212,7 @@ class TestLogger(unittest.TestCase):
         )
         self.assertEqual(
             self.logging.basicConfig.assert_called_with(
-                level=logging.INFO,
+                level=logging.WARNING,
                 format="  %(levelname)s %(message)s",
             ),
             None

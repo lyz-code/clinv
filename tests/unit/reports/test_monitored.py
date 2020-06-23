@@ -1,4 +1,4 @@
-from tests.reports import ClinvReportBaseTestClass
+from . import ClinvReportBaseTestClass
 from clinv.reports.monitored import MonitoredReport
 import unittest
 from unittest.mock import patch, MagicMock

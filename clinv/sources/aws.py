@@ -3,6 +3,7 @@ Module to store the AWS sources used by Clinv.
 
 Classes:
     AWSBasesrc: Class to gather the common methods for the AWS sources.
+    ASGsrc: Class to gather and manipulate the AWS ASG sources.
     EC2src: Class to gather and manipulate the AWS EC2 sources.
     IAMGroupsrc: Class to gather and manipulate the AWS IAM Groups sources.
     IAMUsersrc: Class to gather and manipulate the AWS IAM Users sources.
@@ -15,6 +16,8 @@ Classes:
 
     ClinvAWSResource: Abstract class to extend ClinvGenericResource, it gathers
         common method and attributes for the AWS resources.
+    EC2: Abstract class to extend ClinvAWSResource, it gathers method and
+        attributes for the ASG resources.
     EC2: Abstract class to extend ClinvAWSResource, it gathers method and
         attributes for the EC2 resources.
     IAMGroup: Abstract class to extend ClinvGenericResource, it gathers method
@@ -34,6 +37,7 @@ Classes:
 """
 
 from clinv.sources import ClinvSourcesrc, ClinvGenericResource
+from tabulate import tabulate
 import boto3
 import re
 
@@ -67,6 +71,119 @@ class AWSBasesrc(ClinvSourcesrc):
             region['RegionName']
             for region in ec2.describe_regions()['Regions']
         ]
+
+
+class ASGsrc(AWSBasesrc):
+    """
+    Class to gather and manipulate the ASG resources.
+
+    Parameters:
+        source_data (dict): ASGsrc compatible source_data
+        dictionary.
+        user_data (dict): ASGsrc compatible user_data dictionary.
+
+    Public methods:
+        generate_source_data: Generates the source_data attribute and returns
+            it.
+        generate_user_data: Generates the user_data attribute and returns it.
+        generate_inventory: Generates the inventory dictionary with the source
+            resource.
+
+    Public attributes:
+        id (str): ID of the resource.
+        source_data (dict): Aggregated source supplied data.
+        user_data (dict): Aggregated user supplied data.
+        log (logging object):
+    """
+
+    def __init__(self, source_data={}, user_data={}):
+        super().__init__(source_data, user_data)
+        self.id = 'asg'
+
+    def generate_source_data(self):
+        """
+        Do aggregation of the source data to generate the source dictionary
+        into self.source_data, with the following structure:
+            {
+            }
+
+        Returns:
+            dict: content of self.source_data.
+        """
+
+        self.log.info('Fetching ASG inventory')
+        raw_data = {}
+
+        for region in self.regions:
+            ec2 = boto3.client('autoscaling', region_name=region)
+            raw_data[region] = ec2.describe_auto_scaling_groups(
+            )['AutoScalingGroups']
+
+        prune_keys = [
+            'DefaultCooldown',
+            'EnabledMetrics',
+            'NewInstancesProtectedFromScaleIn',
+            'SuspendedProcesses',
+            'Tags',
+            'TerminationPolicies',
+        ]
+
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                asg_id = 'asg-{}'.format(resource['AutoScalingGroupName'])
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                self.source_data[asg_id] = resource
+
+        return self.source_data
+
+    def generate_user_data(self):
+        """
+        Do aggregation of the user data to populate the self.user_data
+        attribute with the user_data.yaml information or with default values.
+
+        It needs the information of self.source_data, therefore it should be
+        called after generate_source_data.
+
+        Returns:
+            dict: content of self.user_data.
+        """
+
+        for resource_id, resource in self.source_data.items():
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'description': 'tbd',
+                }
+
+        return self.user_data
+
+    def generate_inventory(self):
+        """
+        Do aggregation of the user and source data to populate the self.inv
+        attribute with ASG resources.
+
+        It needs the information of self.source_data and self.user_data,
+        therefore it should be called after generate_source_data and
+        generate_user_data.
+
+        Returns:
+            dict: ASG inventory with user and source data
+        """
+
+        inventory = {}
+
+        for resource_id, resource in self.source_data.items():
+            # Load the user_data into the source_data record
+            for key, value in self.user_data[resource_id].items():
+                resource[key] = value
+
+            inventory[resource_id] = ASG({resource_id: resource})
+
+        return inventory
 
 
 class EC2src(AWSBasesrc):
@@ -1364,6 +1481,129 @@ class ClinvAWSResource(ClinvGenericResource):
             monitored = 'unknown'
 
         return monitored
+
+
+class ASG(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the ASG resources.
+
+    Public methods:
+        print: Prints information of the resource.
+        print_instances: Prints information of the resource.
+
+    Public properties:
+        name: Returns the name of the record.
+        instances: Return information of the autoscaling instances.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def instances(self):
+        """
+        Gather information to show the autoscaling instances information. With
+        the following structure:
+            {
+                'ec2-id':{
+                    'AvailabilityZone': 'eu-east-1a',
+                    'HealthStatus': 'Healthy',
+                    'LaunchConfigurationName': 'lc_name',
+                    'LifecycleState': 'InService',
+                    'ProtectedFromScaleIn': False
+                }
+            }
+        Returns:
+            dict: Instances information
+        """
+
+        instances = {}
+
+        for instance in self._get_field('Instances'):
+            instance = instance.copy()
+            id = instance['InstanceId']
+            instance.pop('InstanceId')
+            instances[id] = instance
+        return instances
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('AutoScalingGroupName')
+
+    def print_instances(self):
+        """
+        Print instances information
+        """
+        headers = [
+            'Instance',
+            'Status',
+            'Zones',
+            'LaunchConfiguration',
+        ]
+        instances_data = []
+
+        for instance in self._get_field('Instances'):
+            instances_data.append([
+                instance['InstanceId'],
+                '{}/{}'.format(
+                    instance['HealthStatus'],
+                    instance['LifecycleState'],
+                ),
+                instance['AvailabilityZone'],
+                instance['LaunchConfigurationName'][:35]
+            ])
+
+        print(tabulate(instances_data, headers=headers, tablefmt='simple'))
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Zones: {}'.format(
+            ', '.join(self._get_field('AvailabilityZones'))
+        ))
+        print('  Launch Configuration: {}'.format(
+            self._get_field('LaunchConfigurationName')
+        ))
+        print('  Healthcheck: {}'.format(
+            self._get_field('HealthCheckType')
+        ))
+        print('  Capacity: {}'.format(
+            len(self._get_field('Instances'))
+        ))
+        print('    Desired: {}'.format(
+            self._get_field('DesiredCapacity')
+        ))
+        print('    Max: {}'.format(
+            self._get_field('MaxSize')
+        ))
+        print('    Min: {}'.format(
+            self._get_field('MinSize')
+        ))
+        self.print_instances()
 
 
 class EC2(ClinvAWSResource):

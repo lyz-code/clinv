@@ -27,36 +27,27 @@ Classes:
     Inventory: Class to gather and manipulate the inventory data.
 """
 
-from clinv.sources.aws import \
-    EC2src, \
-    IAMGroupsrc, \
-    IAMUsersrc, \
-    RDSsrc, \
-    Route53src, \
-    S3src, \
-    SecurityGroupsrc, \
-    VPCsrc
-
-from clinv.sources.risk_management import \
-    Informationsrc, Projectsrc, Servicesrc, Peoplesrc
+from clinv.sources import aws, risk_management
 from yaml import YAMLError
+
 import logging
 import os
 import yaml
 
 active_source_plugins = [
-    EC2src,
-    IAMGroupsrc,
-    IAMUsersrc,
-    Informationsrc,
-    Peoplesrc,
-    Projectsrc,
-    RDSsrc,
-    Route53src,
-    S3src,
-    SecurityGroupsrc,
-    Servicesrc,
-    VPCsrc,
+    aws.ASGsrc,
+    aws.EC2src,
+    aws.IAMGroupsrc,
+    aws.IAMUsersrc,
+    risk_management.Informationsrc,
+    risk_management.Peoplesrc,
+    risk_management.Projectsrc,
+    aws.RDSsrc,
+    aws.Route53src,
+    aws.S3src,
+    aws.SecurityGroupsrc,
+    risk_management.Servicesrc,
+    aws.VPCsrc,
 ]
 
 
@@ -97,8 +88,10 @@ class Inventory():
     """
 
     def __init__(self, inventory_dir, source_plugins=active_source_plugins):
-        self.log = logging.getLogger('main')
         self.inventory_dir = inventory_dir
+
+        self.log = logging.getLogger(__name__)
+        self.log.setLevel(logging.INFO)
         self._source_plugins = source_plugins
         self.source_data_path = os.path.join(
             self.inventory_dir,

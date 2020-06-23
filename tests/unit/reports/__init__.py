@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock
 
 
 class ClinvReportBaseTestClass(object):
@@ -19,6 +19,9 @@ class ClinvReportBaseTestClass(object):
     def setUp(self):
         self.inventory = Mock()
         self.inventory.inv = {
+            'asg': {
+                'asg-resource_name': PropertyMock()
+            },
             'ec2': {
                 'i-023desldk394995ss': Mock()
             },
@@ -56,6 +59,7 @@ class ClinvReportBaseTestClass(object):
                 'vpc-xxxxxxxx': Mock()
             },
         }
+        self.asg = self.inventory.inv['asg']['asg-resource_name']
         self.ec2instance = self.inventory.inv['ec2']['i-023desldk394995ss']
         self.s3instance = self.inventory.inv['s3']['s3_bucket_name']
         self.iamuser = self.inventory.inv['iam_users'][
