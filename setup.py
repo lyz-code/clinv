@@ -36,10 +36,10 @@ setup(
     },
     install_requires=[
         "argcomplete>=1.11.1",
-        "boto3>=1.13.24",
-        "pyexcel>=0.5.15",
-        "PyYAML>=5.3",
-        "requests>=2.23.0",
+        "boto3>=1.14.8",
+        "pyexcel>=0.6.2",
+        "PyYAML>=5.3.1",
+        "requests>=2.24.0",
         "tabulate>=0.8.7",
     ]
 )
