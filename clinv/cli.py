@@ -58,6 +58,7 @@ def load_parser():
         type=str,
         help='String used to search',
         choices=[
+            'asg',
             'ec2',
             'rds',
             'services',

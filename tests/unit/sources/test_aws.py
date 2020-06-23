@@ -57,7 +57,8 @@ class TestASGSource(AWSSourceBaseTestClass, unittest.TestCase):
 
         # What data we want to aggregate to our inventory
         self.desired_source_data = {
-            'arn:aws:autoscaler_arn': {
+            'asg-autoscaler_name': {
+                'AutoScalingGroupARN': 'arn:aws:autoscaler_arn',
                 'AutoScalingGroupName': 'autoscaler_name',
                 'AvailabilityZones': ['us-east-1a'],
                 'CreatedTime': datetime.datetime(
@@ -97,7 +98,7 @@ class TestASGSource(AWSSourceBaseTestClass, unittest.TestCase):
             },
         }
         self.desired_user_data = {
-            'arn:aws:autoscaler_arn': {
+            'asg-autoscaler_name': {
                 'state': 'tbd',
                 'to_destroy': 'tbd',
                 'description': 'tbd',
@@ -251,7 +252,7 @@ class TestASGSource(AWSSourceBaseTestClass, unittest.TestCase):
         self,
         resource_mock
     ):
-        resource_id = 'arn:aws:autoscaler_arn'
+        resource_id = 'asg-autoscaler_name'
         self.src.user_data = self.desired_user_data
 
         desired_mock_input = {
@@ -2206,12 +2207,13 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
 class TestASG(ClinvGenericResourceTests, unittest.TestCase):
     def setUp(self):
         self.module_name = 'aws'
-        self.id = 'arn:aws:autoscaler_arn'
+        self.id = 'asg-resource_name'
 
         super().setUp()
 
         self.raw = {
-            'arn:aws:autoscaler_arn': {
+            'asg-resource_name': {
+                'AutoScalingGroupARN': 'arn:aws:autoscaler_arn',
                 'AutoScalingGroupName': 'resource_name',
                 'AvailabilityZones': ['us-east-1a', 'us-east-1b'],
                 'CreatedTime': datetime.datetime(
@@ -2319,8 +2321,7 @@ class TestASG(ClinvGenericResourceTests, unittest.TestCase):
     def test_print_resource_information(self, printinstancesMock):
         self.resource.print()
         print_calls = (
-            call('arn:aws:autoscaler_arn'),
-            call('  Name: resource_name'),
+            call('asg-resource_name'),
             call('  Description: This is the description'),
             call('  State: active'),
             call('  Destroy: tbd'),
