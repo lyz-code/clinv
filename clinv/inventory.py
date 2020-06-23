@@ -88,8 +88,10 @@ class Inventory():
     """
 
     def __init__(self, inventory_dir, source_plugins=active_source_plugins):
-        self.log = logging.getLogger('main')
         self.inventory_dir = inventory_dir
+
+        self.log = logging.getLogger(__name__)
+        self.log.setLevel(logging.INFO)
         self._source_plugins = source_plugins
         self.source_data_path = os.path.join(
             self.inventory_dir,

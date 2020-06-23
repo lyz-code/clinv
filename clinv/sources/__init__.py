@@ -27,7 +27,8 @@ class ClinvSourcesrc():
     def __init__(self, source_data={}, user_data={}):
         self.source_data = source_data
         self.user_data = user_data
-        self.log = logging.getLogger('main')
+        self.log = logging.getLogger(__name__)
+        self.log.setLevel(logging.INFO)
 
     def prune_dictionary(self, dictionary, prune_keys):
         """

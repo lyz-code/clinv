@@ -45,7 +45,7 @@ class UnassignedReport(ClinvReport):
     def __init__(self, inventory):
         super().__init__(inventory)
 
-    def _unassigned_aws_resource(self, resource_type, exclude_ids=None):
+    def _unassigned_aws_resource(self, resource_type, exclude_ids=[]):
         """
         Do aggregation of data to print the resource_type resources that are
         not associated to any service.
@@ -320,6 +320,8 @@ class UnassignedReport(ClinvReport):
         """
 
         if resource_type == 'all':
+            self.log.info('Unassigned ASG')
+            self._unassigned_asg()
             self.log.info('Unassigned EC2')
             self._unassigned_ec2()
             self.log.info('Unassigned RDS')
