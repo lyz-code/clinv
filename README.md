@@ -18,13 +18,7 @@
 # Install
 
 ```bash
-git clone https://github.com/lyz-code/clinv
-cd clinv
-virtualenv -p python3 clinv
-source clinv/bin/activate
-pip3 install -r requirements.txt
-python3 setup.py install
-mkdir ~/.local/share/clinv
+pip3 install git+git://github.com/lyz-code/clinv
 ```
 
 `clinv` will use your AWS cli credentials, therefore you must have them
