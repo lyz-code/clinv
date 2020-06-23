@@ -2213,7 +2213,7 @@ class TestASG(ClinvGenericResourceTests, unittest.TestCase):
         self.raw = {
             'arn:aws:autoscaler_arn': {
                 'AutoScalingGroupName': 'resource_name',
-                'AvailabilityZones': ['us-east-1a'],
+                'AvailabilityZones': ['us-east-1a', 'us-east-1b'],
                 'CreatedTime': datetime.datetime(
                     2015, 10, 10, 10, 36, 41, 398000, tzinfo=tzutc()
                 ),
@@ -2257,6 +2257,86 @@ class TestASG(ClinvGenericResourceTests, unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
+
+    def test_instances_returns_expected_dictionary(self):
+        self.assertEqual(
+            self.resource.instances,
+            {
+                'i-xxxxxxxxxxxxxxxx1': {
+                    'AvailabilityZone': 'eu-east-1a',
+                    'HealthStatus': 'Healthy',
+                    'LaunchConfigurationName': 'lc_name',
+                    'LifecycleState': 'InService',
+                    'ProtectedFromScaleIn': False
+                },
+                'i-xxxxxxxxxxxxxxxx2': {
+                    'AvailabilityZone': 'eu-east-1a',
+                    'HealthStatus': 'Healthy',
+                    'LaunchConfigurationName': 'lc_name',
+                    'LifecycleState': 'InService',
+                    'ProtectedFromScaleIn': False
+                },
+            }
+        )
+
+    def test_print_instances_prints_expected_information(self):
+        with patch('clinv.sources.aws.tabulate') as tabulateMock:
+            self.resource.print_instances()
+
+        # Status formats the data in a table
+        expected_headers = [
+            'Instance',
+            'Status',
+            'AvailabilityZone',
+            'LaunchConfiguration',
+        ]
+        expected_data = [
+            [
+                'i-xxxxxxxxxxxxxxxx1',
+                'Healthy/InService',
+                'eu-east-1a',
+                'lc_name',
+            ],
+            [
+                'i-xxxxxxxxxxxxxxxx2',
+                'Healthy/InService',
+                'eu-east-1a',
+                'lc_name',
+            ],
+        ]
+        tabulateMock.assert_called_once_with(
+            expected_data,
+            headers=expected_headers,
+            tablefmt='simple',
+        )
+
+        self.assertEqual(
+            self.print.assert_called_once_with(tabulateMock.return_value),
+            None,
+        )
+
+    @patch('clinv.sources.aws.ASG.print_instances')
+    def test_print_resource_information(self, printinstancesMock):
+        self.resource.print()
+        print_calls = (
+            call('arn:aws:autoscaler_arn'),
+            call('  Name: resource_name'),
+            call('  Description: This is the description'),
+            call('  State: active'),
+            call('  Destroy: tbd'),
+            call('  Zones: us-east-1a, us-east-1b'),
+            call('  Launch Configuration: lc_name'),
+            call('  Healthcheck: EC2'),
+            call('  Capacity: 2'),
+            call('    Desired: 2'),
+            call('    Max: 10'),
+            call('    Min: 2'),
+        )
+
+        for print_call in print_calls:
+            self.assertIn(print_call, self.print.mock_calls)
+        self.assertEqual(12, len(self.print.mock_calls))
+        self.assertTrue(printinstancesMock.called)
 
 
 class TestEC2(ClinvAWSResourceTests, unittest.TestCase):

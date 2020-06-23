@@ -3,6 +3,7 @@ Module to store the AWS sources used by Clinv.
 
 Classes:
     AWSBasesrc: Class to gather the common methods for the AWS sources.
+    ASGsrc: Class to gather and manipulate the AWS ASG sources.
     EC2src: Class to gather and manipulate the AWS EC2 sources.
     IAMGroupsrc: Class to gather and manipulate the AWS IAM Groups sources.
     IAMUsersrc: Class to gather and manipulate the AWS IAM Users sources.
@@ -15,6 +16,8 @@ Classes:
 
     ClinvAWSResource: Abstract class to extend ClinvGenericResource, it gathers
         common method and attributes for the AWS resources.
+    EC2: Abstract class to extend ClinvAWSResource, it gathers method and
+        attributes for the ASG resources.
     EC2: Abstract class to extend ClinvAWSResource, it gathers method and
         attributes for the EC2 resources.
     IAMGroup: Abstract class to extend ClinvGenericResource, it gathers method
@@ -36,6 +39,7 @@ Classes:
 from clinv.sources import ClinvSourcesrc, ClinvGenericResource
 import boto3
 import re
+import tabulate
 
 
 class AWSBasesrc(ClinvSourcesrc):
@@ -1480,6 +1484,129 @@ class ClinvAWSResource(ClinvGenericResource):
         return monitored
 
 
+class ASG(ClinvGenericResource):
+    """
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the ASG resources.
+
+    Public methods:
+        print: Prints information of the resource.
+        print_instances: Prints information of the resource.
+
+    Public properties:
+        name: Returns the name of the record.
+        instances: Return information of the autoscaling instances.
+    """
+
+    def __init__(self, raw_data):
+        """
+        Execute the __init__ of the parent class ClinvActiveResource.
+        """
+
+        super().__init__(raw_data)
+
+    @property
+    def instances(self):
+        """
+        Gather information to show the autoscaling instances information. With
+        the following structure:
+            {
+                'ec2-id':{
+                    'AvailabilityZone': 'eu-east-1a',
+                    'HealthStatus': 'Healthy',
+                    'LaunchConfigurationName': 'lc_name',
+                    'LifecycleState': 'InService',
+                    'ProtectedFromScaleIn': False
+                }
+            }
+        Returns:
+            dict: Instances information
+        """
+
+        instances = {}
+
+        for instance in self._get_field('Instances'):
+            instance = instance.copy()
+            id = instance['InstanceId']
+            instance.pop('InstanceId')
+            instances[id] = instance
+        return instances
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        return self._get_field('AutoScalingGroupName')
+
+    def print_instances(self):
+        """
+        Print instances information
+        """
+        headers = [
+            'Instance',
+            'Status',
+            'AvailabilityZone',
+            'LaunchConfiguration',
+        ]
+        instances_data = []
+
+        for instance in self._get_field('Instances'):
+            instances_data.append([
+                instance['InstanceId'],
+                '{}/{}'.format(
+                    instance['HealthStatus'],
+                    instance['LifecycleState'],
+                ),
+                instance['AvailabilityZone'],
+                instance['LaunchConfigurationName'][:35]
+            ])
+
+        print(tabulate(instances_data, headers=headers, tablefmt='simple'))
+
+    def print(self):
+        """
+        Override parent method to do aggregation of data to print information
+        of the resource.
+
+        Returns:
+            stdout: Prints information of the resource.
+        """
+
+        print(self.id)
+        print('  Name: {}'.format(self.name))
+        print('  Description: {}'.format(self.description))
+        print('  State: {}'.format(self.state)),
+        print('  Destroy: {}'.format(self.to_destroy)),
+        print('  Zones: {}'.format(
+            ', '.join(self._get_field('AvailabilityZones'))
+        ))
+        print('  Launch Configuration: {}'.format(
+            self._get_field('LaunchConfigurationName')
+        ))
+        print('  Healthcheck: {}'.format(
+            self._get_field('HealthCheckType')
+        ))
+        print('  Capacity: {}'.format(
+            len(self._get_field('Instances'))
+        ))
+        print('    Desired: {}'.format(
+            self._get_field('DesiredCapacity')
+        ))
+        print('    Max: {}'.format(
+            self._get_field('MaxSize')
+        ))
+        print('    Min: {}'.format(
+            self._get_field('MinSize')
+        ))
+        self.print_instances()
+
+
 class EC2(ClinvAWSResource):
     """
     Class to extend the ClinvAWSResource abstract class. It gathers methods and
@@ -2643,38 +2770,3 @@ class VPC(ClinvGenericResource):
         print('  Destroy: {}'.format(self.to_destroy)),
         print('  Region: {}'.format(self._get_field('region', 'str')))
         print('  CIDR: {}'.format(self.cidr))
-
-
-class ASG(ClinvGenericResource):
-    """
-    Class to extend the ClinvGenericResource abstract class. It gathers methods
-    and attributes for the ASG resources.
-
-    Public methods:
-        print: Prints information of the resource.
-
-    Public properties:
-        name: Returns the name of the record.
-    """
-
-    def __init__(self, raw_data):
-        """
-        Execute the __init__ of the parent class ClinvActiveResource.
-        """
-
-        super().__init__(raw_data)
-
-    @property
-    def name(self):
-        """
-        Overrides the parent method to do aggregation of data to return the
-        name of the resource.
-
-        Returns:
-            str: Name of the resource.
-        """
-
-        try:
-            return self.raw['AutoScalingGroupName']
-        except KeyError:
-            return 'none'
