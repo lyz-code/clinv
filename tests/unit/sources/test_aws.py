@@ -2289,7 +2289,7 @@ class TestASG(ClinvGenericResourceTests, unittest.TestCase):
         expected_headers = [
             'Instance',
             'Status',
-            'AvailabilityZone',
+            'Zones',
             'LaunchConfiguration',
         ]
         expected_data = [

@@ -37,6 +37,7 @@ def load_parser():
         help='String used to search',
         choices=[
             'all',
+            'asg',
             'ec2',
             'iam_groups',
             'iam_users',
@@ -83,6 +84,7 @@ def load_parser():
         help='String used to search',
         default=None,
         choices=[
+            'asg',
             'ec2',
             'rds',
             'services',

@@ -45,7 +45,7 @@ class UnassignedReport(ClinvReport):
     def __init__(self, inventory):
         super().__init__(inventory)
 
-    def _unassigned_aws_resource(self, resource_type):
+    def _unassigned_aws_resource(self, resource_type, exclude_ids=None):
         """
         Do aggregation of data to print the resource_type resources that are
         not associated to any service.
@@ -59,6 +59,7 @@ class UnassignedReport(ClinvReport):
                     'iam_groups',
                     'vpc',
                 ]
+            exclude_ids (list): List of IDs to exclude from the report
 
         Returns:
             stdout: Prints the list of unassigned items.
@@ -75,9 +76,22 @@ class UnassignedReport(ClinvReport):
                 pass
 
         for instance_id, instance in sorted(self.inv[resource_type].items()):
+            if instance_id in exclude_ids:
+                continue
             if instance_id not in all_assigned_instances:
                 if instance.state != 'terminated':
                     instance.short_print()
+
+    def _unassigned_asg(self):
+        """
+        Do aggregation of data to print the ASG resources that are not
+        associated to any service.
+
+        Returns:
+            stdout: Prints the list of unassigned items.
+        """
+
+        self._unassigned_aws_resource('asg')
 
     def _unassigned_ec2(self):
         """
@@ -87,8 +101,16 @@ class UnassignedReport(ClinvReport):
         Returns:
             stdout: Prints the list of unassigned items.
         """
+        for asg_id, asg in self.inv['asg'].items():
+            for instance_id in asg.instances:
+                instance_id
 
-        self._unassigned_aws_resource('ec2')
+        asg_instances = [
+            instance_id
+            for asg_id, asg in self.inv['asg'].items()
+            for instance_id in asg.instances
+        ]
+        self._unassigned_aws_resource('ec2', asg_instances)
 
     def _unassigned_rds(self):
         """

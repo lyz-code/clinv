@@ -37,9 +37,9 @@ Classes:
 """
 
 from clinv.sources import ClinvSourcesrc, ClinvGenericResource
+from tabulate import tabulate
 import boto3
 import re
-import tabulate
 
 
 class AWSBasesrc(ClinvSourcesrc):
@@ -1550,7 +1550,7 @@ class ASG(ClinvGenericResource):
         headers = [
             'Instance',
             'Status',
-            'AvailabilityZone',
+            'Zones',
             'LaunchConfiguration',
         ]
         instances_data = []
