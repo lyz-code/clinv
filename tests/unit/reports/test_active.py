@@ -1,4 +1,4 @@
-from tests.reports import ClinvReportBaseTestClass
+from . import ClinvReportBaseTestClass
 from clinv.reports.active import ActiveReport
 import unittest
 

@@ -1,4 +1,4 @@
-from tests.reports import ClinvReportBaseTestClass
+from . import ClinvReportBaseTestClass
 from clinv.reports.search import SearchReport
 from unittest.mock import patch, call
 import unittest

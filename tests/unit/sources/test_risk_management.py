@@ -1,8 +1,7 @@
-from clinv.sources.risk_management import \
-    Informationsrc, Peoplesrc, Projectsrc, Servicesrc
-from clinv.sources.risk_management import Information, Project, Service, People
-from tests.sources import ClinvSourceBaseTestClass, ClinvGenericResourceTests
+from . import ClinvSourceBaseTestClass, ClinvGenericResourceTests
+from clinv.sources import risk_management
 from unittest.mock import patch, call
+
 import unittest
 
 
@@ -98,7 +97,7 @@ class TestProjectSource(RiskManagementSourceBaseTestClass, unittest.TestCase):
     '''
 
     def setUp(self):
-        self.source_obj = Projectsrc
+        self.source_obj = risk_management.Projectsrc
         self.resource_obj = 'Project'
         self.resource_id = 'pro_01'
         self.resource_type = 'projects'
@@ -114,7 +113,7 @@ class TestServiceSource(RiskManagementSourceBaseTestClass, unittest.TestCase):
     '''
 
     def setUp(self):
-        self.source_obj = Servicesrc
+        self.source_obj = risk_management.Servicesrc
         self.resource_obj = 'Service'
         self.resource_id = 'ser_01'
         self.resource_type = 'services'
@@ -133,7 +132,7 @@ class TestInformationSource(
     '''
 
     def setUp(self):
-        self.source_obj = Informationsrc
+        self.source_obj = risk_management.Informationsrc
         self.resource_obj = 'Information'
         self.resource_id = 'inf_01'
         self.resource_type = 'informations'
@@ -149,7 +148,7 @@ class TestPeopleSource(RiskManagementSourceBaseTestClass, unittest.TestCase):
     '''
 
     def setUp(self):
-        self.source_obj = Peoplesrc
+        self.source_obj = risk_management.Peoplesrc
         self.resource_obj = 'People'
         self.resource_id = 'peo_01'
         self.resource_type = 'people'
@@ -217,7 +216,7 @@ class TestProject(ClinvActiveResourceTests, unittest.TestCase):
             }
         }
 
-        self.resource = Project(self.raw)
+        self.resource = risk_management.Project(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -270,7 +269,7 @@ class TestInformation(ClinvActiveResourceTests, unittest.TestCase):
             }
         }
 
-        self.resource = Information(self.raw)
+        self.resource = risk_management.Information(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -332,7 +331,7 @@ class TestService(ClinvActiveResourceTests, unittest.TestCase):
             }
         }
 
-        self.resource = Service(self.raw)
+        self.resource = risk_management.Service(self.raw)
 
     def tearDown(self):
         super().tearDown()
@@ -394,7 +393,7 @@ class TestPeople(ClinvGenericResourceTests, unittest.TestCase):
             }
         }
 
-        self.resource = People(self.raw)
+        self.resource = risk_management.People(self.raw)
 
     def tearDown(self):
         super().tearDown()

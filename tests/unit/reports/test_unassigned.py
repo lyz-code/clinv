@@ -1,4 +1,4 @@
-from tests.reports import ClinvReportBaseTestClass
+from . import ClinvReportBaseTestClass
 from clinv.reports.unassigned import UnassignedReport
 from unittest.mock import patch
 import unittest

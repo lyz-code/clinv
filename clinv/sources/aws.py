@@ -1323,7 +1323,29 @@ class ASGsrc(AWSBasesrc):
         """
 
         self.log.info('Fetching ASG inventory')
-        self.source_data = {}
+        raw_data = {}
+
+        for region in self.regions:
+            ec2 = boto3.client('autoscaling', region_name=region)
+            raw_data[region] = ec2.describe_auto_scaling_groups(
+            )['AutoScalingGroups']
+
+        prune_keys = [
+            'AutoScalingGroupARN',
+            'DefaultCooldown',
+            'EnabledMetrics',
+            'NewInstancesProtectedFromScaleIn',
+            'SuspendedProcesses',
+            'Tags',
+            'TerminationPolicies',
+        ]
+
+        for region in raw_data.keys():
+            for resource in raw_data[region]:
+                asg_id = resource['AutoScalingGroupARN']
+                resource['region'] = region
+                resource = self.prune_dictionary(resource, prune_keys)
+                self.source_data[asg_id] = resource
 
         return self.source_data
 
@@ -1338,6 +1360,16 @@ class ASGsrc(AWSBasesrc):
         Returns:
             dict: content of self.user_data.
         """
+
+        for resource_id, resource in self.source_data.items():
+            try:
+                self.user_data[resource_id]
+            except KeyError:
+                self.user_data[resource_id] = {
+                    'state': 'tbd',
+                    'to_destroy': 'tbd',
+                    'description': 'tbd',
+                }
 
         return self.user_data
 
@@ -2615,12 +2647,11 @@ class VPC(ClinvGenericResource):
 
 class ASG(ClinvGenericResource):
     """
-    Abstract class to extend ClinvGenericResource, it gathers method and
-    attributes for the ASG resources.
+    Class to extend the ClinvGenericResource abstract class. It gathers methods
+    and attributes for the ASG resources.
 
     Public methods:
-        print: Prints the name of the resource
-        short_print: Prints information of the resource
+        print: Prints information of the resource.
 
     Public properties:
         name: Returns the name of the record.
@@ -2632,3 +2663,18 @@ class ASG(ClinvGenericResource):
         """
 
         super().__init__(raw_data)
+
+    @property
+    def name(self):
+        """
+        Overrides the parent method to do aggregation of data to return the
+        name of the resource.
+
+        Returns:
+            str: Name of the resource.
+        """
+
+        try:
+            return self.raw['AutoScalingGroupName']
+        except KeyError:
+            return 'none'
