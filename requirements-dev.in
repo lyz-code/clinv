@@ -1,0 +1,7 @@
+-c requirements.txt
+pip-tools
+factory_boy
+pytest
+pytest-cov
+requests-mock
+mypy
