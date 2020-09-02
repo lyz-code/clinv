@@ -84,8 +84,7 @@ class RiskManagementBasesrc(ClinvSourcesrc):
 
         inventory = {}
 
-        for resource_id, resource_data in \
-                self.user_data.items():
+        for resource_id, resource_data in self.user_data.items():
             resource = self.resource_obj({resource_id: resource_data})
             inventory[resource_id] = resource
 
@@ -117,7 +116,7 @@ class Projectsrc(RiskManagementBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'projects'
+        self.id = "projects"
         self.resource_obj = Project
 
 
@@ -146,7 +145,7 @@ class Servicesrc(RiskManagementBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'services'
+        self.id = "services"
         self.resource_obj = Service
 
 
@@ -175,7 +174,7 @@ class Informationsrc(RiskManagementBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'informations'
+        self.id = "informations"
         self.resource_obj = Information
 
 
@@ -204,7 +203,7 @@ class Peoplesrc(RiskManagementBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'people'
+        self.id = "people"
         self.resource_obj = People
 
 
@@ -234,7 +233,7 @@ class ClinvActiveResource(ClinvGenericResource):
             str: Responsible of the resource.
         """
 
-        return self._get_field('responsible', 'str')
+        return self._get_field("responsible", "str")
 
 
 class Project(ClinvActiveResource):
@@ -271,7 +270,7 @@ class Project(ClinvActiveResource):
             list: of aliases.
         """
 
-        return self._get_optional_field('aliases', 'list')
+        return self._get_optional_field("aliases", "list")
 
     @property
     def services(self):
@@ -283,7 +282,7 @@ class Project(ClinvActiveResource):
             list: of service ids.
         """
 
-        return self._get_field('services', 'list')
+        return self._get_field("services", "list")
 
     @property
     def informations(self):
@@ -295,7 +294,7 @@ class Project(ClinvActiveResource):
             list: of information ids.
         """
 
-        return self._get_field('informations', 'list')
+        return self._get_field("informations", "list")
 
     @property
     def people(self):
@@ -307,7 +306,7 @@ class Project(ClinvActiveResource):
             list: of people ids.
         """
 
-        return self._get_field('people', 'list')
+        return self._get_field("people", "list")
 
     def search(self, search_string):
         """
@@ -345,12 +344,12 @@ class Project(ClinvActiveResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Aliases: {}'.format(', '.join(self.aliases)))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state))
-        print('  Services: {}'.format(', '.join(self.services)))
-        print('  Informations: {}'.format(', '.join(self.informations)))
+        print("  Name: {}".format(self.name))
+        print("  Aliases: {}".format(", ".join(self.aliases)))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state))
+        print("  Services: {}".format(", ".join(self.services)))
+        print("  Informations: {}".format(", ".join(self.informations)))
 
 
 class Information(ClinvActiveResource):
@@ -382,7 +381,7 @@ class Information(ClinvActiveResource):
             bool: If the information contains personal data.
         """
 
-        return self._get_field('personal_data')
+        return self._get_field("personal_data")
 
     def print(self):
         """
@@ -397,10 +396,10 @@ class Information(ClinvActiveResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state))
-        print('  Personal Information: {}'.format(self.personal_data))
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state))
+        print("  Personal Information: {}".format(self.personal_data))
 
 
 class Service(ClinvActiveResource):
@@ -435,7 +434,7 @@ class Service(ClinvActiveResource):
             str: Access of the resource.
         """
 
-        return self._get_field('access', 'str')
+        return self._get_field("access", "str")
 
     @property
     def informations(self):
@@ -447,7 +446,7 @@ class Service(ClinvActiveResource):
             list: of information ids.
         """
 
-        return self._get_field('informations', 'list')
+        return self._get_field("informations", "list")
 
     @property
     def aws(self):
@@ -459,7 +458,7 @@ class Service(ClinvActiveResource):
             dict: AWS resources used by the service.
         """
 
-        return self._get_field('aws', 'dict')
+        return self._get_field("aws", "dict")
 
     @property
     def dependencies(self):
@@ -470,7 +469,7 @@ class Service(ClinvActiveResource):
             list: Group of service ids.
         """
 
-        return self._get_optional_field('dependencies', 'list')
+        return self._get_optional_field("dependencies", "list")
 
     def search(self, search_string):
         """
@@ -501,8 +500,9 @@ class Service(ClinvActiveResource):
             return True
 
         # Search by service dependency
-        if self.dependencies is not None and \
-                self._match_list(search_string, self.dependencies):
+        if self.dependencies is not None and self._match_list(
+            search_string, self.dependencies
+        ):
             return True
 
     def print(self):
@@ -518,16 +518,16 @@ class Service(ClinvActiveResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state))
-        print('  Access: {}'.format(self.access))
-        print('  Informations: {}'.format(', '.join(self.informations)))
-        print('  Related resources:')
-        for resource_id, resource_value in self.raw['aws'].items():
-            print('    {}:'.format(resource_id))
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state))
+        print("  Access: {}".format(self.access))
+        print("  Informations: {}".format(", ".join(self.informations)))
+        print("  Related resources:")
+        for resource_id, resource_value in self.raw["aws"].items():
+            print("    {}:".format(resource_id))
             for resource_name in resource_value:
-                print('      {}'.format(resource_name))
+                print("      {}".format(resource_name))
 
 
 class People(ClinvActiveResource):
@@ -560,7 +560,7 @@ class People(ClinvActiveResource):
             str: IAM user id.
         """
 
-        return self._get_field('iam_user', 'str')
+        return self._get_field("iam_user", "str")
 
     @property
     def email(self):
@@ -571,7 +571,7 @@ class People(ClinvActiveResource):
             str: email.
         """
 
-        return self._get_field('email', 'str')
+        return self._get_field("email", "str")
 
     def search(self, search_string):
         """
@@ -614,8 +614,8 @@ class People(ClinvActiveResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  Email: {}'.format(self.email))
-        print('  State: {}'.format(self.state))
-        print('  IAM User: {}'.format(self.iam_user))
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  Email: {}".format(self.email))
+        print("  State: {}".format(self.state))
+        print("  IAM User: {}".format(self.iam_user))

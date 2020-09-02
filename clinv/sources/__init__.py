@@ -11,7 +11,7 @@ import logging
 import re
 
 
-class ClinvSourcesrc():
+class ClinvSourcesrc:
     """
     Class to gather the common methods for the Clinv sources.
 
@@ -49,7 +49,7 @@ class ClinvSourcesrc():
         return dictionary
 
 
-class ClinvGenericResource():
+class ClinvGenericResource:
     """
     Abstract class to gather common method and attributes for all Clinv
     resources.
@@ -112,12 +112,12 @@ class ClinvGenericResource():
             str or list: The input_object on the desired output_type.
         """
 
-        if output_type == 'list':
+        if output_type == "list":
             if isinstance(input_object, str):
                 return [input_object]
-        elif output_type == 'str':
+        elif output_type == "str":
             if isinstance(input_object, list):
-                return ', '.join(input_object)
+                return ", ".join(input_object)
         return input_object
 
     def _get_field(self, key, output_type=None):
@@ -144,13 +144,11 @@ class ClinvGenericResource():
         try:
             if self.raw[key] is None:
                 raise ValueError(
-                    "{} {} key is set to None, ".format(self.id, key) +
-                    "please assign it a defined value",
+                    "{} {} key is set to None, ".format(self.id, key)
+                    + "please assign it a defined value",
                 )
         except KeyError:
-            raise KeyError(
-                "{} doesn't have the {} key defined".format(self.id, key)
-            )
+            raise KeyError("{} doesn't have the {} key defined".format(self.id, key))
 
         return self._transform_type(self.raw[key], output_type)
 
@@ -181,14 +179,14 @@ class ClinvGenericResource():
 
         value = self.raw[key]
 
-        if output_type == 'list':
+        if output_type == "list":
             if isinstance(value, str):
                 return [value]
             if value is None:
                 return []
-        elif output_type == 'str':
+        elif output_type == "str":
             if isinstance(value, list):
-                return ', '.join(value)
+                return ", ".join(value)
 
         return value
 
@@ -237,7 +235,7 @@ class ClinvGenericResource():
             str: Description of the resource.
         """
 
-        return self._get_field('description', 'str')
+        return self._get_field("description", "str")
 
     @property
     def name(self):
@@ -248,7 +246,7 @@ class ClinvGenericResource():
             str: Name of the resource.
         """
 
-        return self._get_field('name', 'str')
+        return self._get_field("name", "str")
 
     @property
     def state(self):
@@ -259,7 +257,7 @@ class ClinvGenericResource():
             str: State of the resource.
         """
 
-        return self._get_field('state', 'str')
+        return self._get_field("state", "str")
 
     @property
     def to_destroy(self):
@@ -271,7 +269,7 @@ class ClinvGenericResource():
             str: If we want to destroy the resource
         """
 
-        return self._get_field('to_destroy', 'str')
+        return self._get_field("to_destroy", "str")
 
     def search(self, search_string):
         """
@@ -295,8 +293,7 @@ class ClinvGenericResource():
             return True
 
         # Search by name
-        if self.name is not None and \
-                re.match(search_string, self.name, re.IGNORECASE):
+        if self.name is not None and re.match(search_string, self.name, re.IGNORECASE):
             return True
 
         # Search by description
@@ -315,7 +312,7 @@ class ClinvGenericResource():
             stdout: Prints 'id: name' of the resource.
         """
 
-        print('{}: {}'.format(self.id, self.name))
+        print("{}: {}".format(self.id, self.name))
 
     def print(self):
         """
@@ -328,6 +325,6 @@ class ClinvGenericResource():
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  State: {}'.format(self.state))
-        print('  Description: {}'.format(self.description))
+        print("  Name: {}".format(self.name))
+        print("  State: {}".format(self.state))
+        print("  Description: {}".format(self.description))

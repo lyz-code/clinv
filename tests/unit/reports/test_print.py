@@ -4,9 +4,9 @@ import unittest
 
 
 class TestPrintReport(ClinvReportBaseTestClass, unittest.TestCase):
-    '''
+    """
     Test the PrintReport implementation.
-    '''
+    """
 
     def setUp(self):
         super().setUp()
@@ -16,7 +16,5 @@ class TestPrintReport(ClinvReportBaseTestClass, unittest.TestCase):
         super().tearDown()
 
     def test_output_method(self):
-        self.report.output('i-023.*')
-        self.assertTrue(
-            self.inventory.inv['ec2']['i-023desldk394995ss'].print.called
-        )
+        self.report.output("i-023.*")
+        self.assertTrue(self.inventory.inv["ec2"]["i-023desldk394995ss"].print.called)

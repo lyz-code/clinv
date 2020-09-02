@@ -37,37 +37,37 @@ def main():
 
     inventory = Inventory(args.data_path)
     if args.subcommand not in [
-        'active',
-        'export',
-        'generate',
-        'list',
-        'monitored',
-        'print',
-        'search',
-        'unassigned',
-        'unused',
+        "active",
+        "export",
+        "generate",
+        "list",
+        "monitored",
+        "print",
+        "search",
+        "unassigned",
+        "unused",
     ]:
         return
 
-    if args.subcommand == 'generate':
+    if args.subcommand == "generate":
         inventory.generate()
     else:
         inventory.load()
-        if args.subcommand == 'search':
+        if args.subcommand == "search":
             SearchReport(inventory).output(args.search_string)
-        elif args.subcommand == 'active':
+        elif args.subcommand == "active":
             ActiveReport(inventory).output(args.resource_type)
-        elif args.subcommand == 'unassigned':
+        elif args.subcommand == "unassigned":
             UnassignedReport(inventory).output(args.resource_type)
-        elif args.subcommand == 'print':
+        elif args.subcommand == "print":
             PrintReport(inventory).output(args.search_string)
-        elif args.subcommand == 'list':
+        elif args.subcommand == "list":
             ListReport(inventory).output(args.resource_type)
-        elif args.subcommand == 'export':
+        elif args.subcommand == "export":
             ExportReport(inventory).output(args.export_path)
-        elif args.subcommand == 'monitored':
+        elif args.subcommand == "monitored":
             MonitoredReport(inventory).output(args.monitor_status)
-        elif args.subcommand == 'unused':
+        elif args.subcommand == "unused":
             UnusedReport(inventory).output()
 
 

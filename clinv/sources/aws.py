@@ -36,10 +36,11 @@ Classes:
         and attributes for the VPC resources.
 """
 
-from clinv.sources import ClinvSourcesrc, ClinvGenericResource
-from tabulate import tabulate
-import boto3
 import re
+
+import boto3
+from clinv.sources import ClinvGenericResource, ClinvSourcesrc
+from tabulate import tabulate
 
 
 class AWSBasesrc(ClinvSourcesrc):
@@ -66,11 +67,8 @@ class AWSBasesrc(ClinvSourcesrc):
         Returns:
             list: AWS Regions.
         """
-        ec2 = boto3.client('ec2')
-        return [
-            region['RegionName']
-            for region in ec2.describe_regions()['Regions']
-        ]
+        ec2 = boto3.client("ec2")
+        return [region["RegionName"] for region in ec2.describe_regions()["Regions"]]
 
 
 class ASGsrc(AWSBasesrc):
@@ -98,7 +96,7 @@ class ASGsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'asg'
+        self.id = "asg"
 
     def generate_source_data(self):
         """
@@ -111,27 +109,26 @@ class ASGsrc(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching ASG inventory')
+        self.log.info("Fetching ASG inventory")
         raw_data = {}
 
         for region in self.regions:
-            ec2 = boto3.client('autoscaling', region_name=region)
-            raw_data[region] = ec2.describe_auto_scaling_groups(
-            )['AutoScalingGroups']
+            ec2 = boto3.client("autoscaling", region_name=region)
+            raw_data[region] = ec2.describe_auto_scaling_groups()["AutoScalingGroups"]
 
         prune_keys = [
-            'DefaultCooldown',
-            'EnabledMetrics',
-            'NewInstancesProtectedFromScaleIn',
-            'SuspendedProcesses',
-            'Tags',
-            'TerminationPolicies',
+            "DefaultCooldown",
+            "EnabledMetrics",
+            "NewInstancesProtectedFromScaleIn",
+            "SuspendedProcesses",
+            "Tags",
+            "TerminationPolicies",
         ]
 
         for region in raw_data.keys():
             for resource in raw_data[region]:
-                asg_id = 'asg-{}'.format(resource['AutoScalingGroupName'])
-                resource['region'] = region
+                asg_id = "asg-{}".format(resource["AutoScalingGroupName"])
+                resource["region"] = region
                 resource = self.prune_dictionary(resource, prune_keys)
                 self.source_data[asg_id] = resource
 
@@ -154,9 +151,9 @@ class ASGsrc(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'state': 'tbd',
-                    'to_destroy': 'tbd',
-                    'description': 'tbd',
+                    "state": "tbd",
+                    "to_destroy": "tbd",
+                    "description": "tbd",
                 }
 
         return self.user_data
@@ -211,7 +208,7 @@ class EC2src(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'ec2'
+        self.id = "ec2"
 
     def generate_source_data(self):
         """
@@ -271,65 +268,61 @@ class EC2src(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching EC2 inventory')
+        self.log.info("Fetching EC2 inventory")
         self.source_data = {}
 
         for region in self.regions:
-            ec2 = boto3.client('ec2', region_name=region)
-            self.source_data[region] = \
-                ec2.describe_instances()['Reservations']
+            ec2 = boto3.client("ec2", region_name=region)
+            self.source_data[region] = ec2.describe_instances()["Reservations"]
 
         prune_keys = [
-            'AmiLaunchIndex',
-            'Architecture',
-            'BlockDeviceMappings',
-            'CapacityReservationSpecification',
-            'ClientToken',
-            'CpuOptions',
-            'EbsOptimized',
-            'HibernationOptions',
-            'Hypervisor',
-            'KeyName',
-            'Monitoring',
-            'Placement',
-            'PrivateDnsName',
-            'PrivateIpAddress',
-            'ProductCodes',
-            'PublicDnsName',
-            'PublicIpAddress',
-            'RootDeviceName',
-            'RootDeviceType',
-            'SourceDestCheck',
-            'SubnetId',
-            'VirtualizationType',
+            "AmiLaunchIndex",
+            "Architecture",
+            "BlockDeviceMappings",
+            "CapacityReservationSpecification",
+            "ClientToken",
+            "CpuOptions",
+            "EbsOptimized",
+            "HibernationOptions",
+            "Hypervisor",
+            "KeyName",
+            "Monitoring",
+            "Placement",
+            "PrivateDnsName",
+            "PrivateIpAddress",
+            "ProductCodes",
+            "PublicDnsName",
+            "PublicIpAddress",
+            "RootDeviceName",
+            "RootDeviceType",
+            "SourceDestCheck",
+            "SubnetId",
+            "VirtualizationType",
         ]
         network_prune_keys = [
-            'Association',
-            'Attachment',
-            'Description',
-            'Groups',
-            'InterfaceType',
-            'Ipv6Addresses',
-            'MacAddress',
-            'NetworkInterfaceId',
-            'OwnerId',
-            'PrivateDnsName',
-            'PrivateIpAddress',
-            'SourceDestCheck',
-            'Status',
-            'SubnetId',
-            'VpcId',
+            "Association",
+            "Attachment",
+            "Description",
+            "Groups",
+            "InterfaceType",
+            "Ipv6Addresses",
+            "MacAddress",
+            "NetworkInterfaceId",
+            "OwnerId",
+            "PrivateDnsName",
+            "PrivateIpAddress",
+            "SourceDestCheck",
+            "Status",
+            "SubnetId",
+            "VpcId",
         ]
 
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                for instance in resource['Instances']:
+                for instance in resource["Instances"]:
                     instance = self.prune_dictionary(instance, prune_keys)
-                    for interface in instance['NetworkInterfaces']:
-                        interface = self.prune_dictionary(
-                            interface,
-                            network_prune_keys
-                        )
+                    for interface in instance["NetworkInterfaces"]:
+                        interface = self.prune_dictionary(interface, network_prune_keys)
         return self.source_data
 
     def generate_user_data(self):
@@ -346,17 +339,17 @@ class EC2src(AWSBasesrc):
 
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                for instance in resource['Instances']:
-                    instance_id = instance['InstanceId']
+                for instance in resource["Instances"]:
+                    instance_id = instance["InstanceId"]
                     try:
                         self.user_data[instance_id]
                     except KeyError:
                         self.user_data[instance_id] = {
-                            'description': '',
-                            'to_destroy': 'tbd',
-                            'environment': 'tbd',
-                            'monitored': 'tbd',
-                            'region': region,
+                            "description": "",
+                            "to_destroy": "tbd",
+                            "environment": "tbd",
+                            "monitor": "tbd",
+                            "region": region,
                         }
 
         return self.user_data
@@ -377,18 +370,13 @@ class EC2src(AWSBasesrc):
         inventory = {}
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                for instance in resource['Instances']:
-                    instance_id = instance['InstanceId']
+                for instance in resource["Instances"]:
+                    instance_id = instance["InstanceId"]
 
-                    for key, value in \
-                            self.user_data[instance_id].items():
+                    for key, value in self.user_data[instance_id].items():
                         instance[key] = value
 
-                    inventory[instance_id] = EC2(
-                        {
-                            instance_id: instance
-                        }
-                    )
+                    inventory[instance_id] = EC2({instance_id: instance})
         return inventory
 
 
@@ -417,7 +405,7 @@ class IAMGroupsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'iam_groups'
+        self.id = "iam_groups"
 
     def generate_source_data(self):
         """
@@ -430,35 +418,31 @@ class IAMGroupsrc(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching IAMGroup inventory')
+        self.log.info("Fetching IAMGroup inventory")
         self.source_data = {}
 
-        iam = boto3.client('iam')
-        iam_group_names = [
-            group['GroupName']
-            for group in iam.list_groups()['Groups']
-        ]
+        iam = boto3.client("iam")
+        iam_group_names = [group["GroupName"] for group in iam.list_groups()["Groups"]]
 
         for group_name in iam_group_names:
             group_data = iam.get_group(GroupName=group_name)
-            group_id = group_data['Group']['Arn']
-            self.source_data[group_id] = group_data['Group']
-            self.source_data[group_id].pop('Arn')
-            self.source_data[group_id]['Users'] = [
-                user['Arn']
-                for user in group_data['Users']
+            group_id = group_data["Group"]["Arn"]
+            self.source_data[group_id] = group_data["Group"]
+            self.source_data[group_id].pop("Arn")
+            self.source_data[group_id]["Users"] = [
+                user["Arn"] for user in group_data["Users"]
             ]
-            self.source_data[group_id]['InlinePolicies'] = [
+            self.source_data[group_id]["InlinePolicies"] = [
                 policy
-                for policy in iam.list_group_policies(
-                    GroupName=group_name
-                )['PolicyNames']
+                for policy in iam.list_group_policies(GroupName=group_name)[
+                    "PolicyNames"
+                ]
             ]
-            self.source_data[group_id]['AttachedPolicies'] = [
-                policy['PolicyArn']
-                for policy in iam.list_attached_group_policies(
-                    GroupName=group_name
-                )['AttachedPolicies']
+            self.source_data[group_id]["AttachedPolicies"] = [
+                policy["PolicyArn"]
+                for policy in iam.list_attached_group_policies(GroupName=group_name)[
+                    "AttachedPolicies"
+                ]
             ]
 
         return self.source_data
@@ -481,11 +465,11 @@ class IAMGroupsrc(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'name': resource['GroupName'],
-                    'description': 'tbd',
-                    'to_destroy': 'tbd',
-                    'state': 'tbd',
-                    'desired_users': resource['Users']
+                    "name": resource["GroupName"],
+                    "description": "tbd",
+                    "to_destroy": "tbd",
+                    "state": "tbd",
+                    "desired_users": resource["Users"],
                 }
 
         return self.user_data
@@ -540,7 +524,7 @@ class IAMUsersrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'iam_users'
+        self.id = "iam_users"
 
     def generate_source_data(self):
         """
@@ -569,17 +553,17 @@ class IAMUsersrc(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching IAM users inventory')
+        self.log.info("Fetching IAM users inventory")
         self.source_data = {}
 
-        iam = boto3.client('iam')
-        iam_users = iam.list_users()['Users']
+        iam = boto3.client("iam")
+        iam_users = iam.list_users()["Users"]
 
         for record in iam_users:
-            user_id = record['Arn']
-            record.pop('Arn')
+            user_id = record["Arn"]
+            record.pop("Arn")
             try:
-                record.pop('PasswordLastUsed')
+                record.pop("PasswordLastUsed")
             except KeyError:
                 pass
             self.source_data[user_id] = record
@@ -604,10 +588,10 @@ class IAMUsersrc(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'name': resource['UserName'],
-                    'description': 'tbd',
-                    'to_destroy': 'tbd',
-                    'state': 'tbd',
+                    "name": resource["UserName"],
+                    "description": "tbd",
+                    "to_destroy": "tbd",
+                    "state": "tbd",
                 }
 
         return self.user_data
@@ -662,7 +646,7 @@ class RDSsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'rds'
+        self.id = "rds"
 
     def generate_source_data(self):
         """
@@ -731,32 +715,31 @@ class RDSsrc(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching RDS inventory')
+        self.log.info("Fetching RDS inventory")
         self.source_data = {}
 
         for region in self.regions:
-            rds = boto3.client('rds', region_name=region)
-            self.source_data[region] = \
-                rds.describe_db_instances()['DBInstances']
+            rds = boto3.client("rds", region_name=region)
+            self.source_data[region] = rds.describe_db_instances()["DBInstances"]
 
         prune_keys = [
-            'CopyTagsToSnapshot',
-            'DBParameterGroups',
-            'DbInstancePort',
-            'DomainMemberships',
-            'EnhancedMonitoringResourceArn',
-            'IAMDatabaseAuthenticationEnabled',
-            'LatestRestorableTime',
-            'LicenseModel',
-            'MonitoringInterval',
-            'MonitoringRoleArn',
-            'OptionGroupMemberships',
-            'PendingModifiedValues',
-            'PerformanceInsightsEnabled',
-            'PerformanceInsightsKMSKeyId',
-            'PerformanceInsightsRetentionPeriod',
-            'ReadReplicaDBInstanceIdentifiers',
-            'StorageType',
+            "CopyTagsToSnapshot",
+            "DBParameterGroups",
+            "DbInstancePort",
+            "DomainMemberships",
+            "EnhancedMonitoringResourceArn",
+            "IAMDatabaseAuthenticationEnabled",
+            "LatestRestorableTime",
+            "LicenseModel",
+            "MonitoringInterval",
+            "MonitoringRoleArn",
+            "OptionGroupMemberships",
+            "PendingModifiedValues",
+            "PerformanceInsightsEnabled",
+            "PerformanceInsightsKMSKeyId",
+            "PerformanceInsightsRetentionPeriod",
+            "ReadReplicaDBInstanceIdentifiers",
+            "StorageType",
         ]
 
         for region in self.source_data.keys():
@@ -779,17 +762,17 @@ class RDSsrc(AWSBasesrc):
 
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                resource_id = resource['DbiResourceId']
+                resource_id = resource["DbiResourceId"]
                 # Define the default user_data of the resource
                 try:
                     self.user_data[resource_id]
                 except KeyError:
                     self.user_data[resource_id] = {
-                        'description': '',
-                        'to_destroy': 'tbd',
-                        'environment': 'tbd',
-                        'monitored': 'tbd',
-                        'region': region,
+                        "description": "",
+                        "to_destroy": "tbd",
+                        "environment": "tbd",
+                        "monitored": "tbd",
+                        "region": region,
                     }
         return self.user_data
 
@@ -810,17 +793,12 @@ class RDSsrc(AWSBasesrc):
 
         for region in self.source_data.keys():
             for resource in self.source_data[region]:
-                resource_id = resource['DbiResourceId']
+                resource_id = resource["DbiResourceId"]
 
-                for key, value in \
-                        self.user_data[resource_id].items():
+                for key, value in self.user_data[resource_id].items():
                     resource[key] = value
 
-                inventory[resource_id] = RDS(
-                    {
-                        resource_id: resource
-                    }
-                )
+                inventory[resource_id] = RDS({resource_id: resource})
 
         return inventory
 
@@ -849,7 +827,7 @@ class Route53src(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'route53'
+        self.id = "route53"
 
     def generate_source_data(self):
         """
@@ -888,36 +866,33 @@ class Route53src(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching Route53 inventory')
+        self.log.info("Fetching Route53 inventory")
         self.source_data = {}
 
-        route53 = boto3.client('route53')
+        route53 = boto3.client("route53")
 
         # Fetch the hosted zones
-        self.source_data['hosted_zones'] = \
-            route53.list_hosted_zones()['HostedZones']
+        self.source_data["hosted_zones"] = route53.list_hosted_zones()["HostedZones"]
 
         # Prune unneeded information
-        prune_keys = ['CallerReference']
-        for zone in self.source_data['hosted_zones']:
+        prune_keys = ["CallerReference"]
+        for zone in self.source_data["hosted_zones"]:
             zone = self.prune_dictionary(zone, prune_keys)
 
         # Fetch the records
-        for zone in self.source_data['hosted_zones']:
-            raw_records = route53.list_resource_record_sets(
-                HostedZoneId=zone['Id'],
-            )
+        for zone in self.source_data["hosted_zones"]:
+            raw_records = route53.list_resource_record_sets(HostedZoneId=zone["Id"],)
 
-            zone['records'] = raw_records['ResourceRecordSets']
+            zone["records"] = raw_records["ResourceRecordSets"]
 
-            while raw_records['IsTruncated']:
+            while raw_records["IsTruncated"]:
                 raw_records = route53.list_resource_record_sets(
-                    HostedZoneId=zone['Id'],
-                    StartRecordName=raw_records['NextRecordName'],
-                    StartRecordType=raw_records['NextRecordType'],
+                    HostedZoneId=zone["Id"],
+                    StartRecordName=raw_records["NextRecordName"],
+                    StartRecordType=raw_records["NextRecordType"],
                 )
-                for record in raw_records['ResourceRecordSets']:
-                    zone['records'].append(record)
+                for record in raw_records["ResourceRecordSets"]:
+                    zone["records"].append(record)
 
         return self.source_data
 
@@ -933,12 +908,12 @@ class Route53src(AWSBasesrc):
             dict: content of self.user_data.
         """
 
-        for zone in self.source_data['hosted_zones']:
-            for record in zone['records']:
-                record_id = '{}-{}-{}'.format(
-                    re.sub(r'/hostedzone/', '', zone['Id']),
-                    re.sub(r'\.$', '', record['Name']),
-                    record['Type'].lower(),
+        for zone in self.source_data["hosted_zones"]:
+            for record in zone["records"]:
+                record_id = "{}-{}-{}".format(
+                    re.sub(r"/hostedzone/", "", zone["Id"]),
+                    re.sub(r"\.$", "", record["Name"]),
+                    record["Type"].lower(),
                 )
 
                 # Define the default user_data of the record
@@ -946,10 +921,10 @@ class Route53src(AWSBasesrc):
                     self.user_data[record_id]
                 except KeyError:
                     self.user_data[record_id] = {
-                        'description': 'tbd',
-                        'to_destroy': 'tbd',
-                        'monitored': 'tbd',
-                        'state': 'active',
+                        "description": "tbd",
+                        "to_destroy": "tbd",
+                        "monitored": "tbd",
+                        "state": "active",
                     }
         return self.user_data
 
@@ -968,12 +943,12 @@ class Route53src(AWSBasesrc):
 
         inventory = {}
 
-        for zone in self.source_data['hosted_zones']:
-            for record in zone['records']:
-                record_id = '{}-{}-{}'.format(
-                    re.sub(r'/hostedzone/', '', zone['Id']),
-                    re.sub(r'\.$', '', record['Name']),
-                    record['Type'].lower(),
+        for zone in self.source_data["hosted_zones"]:
+            for record in zone["records"]:
+                record_id = "{}-{}-{}".format(
+                    re.sub(r"/hostedzone/", "", zone["Id"]),
+                    re.sub(r"\.$", "", record["Name"]),
+                    record["Type"].lower(),
                 )
 
                 # Load the user_data into the source_data record
@@ -981,10 +956,10 @@ class Route53src(AWSBasesrc):
                     record[key] = value
 
                 # Add clinv needed information
-                record['hosted_zone'] = {
-                    'id': zone['Id'],
-                    'name': zone['Name'],
-                    'private': zone['Config']['PrivateZone'],
+                record["hosted_zone"] = {
+                    "id": zone["Id"],
+                    "name": zone["Name"],
+                    "private": zone["Config"]["PrivateZone"],
                 }
 
                 inventory[record_id] = Route53({record_id: record})
@@ -1016,7 +991,7 @@ class S3src(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 's3'
+        self.id = "s3"
 
     def generate_source_data(self):
         """
@@ -1065,47 +1040,45 @@ class S3src(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching S3 inventory')
+        self.log.info("Fetching S3 inventory")
         self.source_data = {}
 
-        public_acl_indicator = \
-            'http://acs.amazonaws.com/groups/global/AllUsers'
-        permissions_to_check = ['READ', 'WRITE']
+        public_acl_indicator = "http://acs.amazonaws.com/groups/global/AllUsers"
+        permissions_to_check = ["READ", "WRITE"]
 
         # Create S3 client, describe buckets.
-        s3 = boto3.client('s3')
+        s3 = boto3.client("s3")
         list_bucket_response = s3.list_buckets()
 
-        for bucket_dictionary in list_bucket_response['Buckets']:
-            bucket_dictionary['Grants'] = s3.get_bucket_acl(
-                Bucket=bucket_dictionary['Name']
-            )['Grants']
-            bucket_dictionary['permissions'] = {}
+        for bucket_dictionary in list_bucket_response["Buckets"]:
+            bucket_dictionary["Grants"] = s3.get_bucket_acl(
+                Bucket=bucket_dictionary["Name"]
+            )["Grants"]
+            bucket_dictionary["permissions"] = {}
 
             # Check if there is any public access to the bucket
-            for grant in bucket_dictionary['Grants']:
+            for grant in bucket_dictionary["Grants"]:
                 for (key, value) in grant.items():
-                    if key == 'Permission' and any(
-                        permission in value
-                        for permission in permissions_to_check
+                    if key == "Permission" and any(
+                        permission in value for permission in permissions_to_check
                     ):
-                        for (grantee_attribute_key, grantee_attribute_value) \
-                                in grant['Grantee'].items():
-                            if 'URI' in grantee_attribute_key and \
-                                    grant['Grantee']['URI'] == \
-                                    public_acl_indicator:
-                                bucket_dictionary['permissions'][value] = \
-                                    'public'
+                        for (grantee_attribute_key, grantee_attribute_value) in grant[
+                            "Grantee"
+                        ].items():
+                            if (
+                                "URI" in grantee_attribute_key
+                                and grant["Grantee"]["URI"] == public_acl_indicator
+                            ):
+                                bucket_dictionary["permissions"][value] = "public"
 
             # If there is no public access, it means it's private
             for permission in permissions_to_check:
                 try:
-                    bucket_dictionary['permissions'][permission]
+                    bucket_dictionary["permissions"][permission]
                 except KeyError:
-                    bucket_dictionary['permissions'][permission] = \
-                        'private'
+                    bucket_dictionary["permissions"][permission] = "private"
 
-            self.source_data[bucket_dictionary['Name']] = bucket_dictionary
+            self.source_data[bucket_dictionary["Name"]] = bucket_dictionary
         return self.source_data
 
     def generate_user_data(self):
@@ -1126,14 +1099,11 @@ class S3src(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'description': '',
-                    'to_destroy': 'tbd',
-                    'environment': 'tbd',
-                    'desired_permissions': {
-                        'read': 'tbd',
-                        'write': 'tbd',
-                    },
-                    'state': 'active',
+                    "description": "",
+                    "to_destroy": "tbd",
+                    "environment": "tbd",
+                    "desired_permissions": {"read": "tbd", "write": "tbd",},
+                    "state": "active",
                 }
 
         return self.user_data
@@ -1187,7 +1157,7 @@ class SecurityGroupsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'security_groups'
+        self.id = "security_groups"
 
     def generate_source_data(self):
         """
@@ -1218,25 +1188,25 @@ class SecurityGroupsrc(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching SecurityGroup inventory')
+        self.log.info("Fetching SecurityGroup inventory")
         self.source_data = {}
         raw_data = {}
 
         for region in self.regions:
-            ec2 = boto3.client('ec2', region_name=region)
-            raw_data[region] = ec2.describe_security_groups()['SecurityGroups']
+            ec2 = boto3.client("ec2", region_name=region)
+            raw_data[region] = ec2.describe_security_groups()["SecurityGroups"]
 
         prune_keys = [
-            'GroupId',
-            'OwnerId',
-            'Description',
+            "GroupId",
+            "OwnerId",
+            "Description",
         ]
 
         for region in raw_data.keys():
             for resource in raw_data[region]:
-                security_group_id = resource['GroupId']
-                resource['description'] = resource['Description']
-                resource['region'] = region
+                security_group_id = resource["GroupId"]
+                resource["description"] = resource["Description"]
+                resource["region"] = region
                 resource = self.prune_dictionary(resource, prune_keys)
                 self.source_data[security_group_id] = resource
 
@@ -1259,10 +1229,10 @@ class SecurityGroupsrc(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'state': 'tbd',
-                    'to_destroy': 'tbd',
-                    'ingress': resource['IpPermissions'],
-                    'egress': resource['IpPermissionsEgress'],
+                    "state": "tbd",
+                    "to_destroy": "tbd",
+                    "ingress": resource["IpPermissions"],
+                    "egress": resource["IpPermissionsEgress"],
                 }
 
         return self.user_data
@@ -1317,7 +1287,7 @@ class VPCsrc(AWSBasesrc):
 
     def __init__(self, source_data={}, user_data={}):
         super().__init__(source_data, user_data)
-        self.id = 'vpc'
+        self.id = "vpc"
 
     def generate_source_data(self):
         """
@@ -1330,23 +1300,23 @@ class VPCsrc(AWSBasesrc):
             dict: content of self.source_data.
         """
 
-        self.log.info('Fetching VPC inventory')
+        self.log.info("Fetching VPC inventory")
         raw_data = {}
 
         for region in self.regions:
-            ec2 = boto3.client('ec2', region_name=region)
-            raw_data[region] = ec2.describe_vpcs()['Vpcs']
+            ec2 = boto3.client("ec2", region_name=region)
+            raw_data[region] = ec2.describe_vpcs()["Vpcs"]
 
         prune_keys = [
-            'CidrBlockAssociationSet',
-            'OwnerId',
-            'VpcId',
+            "CidrBlockAssociationSet",
+            "OwnerId",
+            "VpcId",
         ]
 
         for region in raw_data.keys():
             for resource in raw_data[region]:
-                vpc_id = resource['VpcId']
-                resource['region'] = region
+                vpc_id = resource["VpcId"]
+                resource["region"] = region
                 resource = self.prune_dictionary(resource, prune_keys)
                 self.source_data[vpc_id] = resource
 
@@ -1369,9 +1339,9 @@ class VPCsrc(AWSBasesrc):
                 self.user_data[resource_id]
             except KeyError:
                 self.user_data[resource_id] = {
-                    'state': 'tbd',
-                    'to_destroy': 'tbd',
-                    'description': 'tbd',
+                    "state": "tbd",
+                    "to_destroy": "tbd",
+                    "description": "tbd",
                 }
 
         return self.user_data
@@ -1430,7 +1400,7 @@ class ClinvAWSResource(ClinvGenericResource):
             str: Region of the resource.
         """
 
-        return self._get_field('region', 'str')
+        return self._get_field("region", "str")
 
     def search(self, search_string):
         """
@@ -1474,11 +1444,11 @@ class ClinvAWSResource(ClinvGenericResource):
         """
 
         try:
-            monitored = self._get_field('monitored', 'str')
+            monitored = self._get_field("monitored", "str")
             if monitored not in [True, False]:
-                monitored = 'unknown'
+                monitored = "unknown"
         except KeyError:
-            monitored = 'unknown'
+            monitored = "unknown"
 
         return monitored
 
@@ -1524,10 +1494,10 @@ class ASG(ClinvGenericResource):
 
         instances = {}
 
-        for instance in self._get_field('Instances'):
+        for instance in self._get_field("Instances"):
             instance = instance.copy()
-            id = instance['InstanceId']
-            instance.pop('InstanceId')
+            id = instance["InstanceId"]
+            instance.pop("InstanceId")
             instances[id] = instance
         return instances
 
@@ -1541,32 +1511,33 @@ class ASG(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_field('AutoScalingGroupName')
+        return self._get_field("AutoScalingGroupName")
 
     def print_instances(self):
         """
         Print instances information
         """
         headers = [
-            'Instance',
-            'Status',
-            'Zones',
-            'LaunchConfiguration',
+            "Instance",
+            "Status",
+            "Zones",
+            "LaunchConfiguration",
         ]
         instances_data = []
 
-        for instance in self._get_field('Instances'):
-            instances_data.append([
-                instance['InstanceId'],
-                '{}/{}'.format(
-                    instance['HealthStatus'],
-                    instance['LifecycleState'],
-                ),
-                instance['AvailabilityZone'],
-                instance['LaunchConfigurationName'][:35]
-            ])
+        for instance in self._get_field("Instances"):
+            instances_data.append(
+                [
+                    instance["InstanceId"],
+                    "{}/{}".format(
+                        instance["HealthStatus"], instance["LifecycleState"],
+                    ),
+                    instance["AvailabilityZone"],
+                    instance["LaunchConfigurationName"][:35],
+                ]
+            )
 
-        print(tabulate(instances_data, headers=headers, tablefmt='simple'))
+        print(tabulate(instances_data, headers=headers, tablefmt="simple"))
 
     def print(self):
         """
@@ -1578,31 +1549,21 @@ class ASG(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy)),
-        print('  Zones: {}'.format(
-            ', '.join(self._get_field('AvailabilityZones'))
-        ))
-        print('  Launch Configuration: {}'.format(
-            self._get_field('LaunchConfigurationName')
-        ))
-        print('  Healthcheck: {}'.format(
-            self._get_field('HealthCheckType')
-        ))
-        print('  Capacity: {}'.format(
-            len(self._get_field('Instances'))
-        ))
-        print('    Desired: {}'.format(
-            self._get_field('DesiredCapacity')
-        ))
-        print('    Max: {}'.format(
-            self._get_field('MaxSize')
-        ))
-        print('    Min: {}'.format(
-            self._get_field('MinSize')
-        ))
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state)),
+        print("  Destroy: {}".format(self.to_destroy)),
+        print("  Zones: {}".format(", ".join(self._get_field("AvailabilityZones"))))
+        print(
+            "  Launch Configuration: {}".format(
+                self._get_field("LaunchConfigurationName")
+            )
+        )
+        print("  Healthcheck: {}".format(self._get_field("HealthCheckType")))
+        print("  Capacity: {}".format(len(self._get_field("Instances"))))
+        print("    Desired: {}".format(self._get_field("DesiredCapacity")))
+        print("    Max: {}".format(self._get_field("MaxSize")))
+        print("    Min: {}".format(self._get_field("MinSize")))
         self.print_instances()
 
 
@@ -1644,14 +1605,14 @@ class EC2(ClinvAWSResource):
         """
 
         try:
-            for tag in self.raw['Tags']:
-                if tag['Key'] == 'Name':
-                    return tag['Value']
+            for tag in self.raw["Tags"]:
+                if tag["Key"] == "Name":
+                    return tag["Value"]
         except KeyError:
             pass
         except TypeError:
             pass
-        return 'none'
+        return "none"
 
     @property
     def security_groups(self):
@@ -1664,8 +1625,8 @@ class EC2(ClinvAWSResource):
 
         try:
             return {
-                security_group['GroupId']: security_group['GroupName']
-                for security_group in self.raw['SecurityGroups']
+                security_group["GroupId"]: security_group["GroupName"]
+                for security_group in self.raw["SecurityGroups"]
             }
         except KeyError:
             pass
@@ -1681,9 +1642,9 @@ class EC2(ClinvAWSResource):
 
         private_ips = []
         try:
-            for interface in self.raw['NetworkInterfaces']:
-                for address in interface['PrivateIpAddresses']:
-                    private_ips.append(address['PrivateIpAddress'])
+            for interface in self.raw["NetworkInterfaces"]:
+                for address in interface["PrivateIpAddresses"]:
+                    private_ips.append(address["PrivateIpAddress"])
         except KeyError:
             pass
         return private_ips
@@ -1699,9 +1660,9 @@ class EC2(ClinvAWSResource):
 
         public_ips = []
         try:
-            for interface in self.raw['NetworkInterfaces']:
-                for association in interface['PrivateIpAddresses']:
-                    public_ips.append(association['Association']['PublicIp'])
+            for interface in self.raw["NetworkInterfaces"]:
+                for association in interface["PrivateIpAddresses"]:
+                    public_ips.append(association["Association"]["PublicIp"])
         except KeyError:
             pass
         return public_ips
@@ -1717,7 +1678,7 @@ class EC2(ClinvAWSResource):
         """
 
         try:
-            return self.raw['State']['Name']
+            return self.raw["State"]["Name"]
         except KeyError:
             pass
 
@@ -1730,7 +1691,7 @@ class EC2(ClinvAWSResource):
             str: Resource type.
         """
 
-        return self._get_field('InstanceType', 'str')
+        return self._get_field("InstanceType", "str")
 
     @property
     def state_transition(self):
@@ -1741,7 +1702,7 @@ class EC2(ClinvAWSResource):
         Returns:
             str: State transition of the resource.
         """
-        return self._get_field('StateTransitionReason', 'str')
+        return self._get_field("StateTransitionReason", "str")
 
     @property
     def vpc(self):
@@ -1752,7 +1713,7 @@ class EC2(ClinvAWSResource):
             str: Resource type.
         """
 
-        return self._get_optional_field('VpcId', 'str')
+        return self._get_optional_field("VpcId", "str")
 
     def print(self):
         """
@@ -1765,19 +1726,19 @@ class EC2(ClinvAWSResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  State: {}'.format(self.state))
-        if self.state != 'running':
-            print('  State Reason: {}'.format(self.state_transition))
-        print('  Type: {}'.format(self.type))
+        print("  Name: {}".format(self.name))
+        print("  State: {}".format(self.state))
+        if self.state != "running":
+            print("  State Reason: {}".format(self.state_transition))
+        print("  Type: {}".format(self.type))
 
-        print('  SecurityGroups: ')
+        print("  SecurityGroups: ")
         for sg_id, sg_name in self.security_groups.items():
-            print('    - {}: {}'.format(sg_id, sg_name))
+            print("    - {}: {}".format(sg_id, sg_name))
 
-        print('  PrivateIP: {}'.format(self.private_ips))
-        print('  PublicIP: {}'.format(self.public_ips))
-        print('  Region: {}'.format(self.region))
+        print("  PrivateIP: {}".format(self.private_ips))
+        print("  PublicIP: {}".format(self.public_ips))
+        print("  Region: {}".format(self.region))
 
     def search(self, search_string):
         """
@@ -1851,7 +1812,7 @@ class IAMGroup(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_field('GroupName', 'str')
+        return self._get_field("GroupName", "str")
 
     @property
     def users(self):
@@ -1862,7 +1823,7 @@ class IAMGroup(ClinvGenericResource):
             list: List of user ids.
         """
 
-        return self._get_field('Users', 'list')
+        return self._get_field("Users", "list")
 
     @property
     def desired_users(self):
@@ -1873,7 +1834,7 @@ class IAMGroup(ClinvGenericResource):
             list: List of user ids.
         """
 
-        return self._get_field('desired_users', 'list')
+        return self._get_field("desired_users", "list")
 
     @property
     def inline_policies(self):
@@ -1884,7 +1845,7 @@ class IAMGroup(ClinvGenericResource):
             list: List of policy ids.
         """
 
-        return self._get_field('InlinePolicies', 'list')
+        return self._get_field("InlinePolicies", "list")
 
     @property
     def attached_policies(self):
@@ -1895,7 +1856,7 @@ class IAMGroup(ClinvGenericResource):
             list: List of policy ids.
         """
 
-        return self._get_field('AttachedPolicies', 'list')
+        return self._get_field("AttachedPolicies", "list")
 
     def print(self):
         """
@@ -1910,19 +1871,19 @@ class IAMGroup(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  Users:'),
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  Users:"),
         for user_id in self.users:
-            print('    - {}'.format(user_id))
-        print('  AttachedPolicies:'),
+            print("    - {}".format(user_id))
+        print("  AttachedPolicies:"),
         for policy_id in self.attached_policies:
-            print('    - {}'.format(policy_id))
-        print('  InlinePolicies:'),
+            print("    - {}".format(policy_id))
+        print("  InlinePolicies:"),
         for policy_id in self.inline_policies:
-            print('    - {}'.format(policy_id))
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy)),
+            print("    - {}".format(policy_id))
+        print("  State: {}".format(self.state)),
+        print("  Destroy: {}".format(self.to_destroy)),
 
     def search(self, search_string):
         """
@@ -1945,13 +1906,15 @@ class IAMGroup(ClinvGenericResource):
             return True
 
         # Search by user ids
-        if self._match_list(search_string, self.users) or \
-                self._match_list(search_string, self.desired_users):
+        if self._match_list(search_string, self.users) or self._match_list(
+            search_string, self.desired_users
+        ):
             return True
 
         # Search by policy ids
-        if self._match_list(search_string, self.attached_policies) or \
-                self._match_list(search_string, self.inline_policies):
+        if self._match_list(search_string, self.attached_policies) or self._match_list(
+            search_string, self.inline_policies
+        ):
             return True
 
         return False
@@ -1989,10 +1952,10 @@ class IAMUser(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy)),
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state)),
+        print("  Destroy: {}".format(self.to_destroy)),
 
 
 class RDS(ClinvAWSResource):
@@ -2027,9 +1990,8 @@ class RDS(ClinvAWSResource):
             str: Name of the resource.
         """
 
-        return '{} {}'.format(
-            self._get_field('Engine', 'str'),
-            self._get_field('EngineVersion', 'str'),
+        return "{} {}".format(
+            self._get_field("Engine", "str"), self._get_field("EngineVersion", "str"),
         )
 
     @property
@@ -2042,7 +2004,7 @@ class RDS(ClinvAWSResource):
             str: Name of the resource.
         """
 
-        return self._get_field('DBInstanceIdentifier', 'str')
+        return self._get_field("DBInstanceIdentifier", "str")
 
     @property
     def state(self):
@@ -2054,7 +2016,7 @@ class RDS(ClinvAWSResource):
             str: State of the resource.
         """
 
-        return self._get_field('DBInstanceStatus', 'str')
+        return self._get_field("DBInstanceStatus", "str")
 
     @property
     def security_groups(self):
@@ -2065,10 +2027,10 @@ class RDS(ClinvAWSResource):
             list: Security groups of the resource.
         """
 
-        security_groups = self._get_field('DBSecurityGroups', 'list')
+        security_groups = self._get_field("DBSecurityGroups", "list")
 
-        for security_group in self._get_field('VpcSecurityGroups', 'list'):
-            security_groups.append(security_group['VpcSecurityGroupId'])
+        for security_group in self._get_field("VpcSecurityGroups", "list"):
+            security_groups.append(security_group["VpcSecurityGroupId"])
 
         return security_groups
 
@@ -2081,7 +2043,7 @@ class RDS(ClinvAWSResource):
             str: Resource type.
         """
 
-        return self._get_field('DBInstanceClass', 'str')
+        return self._get_field("DBInstanceClass", "str")
 
     @property
     def endpoint(self):
@@ -2092,8 +2054,8 @@ class RDS(ClinvAWSResource):
             str: Resource type.
         """
 
-        endpoint_dict = self._get_field('Endpoint', 'dict')
-        return '{}:{}'.format(endpoint_dict['Address'], endpoint_dict['Port'])
+        endpoint_dict = self._get_field("Endpoint", "dict")
+        return "{}:{}".format(endpoint_dict["Address"], endpoint_dict["Port"])
 
     @property
     def vpc(self):
@@ -2105,7 +2067,7 @@ class RDS(ClinvAWSResource):
             str: Name of the resource.
         """
 
-        return self.raw['DBSubnetGroup']['VpcId']
+        return self.raw["DBSubnetGroup"]["VpcId"]
 
     def print(self):
         """
@@ -2120,14 +2082,14 @@ class RDS(ClinvAWSResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Endpoint: {}'.format(self.endpoint)),
-        print('  Type: {}'.format(self.type))
-        print('  Engine: {}'.format(self.engine))
-        print('  Description: {}'.format(self.description))
-        print('  SecurityGroups:')
+        print("  Name: {}".format(self.name))
+        print("  Endpoint: {}".format(self.endpoint)),
+        print("  Type: {}".format(self.type))
+        print("  Engine: {}".format(self.engine))
+        print("  Description: {}".format(self.description))
+        print("  SecurityGroups:")
         for security_group in self.security_groups:
-            print('    - {}'.format(security_group))
+            print("    - {}".format(security_group))
 
     def search(self, search_string):
         """
@@ -2194,7 +2156,7 @@ class Route53(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_field('Name', 'str')
+        return self._get_field("Name", "str")
 
     @property
     def to_destroy(self):
@@ -2206,7 +2168,7 @@ class Route53(ClinvGenericResource):
             str: If we want to destroy the resource
         """
 
-        return self._get_field('to_destroy', 'str')
+        return self._get_field("to_destroy", "str")
 
     @property
     def value(self):
@@ -2218,9 +2180,9 @@ class Route53(ClinvGenericResource):
         """
 
         try:
-            return [record['Value'] for record in self.raw['ResourceRecords']]
+            return [record["Value"] for record in self.raw["ResourceRecords"]]
         except KeyError:
-            return [self.raw['AliasTarget']['DNSName']]
+            return [self.raw["AliasTarget"]["DNSName"]]
 
     @property
     def type(self):
@@ -2231,7 +2193,7 @@ class Route53(ClinvGenericResource):
             str: Resource type.
         """
 
-        return self._get_field('Type', 'str')
+        return self._get_field("Type", "str")
 
     @property
     def hosted_zone(self):
@@ -2242,7 +2204,7 @@ class Route53(ClinvGenericResource):
             str: Resource hosted zone name.
         """
 
-        return self.raw['hosted_zone']['name']
+        return self.raw["hosted_zone"]["name"]
 
     @property
     def hosted_zone_id(self):
@@ -2253,7 +2215,7 @@ class Route53(ClinvGenericResource):
             str: Resource hosted zone id.
         """
 
-        return self.raw['hosted_zone']['id']
+        return self.raw["hosted_zone"]["id"]
 
     @property
     def access(self):
@@ -2264,10 +2226,10 @@ class Route53(ClinvGenericResource):
             str: Returns 'public' or 'private'
         """
 
-        if self.raw['hosted_zone']['private']:
-            return 'private'
+        if self.raw["hosted_zone"]["private"]:
+            return "private"
         else:
-            return 'public'
+            return "public"
 
     @property
     def monitored(self):
@@ -2279,11 +2241,11 @@ class Route53(ClinvGenericResource):
         """
 
         try:
-            monitored = self._get_field('monitored', 'str')
+            monitored = self._get_field("monitored", "str")
             if monitored not in [True, False]:
-                monitored = 'unknown'
+                monitored = "unknown"
         except KeyError:
-            monitored = 'unknown'
+            monitored = "unknown"
 
         return monitored
 
@@ -2313,15 +2275,15 @@ class Route53(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Value:')
+        print("  Name: {}".format(self.name))
+        print("  Value:")
         for value in self.value:
-            print('    {}'.format(value))
-        print('  Type: {}'.format(self.type))
-        print('  Zone: {}'.format(self.hosted_zone_id))
-        print('  Access: {}'.format(self.access))
-        print('  Description: {}'.format(self.description))
-        print('  Destroy: {}'.format(self.to_destroy))
+            print("    {}".format(value))
+        print("  Type: {}".format(self.type))
+        print("  Zone: {}".format(self.hosted_zone_id))
+        print("  Access: {}".format(self.access))
+        print("  Description: {}".format(self.description))
+        print("  Destroy: {}".format(self.to_destroy))
 
     def search(self, search_string):
         """
@@ -2383,7 +2345,7 @@ class S3(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_field('Name', 'str')
+        return self._get_field("Name", "str")
 
     @property
     def monitored(self):
@@ -2395,11 +2357,11 @@ class S3(ClinvGenericResource):
         """
 
         try:
-            monitored = self._get_field('monitored', 'str')
+            monitored = self._get_field("monitored", "str")
             if monitored not in [True, False]:
-                monitored = 'unknown'
+                monitored = "unknown"
         except KeyError:
-            monitored = 'unknown'
+            monitored = "unknown"
 
         return monitored
 
@@ -2416,19 +2378,22 @@ class S3(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Description: {}'.format(self.description))
-        print('  Permissions: desired/real'),
-        print('      READ: {}/{}'.format(
-            self.raw['desired_permissions']['read'],
-            self.raw['permissions']['READ']
-        )),
-        print('      WRITE: {}/{}'.format(
-            self.raw['desired_permissions']['write'],
-            self.raw['permissions']['WRITE']
-        )),
-        print('  Environment: {}'.format(self.raw['environment'])),
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy))
+        print("  Description: {}".format(self.description))
+        print("  Permissions: desired/real"),
+        print(
+            "      READ: {}/{}".format(
+                self.raw["desired_permissions"]["read"], self.raw["permissions"]["READ"]
+            )
+        ),
+        print(
+            "      WRITE: {}/{}".format(
+                self.raw["desired_permissions"]["write"],
+                self.raw["permissions"]["WRITE"],
+            )
+        ),
+        print("  Environment: {}".format(self.raw["environment"])),
+        print("  State: {}".format(self.state)),
+        print("  Destroy: {}".format(self.to_destroy))
 
 
 class SecurityGroup(ClinvGenericResource):
@@ -2472,7 +2437,7 @@ class SecurityGroup(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_field('GroupName')
+        return self._get_field("GroupName")
 
     def is_synchronized(self):
         """
@@ -2483,8 +2448,10 @@ class SecurityGroup(ClinvGenericResource):
             bool: If the state is synchronized.
         """
 
-        if self.raw['ingress'] == self.raw['IpPermissions'] and \
-                self.raw['egress'] == self.raw['IpPermissionsEgress']:
+        if (
+            self.raw["ingress"] == self.raw["IpPermissions"]
+            and self.raw["egress"] == self.raw["IpPermissionsEgress"]
+        ):
             return True
         return False
 
@@ -2506,12 +2473,13 @@ class SecurityGroup(ClinvGenericResource):
             stdout: Print the information with a defined format.
         """
         try:
-            print('      - {}: {}'.format(
-                security_group_pair['GroupId'],
-                security_group_pair['Description'],
-            ))
+            print(
+                "      - {}: {}".format(
+                    security_group_pair["GroupId"], security_group_pair["Description"],
+                )
+            )
         except KeyError:
-            print('      - {}'.format(security_group_pair['GroupId']))
+            print("      - {}".format(security_group_pair["GroupId"]))
 
     def _print_security_rule(self, security_rule):
         """
@@ -2532,37 +2500,34 @@ class SecurityGroup(ClinvGenericResource):
         Return:
             stdout: Print the information with a defined format.
         """
-        protocol = security_rule['IpProtocol'].upper()
+        protocol = security_rule["IpProtocol"].upper()
 
-        if protocol == 'ICMP':
-            port_string = ''
-        elif protocol == '-1':
-            protocol = 'All Traffic'
-            port_string = ''
+        if protocol == "ICMP":
+            port_string = ""
+        elif protocol == "-1":
+            protocol = "All Traffic"
+            port_string = ""
         else:
-            if security_rule['FromPort'] == security_rule['ToPort']:
-                port_string = security_rule['FromPort']
+            if security_rule["FromPort"] == security_rule["ToPort"]:
+                port_string = security_rule["FromPort"]
             else:
-                port_string = '{}-{}'.format(
-                    security_rule['FromPort'],
-                    security_rule['ToPort'],
+                port_string = "{}-{}".format(
+                    security_rule["FromPort"], security_rule["ToPort"],
                 )
 
-        print('    {}: {}'.format(protocol, port_string))
+        print("    {}: {}".format(protocol, port_string))
 
         try:
-            if len(security_rule['IpRanges']) > 0:
-                for cidr in security_rule['IpRanges']:
-                    print('      - {}'.format(cidr['CidrIp']))
+            if len(security_rule["IpRanges"]) > 0:
+                for cidr in security_rule["IpRanges"]:
+                    print("      - {}".format(cidr["CidrIp"]))
         except KeyError:
             pass
 
         try:
-            if len(security_rule['UserIdGroupPairs']) > 0:
-                for security_group in security_rule['UserIdGroupPairs']:
-                    self._print_security_group_pairs_information(
-                        security_group
-                    )
+            if len(security_rule["UserIdGroupPairs"]) > 0:
+                for security_group in security_rule["UserIdGroupPairs"]:
+                    self._print_security_group_pairs_information(security_group)
 
         except KeyError:
             pass
@@ -2592,22 +2557,24 @@ class SecurityGroup(ClinvGenericResource):
             bool: If it's related
         """
         # Check regular expression in the associated IPv4s.
-        for cidr in security_rule['IpRanges']:
-            if re.match(regexp, cidr['CidrIp']):
+        for cidr in security_rule["IpRanges"]:
+            if re.match(regexp, cidr["CidrIp"]):
                 return True
 
         # Check regular expression in the associated ports.
         try:
             port_to_test = int(regexp)
-            if port_to_test >= security_rule['FromPort'] and \
-                    port_to_test <= security_rule['ToPort']:
+            if (
+                port_to_test >= security_rule["FromPort"]
+                and port_to_test <= security_rule["ToPort"]
+            ):
                 return True
         except ValueError:
             pass
 
         # Check regular expression in the associated security groups
-        for security_group in security_rule['UserIdGroupPairs']:
-            if re.match(regexp, security_group['GroupId']):
+        for security_group in security_rule["UserIdGroupPairs"]:
+            if re.match(regexp, security_group["GroupId"]):
                 return True
 
     def is_related(self, regexp):
@@ -2625,11 +2592,11 @@ class SecurityGroup(ClinvGenericResource):
             bool: If it's related
         """
 
-        for security_rule in self._get_field('IpPermissions'):
+        for security_rule in self._get_field("IpPermissions"):
             if self._is_security_rule_related(regexp, security_rule):
                 return True
 
-        for security_rule in self._get_field('IpPermissionsEgress'):
+        for security_rule in self._get_field("IpPermissionsEgress"):
             if self._is_security_rule_related(regexp, security_rule):
                 return True
 
@@ -2643,18 +2610,18 @@ class SecurityGroup(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy)),
-        print('  Synchronized: {}'.format(str(self.is_synchronized())))
-        print('  Region: {}'.format(self._get_field('region', 'str')))
-        print('  VPC: {}'.format(self.vpc))
-        print('  Ingress:')
-        for security_rule in self._get_field('IpPermissions'):
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state)),
+        print("  Destroy: {}".format(self.to_destroy)),
+        print("  Synchronized: {}".format(str(self.is_synchronized())))
+        print("  Region: {}".format(self._get_field("region", "str")))
+        print("  VPC: {}".format(self.vpc))
+        print("  Ingress:")
+        for security_rule in self._get_field("IpPermissions"):
             self._print_security_rule(security_rule)
-        print('  Egress:')
-        for security_rule in self._get_field('IpPermissionsEgress'):
+        print("  Egress:")
+        for security_rule in self._get_field("IpPermissionsEgress"):
             self._print_security_rule(security_rule)
 
     def search(self, search_string):
@@ -2700,7 +2667,7 @@ class SecurityGroup(ClinvGenericResource):
             str: Name of the resource.
         """
 
-        return self._get_optional_field('VpcId')
+        return self._get_optional_field("VpcId")
 
 
 class VPC(ClinvGenericResource):
@@ -2733,14 +2700,14 @@ class VPC(ClinvGenericResource):
         """
 
         try:
-            for tag in self.raw['Tags']:
-                if tag['Key'] == 'Name':
-                    return tag['Value']
+            for tag in self.raw["Tags"]:
+                if tag["Key"] == "Name":
+                    return tag["Value"]
         except KeyError:
             pass
         except TypeError:
             pass
-        return 'none'
+        return "none"
 
     @property
     def cidr(self):
@@ -2751,7 +2718,7 @@ class VPC(ClinvGenericResource):
             str: CIDR.
         """
 
-        return self._get_field('CidrBlock', 'str')
+        return self._get_field("CidrBlock", "str")
 
     def print(self):
         """
@@ -2763,9 +2730,9 @@ class VPC(ClinvGenericResource):
         """
 
         print(self.id)
-        print('  Name: {}'.format(self.name))
-        print('  Description: {}'.format(self.description))
-        print('  State: {}'.format(self.state)),
-        print('  Destroy: {}'.format(self.to_destroy)),
-        print('  Region: {}'.format(self._get_field('region', 'str')))
-        print('  CIDR: {}'.format(self.cidr))
+        print("  Name: {}".format(self.name))
+        print("  Description: {}".format(self.description))
+        print("  State: {}".format(self.state)),
+        print("  Destroy: {}".format(self.to_destroy)),
+        print("  Region: {}".format(self._get_field("region", "str")))
+        print("  CIDR: {}".format(self.cidr))

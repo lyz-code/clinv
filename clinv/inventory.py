@@ -51,7 +51,7 @@ active_source_plugins = [
 ]
 
 
-class Inventory():
+class Inventory:
     """
     Class to gather and manipulate the inventory data.
 
@@ -93,14 +93,8 @@ class Inventory():
         self.log = logging.getLogger(__name__)
         self.log.setLevel(logging.INFO)
         self._source_plugins = source_plugins
-        self.source_data_path = os.path.join(
-            self.inventory_dir,
-            'source_data.yaml',
-        )
-        self.user_data_path = os.path.join(
-            self.inventory_dir,
-            'user_data.yaml',
-        )
+        self.source_data_path = os.path.join(self.inventory_dir, "source_data.yaml",)
+        self.user_data_path = os.path.join(self.inventory_dir, "user_data.yaml",)
         self.user_data = {}
         self.source_data = {}
         self.inv = {}
@@ -158,12 +152,7 @@ class Inventory():
                 source_data = self.source_data[source().id]
             except KeyError:
                 source_data = {}
-            self.sources.append(
-                source(
-                    source_data=source_data,
-                    user_data=user_data,
-                )
-            )
+            self.sources.append(source(source_data=source_data, user_data=user_data,))
 
     def _load_yaml(self, yaml_path):
         """
@@ -177,15 +166,15 @@ class Inventory():
         """
 
         try:
-            with open(os.path.expanduser(yaml_path), 'r') as f:
+            with open(os.path.expanduser(yaml_path), "r") as f:
                 try:
                     return yaml.safe_load(f)
                 except YAMLError as e:
                     self.log.error(e)
                     raise
         except FileNotFoundError as e:
-            self.log.error('Error opening yaml file {}'.format(yaml_path))
-            raise(e)
+            self.log.error("Error opening yaml file {}".format(yaml_path))
+            raise (e)
 
     def generate(self):
         """
@@ -331,5 +320,5 @@ class Inventory():
             Nothing.
         """
 
-        with open(os.path.expanduser(yaml_path), 'w+') as f:
+        with open(os.path.expanduser(yaml_path), "w+") as f:
             yaml.dump(variable, f, default_flow_style=False)

@@ -50,10 +50,8 @@ class ListReport(ClinvReport):
         resources_to_print = []
 
         for resource_type in sorted(self.inv.keys()):
-            if resource_type == desired_resource_type \
-                    or desired_resource_type is None:
-                for resource_id, resource \
-                        in sorted(self.inv[resource_type].items()):
+            if resource_type == desired_resource_type or desired_resource_type is None:
+                for resource_id, resource in sorted(self.inv[resource_type].items()):
                     resources_to_print.append(resource)
 
         self.short_print_resources(resources_to_print)

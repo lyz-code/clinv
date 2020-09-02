@@ -66,9 +66,9 @@ class UnassignedReport(ClinvReport):
         """
 
         all_assigned_instances = []
-        for service_id, service in sorted(self.inv['services'].items()):
+        for service_id, service in sorted(self.inv["services"].items()):
             try:
-                for instance in service.raw['aws'][resource_type]:
+                for instance in service.raw["aws"][resource_type]:
                     all_assigned_instances.append(instance)
             except TypeError:
                 pass
@@ -79,7 +79,7 @@ class UnassignedReport(ClinvReport):
             if instance_id in exclude_ids:
                 continue
             if instance_id not in all_assigned_instances:
-                if instance.state != 'terminated':
+                if instance.state != "terminated":
                     instance.short_print()
 
     def _unassigned_asg(self):
@@ -91,7 +91,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_aws_resource('asg')
+        self._unassigned_aws_resource("asg")
 
     def _unassigned_ec2(self):
         """
@@ -101,16 +101,16 @@ class UnassignedReport(ClinvReport):
         Returns:
             stdout: Prints the list of unassigned items.
         """
-        for asg_id, asg in self.inv['asg'].items():
+        for asg_id, asg in self.inv["asg"].items():
             for instance_id in asg.instances:
                 instance_id
 
         asg_instances = [
             instance_id
-            for asg_id, asg in self.inv['asg'].items()
+            for asg_id, asg in self.inv["asg"].items()
             for instance_id in asg.instances
         ]
-        self._unassigned_aws_resource('ec2', asg_instances)
+        self._unassigned_aws_resource("ec2", asg_instances)
 
     def _unassigned_rds(self):
         """
@@ -121,7 +121,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_aws_resource('rds')
+        self._unassigned_aws_resource("rds")
 
     def _unassigned_route53(self):
         """
@@ -132,11 +132,11 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        resource_type = 'route53'
+        resource_type = "route53"
         all_assigned_instances = []
-        for service_id, service in sorted(self.inv['services'].items()):
+        for service_id, service in sorted(self.inv["services"].items()):
             try:
-                for instance in service.raw['aws'][resource_type]:
+                for instance in service.raw["aws"][resource_type]:
                     all_assigned_instances.append(instance)
             except TypeError:
                 pass
@@ -145,7 +145,7 @@ class UnassignedReport(ClinvReport):
 
         for instance_id, instance in sorted(self.inv[resource_type].items()):
             if instance_id not in all_assigned_instances:
-                if instance.type != 'SOA' and instance.type != 'NS':
+                if instance.type != "SOA" and instance.type != "NS":
                     instance.print()
 
     def _unassigned_s3(self):
@@ -157,7 +157,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_aws_resource('s3')
+        self._unassigned_aws_resource("s3")
 
     def _unassigned_risk_management_resource(self, resource_type):
         """
@@ -176,7 +176,7 @@ class UnassignedReport(ClinvReport):
         """
 
         all_assigned_resources = []
-        for project_id, project in sorted(self.inv['projects'].items()):
+        for project_id, project in sorted(self.inv["projects"].items()):
             resource_method = getattr(project, resource_type)
             if resource_method is None:
                 continue
@@ -186,8 +186,10 @@ class UnassignedReport(ClinvReport):
 
         unassigned_resources = []
         for resource_id, resource in sorted(self.inv[resource_type].items()):
-            if resource_id not in all_assigned_resources and \
-                    resource.state != 'terminated':
+            if (
+                resource_id not in all_assigned_resources
+                and resource.state != "terminated"
+            ):
                 unassigned_resources.append(resource)
         self.short_print_resources(unassigned_resources)
 
@@ -200,7 +202,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_risk_management_resource('services')
+        self._unassigned_risk_management_resource("services")
 
     def _unassigned_informations(self):
         """
@@ -211,7 +213,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_risk_management_resource('informations')
+        self._unassigned_risk_management_resource("informations")
 
     def _unassigned_people(self):
         """
@@ -222,7 +224,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_risk_management_resource('people')
+        self._unassigned_risk_management_resource("people")
 
     def _unassigned_iam_users(self):
         """
@@ -233,14 +235,14 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
         all_assigned_resources = []
-        for person_id, person in sorted(self.inv['people'].items()):
+        for person_id, person in sorted(self.inv["people"].items()):
             if person.iam_user is None:
                 continue
             else:
                 all_assigned_resources.append(person.iam_user)
 
         unassigned_resources = []
-        for resource_id, resource in sorted(self.inv['iam_users'].items()):
+        for resource_id, resource in sorted(self.inv["iam_users"].items()):
             if resource_id not in all_assigned_resources:
                 unassigned_resources.append(resource)
         self.short_print_resources(unassigned_resources)
@@ -254,7 +256,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_aws_resource('iam_groups')
+        self._unassigned_aws_resource("iam_groups")
 
     def _unassigned_security_groups(self):
         """
@@ -278,9 +280,8 @@ class UnassignedReport(ClinvReport):
 
         unassigned_resources = []
 
-        for security_group_id, security_group in \
-                self.inv['security_groups'].items():
-            if security_group.state not in ['active', 'terminated']:
+        for security_group_id, security_group in self.inv["security_groups"].items():
+            if security_group.state not in ["active", "terminated"]:
                 unassigned_resources.append(security_group)
 
         self.short_print_resources(unassigned_resources)
@@ -294,7 +295,7 @@ class UnassignedReport(ClinvReport):
             stdout: Prints the list of unassigned items.
         """
 
-        self._unassigned_aws_resource('vpc')
+        self._unassigned_aws_resource("vpc")
 
     def output(self, resource_type):
         """
@@ -319,30 +320,30 @@ class UnassignedReport(ClinvReport):
             stdout: Unassigned Resource ids.
         """
 
-        if resource_type == 'all':
-            self.log.info('Unassigned ASG')
+        if resource_type == "all":
+            self.log.info("Unassigned ASG")
             self._unassigned_asg()
-            self.log.info('Unassigned EC2')
+            self.log.info("Unassigned EC2")
             self._unassigned_ec2()
-            self.log.info('Unassigned RDS')
+            self.log.info("Unassigned RDS")
             self._unassigned_rds()
-            self.log.info('Unassigned Route53')
+            self.log.info("Unassigned Route53")
             self._unassigned_route53()
-            self.log.info('Unassigned S3')
+            self.log.info("Unassigned S3")
             self._unassigned_s3()
-            self.log.info('Unassigned Services')
+            self.log.info("Unassigned Services")
             self._unassigned_services()
-            self.log.info('Unassigned People')
+            self.log.info("Unassigned People")
             self._unassigned_people()
-            self.log.info('Unassigned IAM Users')
+            self.log.info("Unassigned IAM Users")
             self._unassigned_iam_users()
-            self.log.info('Unassigned IAM Groups')
+            self.log.info("Unassigned IAM Groups")
             self._unassigned_iam_groups()
-            self.log.info('Unassigned Informations')
+            self.log.info("Unassigned Informations")
             self._unassigned_informations()
-            self.log.info('Unassigned Security Groups')
+            self.log.info("Unassigned Security Groups")
             self._unassigned_security_groups()
-            self.log.info('Unassigned VPC')
+            self.log.info("Unassigned VPC")
             self._unassigned_vpc()
         else:
-            self.__getattribute__('_unassigned_{}'.format(resource_type))()
+            self.__getattribute__("_unassigned_{}".format(resource_type))()
