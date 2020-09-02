@@ -775,7 +775,7 @@ class RDSsrc(AWSBasesrc):
                         "description": "",
                         "to_destroy": "tbd",
                         "environment": "tbd",
-                        "monitored": "tbd",
+                        "monitor": "tbd",
                         "region": region,
                     }
         return self.user_data
@@ -927,7 +927,7 @@ class Route53src(AWSBasesrc):
                     self.user_data[record_id] = {
                         "description": "tbd",
                         "to_destroy": "tbd",
-                        "monitored": "tbd",
+                        "monitor": "tbd",
                         "state": "active",
                     }
         return self.user_data
@@ -1384,7 +1384,7 @@ class ClinvAWSResource(ClinvGenericResource):
         search: Search in the resource data if a string matches.
 
     Public properties:
-        monitored: Returns if the resource is monitored.
+        monitor: Returns if the resource is monitor.
         region: Returns the region of the resource.
     """
 
@@ -1439,22 +1439,22 @@ class ClinvAWSResource(ClinvGenericResource):
         return False
 
     @property
-    def monitored(self):
+    def monitor(self):
         """
-        Do aggregation of data to return if the resource is being monitored.
+        Do aggregation of data to return if the resource is being monitor.
 
         Returns:
             str: Resource type.
         """
 
         try:
-            monitored = self._get_field("monitored", "str")
-            if monitored not in [True, False]:
-                monitored = "unknown"
+            monitor = self._get_field("monitor", "str")
+            if monitor not in [True, False]:
+                monitor = "unknown"
         except KeyError:
-            monitored = "unknown"
+            monitor = "unknown"
 
-        return monitored
+        return monitor
 
 
 class ASG(ClinvGenericResource):
@@ -1781,6 +1781,24 @@ class EC2(ClinvAWSResource):
             return True
 
         return False
+
+    @property
+    def monitor(self):
+        """
+        Do aggregation of data to return if the resource is being monitor.
+
+        Returns:
+            str: Resource type.
+        """
+
+        try:
+            monitor = self._get_field("monitor", "str")
+            if monitor not in [True, False]:
+                monitor = "unknown"
+        except KeyError:
+            monitor = "unknown"
+
+        return monitor
 
 
 class IAMGroup(ClinvGenericResource):
@@ -2137,7 +2155,7 @@ class Route53(ClinvGenericResource):
         type: Returns the type of the record.
         hosted_zone: Returns the hosted zone name of the resource.
         hosted_zone_id: Returns the hosted zone id of the resource.
-        monitored: Returns if the resource is being monitored.
+        monitor: Returns if the resource is being monitor.
         private: Returns if the resource is private.
         print: Prints information of the resource.
         short_print: Prints the resource id.
@@ -2236,22 +2254,22 @@ class Route53(ClinvGenericResource):
             return "public"
 
     @property
-    def monitored(self):
+    def monitor(self):
         """
-        Do aggregation of data to return if the resource is being monitored.
+        Do aggregation of data to return if the resource is being monitor.
 
         Returns:
             str: Resource type.
         """
 
         try:
-            monitored = self._get_field("monitored", "str")
-            if monitored not in [True, False]:
-                monitored = "unknown"
+            monitor = self._get_field("monitor", "str")
+            if monitor not in [True, False]:
+                monitor = "unknown"
         except KeyError:
-            monitored = "unknown"
+            monitor = "unknown"
 
-        return monitored
+        return monitor
 
     def short_print(self):
         """
@@ -2328,7 +2346,7 @@ class S3(ClinvGenericResource):
 
     Public properties:
         name: Returns the name of the resource.
-        monitored: Returns if the resource is monitored.
+        monitor: Returns if the resource is monitor.
         print: Prints information of the resource.
     """
 
@@ -2352,22 +2370,22 @@ class S3(ClinvGenericResource):
         return self._get_field("Name", "str")
 
     @property
-    def monitored(self):
+    def monitor(self):
         """
-        Do aggregation of data to return if the resource is being monitored.
+        Do aggregation of data to return if the resource is being monitor.
 
         Returns:
             str: Resource type.
         """
 
         try:
-            monitored = self._get_field("monitored", "str")
-            if monitored not in [True, False]:
-                monitored = "unknown"
+            monitor = self._get_field("monitor", "str")
+            if monitor not in [True, False]:
+                monitor = "unknown"
         except KeyError:
-            monitored = "unknown"
+            monitor = "unknown"
 
-        return monitored
+        return monitor
 
     def print(self):
         """

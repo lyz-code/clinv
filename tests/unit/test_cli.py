@@ -1,7 +1,8 @@
 import logging
 import unittest
 from unittest.mock import call, patch
-from clinv.cli import load_parser, load_logger
+
+from clinv.cli import load_logger, load_parser
 
 
 class TestArgparse(unittest.TestCase):
@@ -144,24 +145,24 @@ class TestArgparse(unittest.TestCase):
         self.assertEqual(parsed.subcommand, "print")
         self.assertEqual(parsed.search_string, "resource_id")
 
-    def test_can_specify_monitored_subcommand(self):
-        parsed = self.parser.parse_args(["monitored"])
-        self.assertEqual(parsed.subcommand, "monitored")
+    def test_can_specify_monitor_subcommand(self):
+        parsed = self.parser.parse_args(["monitor"])
+        self.assertEqual(parsed.subcommand, "monitor")
         self.assertEqual(parsed.monitor_status, "true")
 
-    def test_can_specify_monitored_monitored_subcommand(self):
-        parsed = self.parser.parse_args(["monitored", "true"])
-        self.assertEqual(parsed.subcommand, "monitored")
+    def test_can_specify_monitor_monitor_subcommand(self):
+        parsed = self.parser.parse_args(["monitor", "true"])
+        self.assertEqual(parsed.subcommand, "monitor")
         self.assertEqual(parsed.monitor_status, "true")
 
-    def test_can_specify_monitored_unmonitored_subcommand(self):
-        parsed = self.parser.parse_args(["monitored", "false"])
-        self.assertEqual(parsed.subcommand, "monitored")
+    def test_can_specify_monitor_unmonitor_subcommand(self):
+        parsed = self.parser.parse_args(["monitor", "false"])
+        self.assertEqual(parsed.subcommand, "monitor")
         self.assertEqual(parsed.monitor_status, "false")
 
-    def test_can_specify_monitored_unknown_subcommand(self):
-        parsed = self.parser.parse_args(["monitored", "unknown"])
-        self.assertEqual(parsed.subcommand, "monitored")
+    def test_can_specify_monitor_unknown_subcommand(self):
+        parsed = self.parser.parse_args(["monitor", "unknown"])
+        self.assertEqual(parsed.subcommand, "monitor")
         self.assertEqual(parsed.monitor_status, "unknown")
 
     def test_can_specify_unused_subcommand(self):

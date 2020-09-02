@@ -77,9 +77,9 @@ instances that aren't assigned in a `service`.
 If `resource_type` is `people`, `service` or `information`, it will search for instances
 that aren't assigned to a `project`.
 
-## Monitored
+## Monitor
 
-`clinv monitored monitor_status` will show a list of id and names of elements
+`clinv monitor monitor_status` will show a list of id and names of elements
 that have the specified `monitor_status`. The `monitor_status` can be one of:
 `true`, `false` and `unknown`.
 
