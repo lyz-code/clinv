@@ -43,14 +43,14 @@ class UnusedReport(ClinvReport):
         unused_resources = []
 
         # Security groups used by EC2 instances.
-        for ec2_id, ec2 in self.inv['ec2'].items():
+        for ec2_id, ec2 in self.inv["ec2"].items():
             [
                 used_resources.append(security_group)
                 for security_group in ec2.security_groups.keys()
             ]
 
         # Security groups used by RDS instances.
-        for rds_id, rds in self.inv['rds'].items():
+        for rds_id, rds in self.inv["rds"].items():
             [
                 used_resources.append(security_group)
                 for security_group in rds.security_groups
@@ -60,19 +60,21 @@ class UnusedReport(ClinvReport):
         def is_security_group_related(security_group_id_to_test):
             if security_group_id_to_test in used_resources:
                 return True
-            for security_group_id, security_group in \
-                    self.inv['security_groups'].items():
+            for security_group_id, security_group in self.inv[
+                "security_groups"
+            ].items():
                 if security_group.is_related(security_group_id_to_test):
                     used_resources.append(security_group_id_to_test)
                     return True
 
             return False
 
-        for security_group_id_to_test, security_group_to_test \
-                in self.inv['security_groups'].items():
+        for security_group_id_to_test, security_group_to_test in self.inv[
+            "security_groups"
+        ].items():
             # Don't add the VPC/Region default security groups as they can't
             # be removed.
-            if security_group_to_test.name == 'default':
+            if security_group_to_test.name == "default":
                 continue
 
             if not is_security_group_related(security_group_id_to_test):
@@ -90,5 +92,5 @@ class UnusedReport(ClinvReport):
         Returns:
             stdout: Resource information
         """
-        self.log.info('Unused Security Groups')
+        self.log.info("Unused Security Groups")
         self._unused_security_groups()

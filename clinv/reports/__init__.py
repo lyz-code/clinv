@@ -8,7 +8,7 @@ Classes:
 import logging
 
 
-class ClinvReport():
+class ClinvReport:
     """
     Class to gather the common methods for the Clinv reports.
 
@@ -65,9 +65,7 @@ class ClinvReport():
 
         for resource_id in resource_ids:
             try:
-                resource_names.append(
-                    self.inv[resource_type][resource_id].name
-                )
+                resource_names.append(self.inv[resource_type][resource_id].name)
             except KeyError:
                 pass
 
@@ -76,4 +74,4 @@ class ClinvReport():
         elif len(resource_names) == 1:
             return resource_names[0]
         else:
-            return ', '.join(resource_names)
+            return ", ".join(resource_names)

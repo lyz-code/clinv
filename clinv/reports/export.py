@@ -72,27 +72,27 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'Name',
-            'Services',
-            'To destroy',
-            'Responsible',
-            'Region',
-            'Comments'
+            "ID",
+            "Name",
+            "Services",
+            "To destroy",
+            "Responsible",
+            "Region",
+            "Comments",
         ]
 
         # Fill up content
         exported_data = []
         for instance_id, instance in self.inv[resource_type].items():
             related_services = {}
-            for service_id, service in self.inv['services'].items():
+            for service_id, service in self.inv["services"].items():
                 try:
-                    service.raw['aws'][resource_type]
+                    service.raw["aws"][resource_type]
                 except TypeError:
                     continue
                 except KeyError:
                     continue
-                for service_resource_id in service.raw['aws'][resource_type]:
+                for service_resource_id in service.raw["aws"][resource_type]:
                     if service_resource_id == instance_id:
                         related_services[service_id] = service
 
@@ -100,14 +100,16 @@ class ExportReport(ClinvReport):
                 [
                     instance_id,
                     instance.name,
-                    self._get_resource_names('services', related_services),
-                    instance._get_field('to_destroy'),
-                    ', '.join(set(
-                        [
-                            service.responsible
-                            for service_id, service in related_services.items()
-                        ]
-                    )),
+                    self._get_resource_names("services", related_services),
+                    instance._get_field("to_destroy"),
+                    ", ".join(
+                        set(
+                            [
+                                service.responsible
+                                for service_id, service in related_services.items()
+                            ]
+                        )
+                    ),
                     instance.region,
                     instance.description,
                 ]
@@ -129,7 +131,7 @@ class ExportReport(ClinvReport):
             by lines of data.
         """
 
-        return self._export_aws_resource('ec2')
+        return self._export_aws_resource("ec2")
 
     def _export_rds(self):
         """
@@ -141,7 +143,7 @@ class ExportReport(ClinvReport):
             by lines of data.
         """
 
-        return self._export_aws_resource('rds')
+        return self._export_aws_resource("rds")
 
     def _export_s3(self):
         """
@@ -155,26 +157,26 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'To destroy',
-            'Environment',
-            'Read Permissions (desired/real)',
-            'Write Permissions (desired/real)',
-            'Description',
+            "ID",
+            "To destroy",
+            "Environment",
+            "Read Permissions (desired/real)",
+            "Write Permissions (desired/real)",
+            "Description",
         ]
 
         # Fill up content
         exported_data = []
-        for instance_id, instance in self.inv['s3'].items():
+        for instance_id, instance in self.inv["s3"].items():
             related_services = {}
-            for service_id, service in self.inv['services'].items():
+            for service_id, service in self.inv["services"].items():
                 try:
-                    service.raw['aws']['s3']
+                    service.raw["aws"]["s3"]
                 except TypeError:
                     continue
                 except KeyError:
                     continue
-                for service_resource_id in service.raw['aws']['s3']:
+                for service_resource_id in service.raw["aws"]["s3"]:
                     if service_resource_id == instance_id:
                         related_services[service_id] = service
 
@@ -182,14 +184,14 @@ class ExportReport(ClinvReport):
                 [
                     instance_id,
                     instance.to_destroy,
-                    instance._get_field('environment'),
-                    '{}/{}'.format(
-                        instance.raw['desired_permissions']['read'],
-                        instance.raw['permissions']['READ']
+                    instance._get_field("environment"),
+                    "{}/{}".format(
+                        instance.raw["desired_permissions"]["read"],
+                        instance.raw["permissions"]["READ"],
                     ),
-                    '{}/{}'.format(
-                        instance.raw['desired_permissions']['write'],
-                        instance.raw['permissions']['WRITE']
+                    "{}/{}".format(
+                        instance.raw["desired_permissions"]["write"],
+                        instance.raw["permissions"]["WRITE"],
                     ),
                     instance.description,
                 ]
@@ -213,30 +215,30 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'Name',
-            'Type',
-            'Value',
-            'Services',
-            'To destroy',
-            'Access',
-            'Description',
+            "ID",
+            "Name",
+            "Type",
+            "Value",
+            "Services",
+            "To destroy",
+            "Access",
+            "Description",
         ]
 
         # Fill up content
-        resource_type = 'route53'
+        resource_type = "route53"
 
         exported_data = []
         for instance_id, instance in self.inv[resource_type].items():
             related_services = {}
-            for service_id, service in self.inv['services'].items():
+            for service_id, service in self.inv["services"].items():
                 try:
-                    service.raw['aws'][resource_type]
+                    service.raw["aws"][resource_type]
                 except TypeError:
                     continue
                 except KeyError:
                     continue
-                for service_resource_id in service.raw['aws'][resource_type]:
+                for service_resource_id in service.raw["aws"][resource_type]:
                     if service_resource_id == instance_id:
                         related_services[service_id] = service
 
@@ -245,9 +247,9 @@ class ExportReport(ClinvReport):
                     instance.id,
                     instance.name,
                     instance.type,
-                    ', '.join(instance.value),
-                    self._get_resource_names('services', related_services),
-                    instance._get_field('to_destroy'),
+                    ", ".join(instance.value),
+                    self._get_resource_names("services", related_services),
+                    instance._get_field("to_destroy"),
                     instance.access,
                     instance.description,
                 ]
@@ -271,26 +273,23 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'Name',
-            'Services',
-            'Informations',
-            'State',
-            'Description',
+            "ID",
+            "Name",
+            "Services",
+            "Informations",
+            "State",
+            "Description",
         ]
 
         # Fill up content
         exported_data = []
-        for resource_id, resource in self.inv['projects'].items():
+        for resource_id, resource in self.inv["projects"].items():
             exported_data.append(
                 [
                     resource_id,
                     resource.name,
-                    self._get_resource_names('services', resource.services),
-                    self._get_resource_names(
-                        'informations',
-                        resource.informations
-                    ),
+                    self._get_resource_names("services", resource.services),
+                    self._get_resource_names("informations", resource.informations),
                     resource.state,
                     resource.description,
                 ]
@@ -314,27 +313,24 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'Name',
-            'Access',
-            'State',
-            'Informations',
-            'Description',
+            "ID",
+            "Name",
+            "Access",
+            "State",
+            "Informations",
+            "Description",
         ]
 
         # Fill up content
         exported_data = []
-        for resource_id, resource in self.inv['services'].items():
+        for resource_id, resource in self.inv["services"].items():
             exported_data.append(
                 [
                     resource_id,
                     resource.name,
                     resource.access,
                     resource.state,
-                    self._get_resource_names(
-                        'informations',
-                        resource.informations
-                    ),
+                    self._get_resource_names("informations", resource.informations),
                     resource.description,
                 ]
             )
@@ -357,17 +353,17 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'Name',
-            'State',
-            'Responsible',
-            'Personal Data',
-            'Description',
+            "ID",
+            "Name",
+            "State",
+            "Responsible",
+            "Personal Data",
+            "Description",
         ]
 
         # Fill up content
         exported_data = []
-        for resource_id, resource in self.inv['informations'].items():
+        for resource_id, resource in self.inv["informations"].items():
             exported_data.append(
                 [
                     resource_id,
@@ -397,22 +393,17 @@ class ExportReport(ClinvReport):
 
         # Create spreadsheet headers
         exported_headers = [
-            'ID',
-            'Name',
-            'State',
-            'Description',
+            "ID",
+            "Name",
+            "State",
+            "Description",
         ]
 
         # Fill up content
         exported_data = []
-        for resource_id, resource in self.inv['people'].items():
+        for resource_id, resource in self.inv["people"].items():
             exported_data.append(
-                [
-                    resource_id,
-                    resource.name,
-                    resource.state,
-                    resource.description,
-                ]
+                [resource_id, resource.name, resource.state, resource.description,]
             )
 
         # Sort by id
@@ -438,16 +429,15 @@ class ExportReport(ClinvReport):
         """
 
         book = OrderedDict()
-        book.update({'Projects': self._export_projects()})
-        book.update({'Services': self._export_services()})
-        book.update({'Informations': self._export_informations()})
-        book.update({'EC2': self._export_ec2()})
-        book.update({'RDS': self._export_rds()})
-        book.update({'Route53': self._export_route53()})
-        book.update({'S3': self._export_s3()})
-        book.update({'People': self._export_people()})
+        book.update({"Projects": self._export_projects()})
+        book.update({"Services": self._export_services()})
+        book.update({"Informations": self._export_informations()})
+        book.update({"EC2": self._export_ec2()})
+        book.update({"RDS": self._export_rds()})
+        book.update({"Route53": self._export_route53()})
+        book.update({"S3": self._export_s3()})
+        book.update({"People": self._export_people()})
 
         pyexcel.save_book_as(
-            bookdict=book,
-            dest_file_name=os.path.expanduser(export_path),
+            bookdict=book, dest_file_name=os.path.expanduser(export_path),
         )

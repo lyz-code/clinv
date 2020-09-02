@@ -5,9 +5,9 @@ import unittest
 
 
 class TestSearchReport(ClinvReportBaseTestClass, unittest.TestCase):
-    '''
+    """
     Test the SearchReport implementation.
-    '''
+    """
 
     def setUp(self):
         super().setUp()
@@ -16,14 +16,13 @@ class TestSearchReport(ClinvReportBaseTestClass, unittest.TestCase):
     def tearDown(self):
         super().tearDown()
 
-    @patch('clinv.reports.search.print')
+    @patch("clinv.reports.search.print")
     def test_output_method_returns_an_inventory_resource_if_match(
-        self,
-        printMock,
+        self, printMock,
     ):
         self.ec2instance.search.return_value = True
 
-        self.report.output('ec2')
+        self.report.output("ec2")
 
-        self.assertEqual(printMock.mock_calls, [call('\nType: ec2')])
+        self.assertEqual(printMock.mock_calls, [call("\nType: ec2")])
         self.assertTrue(self.ec2instance.short_print.called)

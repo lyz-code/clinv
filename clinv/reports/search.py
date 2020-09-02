@@ -45,5 +45,5 @@ class SearchReport(ClinvReport):
                     result.append(resource)
 
             if result != []:
-                print('\nType: {}'.format(resource_type))
+                print("\nType: {}".format(resource_type))
                 self.short_print_resources(result)
