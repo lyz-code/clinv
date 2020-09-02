@@ -27,12 +27,13 @@ Classes:
     Inventory: Class to gather and manipulate the inventory data.
 """
 
-from clinv.sources import aws, risk_management
-from yaml import YAMLError
-
 import logging
 import os
+
 import yaml
+from yaml import YAMLError
+
+from clinv.sources import aws, risk_management
 
 active_source_plugins = [
     aws.ASGsrc,

@@ -23,10 +23,10 @@ from clinv.inventory import Inventory
 from clinv.reports.active import ActiveReport
 from clinv.reports.export import ExportReport
 from clinv.reports.list import ListReport
-from clinv.reports.print import PrintReport
-from clinv.reports.unassigned import UnassignedReport
-from clinv.reports.search import SearchReport
 from clinv.reports.monitored import MonitoredReport
+from clinv.reports.print import PrintReport
+from clinv.reports.search import SearchReport
+from clinv.reports.unassigned import UnassignedReport
 from clinv.reports.unused import UnusedReport
 
 

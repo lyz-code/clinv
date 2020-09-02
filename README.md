@@ -40,6 +40,9 @@ it is able to import the following resources from all the regions:
 * S3
 * IAM users and groups
 
+It will automatically mark the EC2 instances as monitored if they have the tag
+`monitor` with value `"True"`.
+
 ## List
 
 `clinv list resource_type` will show a list of id and names of the selected
