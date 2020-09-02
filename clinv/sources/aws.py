@@ -352,6 +352,10 @@ class EC2src(AWSBasesrc):
                             "region": region,
                         }
 
+                    for tag in instance["Tags"]:
+                        if tag["Key"] == "monitor" and tag["Value"] == "True":
+                            self.user_data[instance_id]["monitor"] = True
+
         return self.user_data
 
     def generate_inventory(self):
@@ -1102,7 +1106,7 @@ class S3src(AWSBasesrc):
                     "description": "",
                     "to_destroy": "tbd",
                     "environment": "tbd",
-                    "desired_permissions": {"read": "tbd", "write": "tbd",},
+                    "desired_permissions": {"read": "tbd", "write": "tbd"},
                     "state": "active",
                 }
 

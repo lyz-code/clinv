@@ -478,9 +478,20 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
         )
 
     def test_generate_user_data_adds_monitored_value_from_instance_tags_if_empty(self):
-        self.src.user_data["us-east-1"][0]["Instances"][0]["Tags"].append(
+        self.src.source_data["us-east-1"][0]["Instances"][0]["Tags"].append(
             {"Key": "monitor", "Value": "True"}
         )
+
+        self.src.generate_user_data()
+
+        assert self.src.user_data["i-023desldk394995ss"]["monitor"] is True
+
+    def test_generate_user_data_doesnt_modify_monitored_value_if_empty(self):
+        self.src.source_data["us-east-1"][0]["Instances"][0]["Tags"].append(
+            {"Key": "monitor", "Value": "False"}
+        )
+        self.src.user_data = self.desired_user_data
+        self.src.user_data["i-023desldk394995ss"]["monitor"] = True
 
         self.src.generate_user_data()
 
