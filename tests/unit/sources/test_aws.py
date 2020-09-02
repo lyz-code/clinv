@@ -477,7 +477,7 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
             self.src.user_data, desired_user_data,
         )
 
-    def test_generate_user_data_adds_monitored_value_from_instance_tags_if_empty(self):
+    def test_generate_user_data_adds_monitor_value_from_instance_tags_if_empty(self):
         self.src.source_data["us-east-1"][0]["Instances"][0]["Tags"].append(
             {"Key": "monitor", "Value": "True"}
         )
@@ -486,7 +486,7 @@ class TestEC2Source(AWSSourceBaseTestClass, unittest.TestCase):
 
         assert self.src.user_data["i-023desldk394995ss"]["monitor"] is True
 
-    def test_generate_user_data_doesnt_modify_monitored_value_if_empty(self):
+    def test_generate_user_data_doesnt_modify_monitor_value_if_empty(self):
         self.src.source_data["us-east-1"][0]["Instances"][0]["Tags"].append(
             {"Key": "monitor", "Value": "False"}
         )
@@ -895,7 +895,7 @@ class TestRDSSource(AWSSourceBaseTestClass, unittest.TestCase):
                 "description": "",
                 "to_destroy": "tbd",
                 "environment": "tbd",
-                "monitored": "tbd",
+                "monitor": "tbd",
                 "region": "us-east-1",
             },
         }
@@ -1094,7 +1094,7 @@ class TestRoute53Source(AWSSourceBaseTestClass, unittest.TestCase):
             "hosted_zone_id-record1.clinv.org-cname": {
                 "description": "tbd",
                 "to_destroy": "tbd",
-                "monitored": "tbd",
+                "monitor": "tbd",
                 "state": "active",
             },
         }
@@ -1928,21 +1928,21 @@ class ClinvAWSResourceTests(ClinvGenericResourceTests):
     def test_search_by_type(self):
         self.assertTrue(self.resource.search("c4.4xlarge"))
 
-    def test_monitored_property_works_as_expected_if_unset(self):
-        self.resource.raw.pop("monitored")
-        self.assertEqual(self.resource.monitored, "unknown")
+    def test_monitor_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop("monitor")
+        self.assertEqual(self.resource.monitor, "unknown")
 
-    def test_monitored_property_works_as_expected_if_non_known_value(self):
-        self.resource.raw["monitored"] = "tbd"
-        self.assertEqual(self.resource.monitored, "unknown")
+    def test_monitor_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw["monitor"] = "tbd"
+        self.assertEqual(self.resource.monitor, "unknown")
 
-    def test_monitored_property_works_as_expected_if_set_to_bool_true(self):
-        self.resource.raw["monitored"] = True
-        self.assertEqual(self.resource.monitored, True)
+    def test_monitor_property_works_as_expected_if_set_to_bool_true(self):
+        self.resource.raw["monitor"] = True
+        self.assertEqual(self.resource.monitor, True)
 
-    def test_monitored_property_works_as_expected_if_set_to_bool_false(self):
-        self.resource.raw["monitored"] = False
-        self.assertEqual(self.resource.monitored, False)
+    def test_monitor_property_works_as_expected_if_set_to_bool_false(self):
+        self.resource.raw["monitor"] = False
+        self.assertEqual(self.resource.monitor, False)
 
 
 class TestASG(ClinvGenericResourceTests, unittest.TestCase):
@@ -2174,7 +2174,7 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
                 "description": "This is in the description of the instance",
                 "region": "us-east-1",
                 "to_destroy": "tbd",
-                "monitored": "true",
+                "monitor": "tbd",
                 "environment": "tbd",
             }
         }
@@ -2279,6 +2279,22 @@ class TestEC2(ClinvAWSResourceTests, unittest.TestCase):
         self.resource.raw.pop("VpcId")
         self.assertFalse(self.resource.search("vpc-310.*"))
 
+    def test_monitor_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop("monitor")
+        self.assertEqual(self.resource.monitor, "unknown")
+
+    def test_monitor_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw["monitor"] = "tbd"
+        self.assertEqual(self.resource.monitor, "unknown")
+
+    def test_monitor_property_works_as_expected_if_set_to_true(self):
+        self.resource.raw["monitor"] = True
+        self.assertEqual(self.resource.monitor, True)
+
+    def test_monitor_property_works_as_expected_if_set_to_false(self):
+        self.resource.raw["monitor"] = False
+        self.assertEqual(self.resource.monitor, False)
+
 
 class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
     def setUp(self):
@@ -2340,7 +2356,7 @@ class TestRDS(ClinvAWSResourceTests, unittest.TestCase):
                 "description": "This is in the description of the instance",
                 "region": "us-east-1",
                 "to_destroy": "tbd",
-                "monitored": "true",
+                "monitor": "true",
                 "environment": "production",
                 "VpcSecurityGroups": [
                     {"Status": "active", "VpcSecurityGroupId": "sg-f23le20g"}
@@ -2411,7 +2427,7 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
                 "description": "This is the description",
                 "to_destroy": "tbd",
                 "state": "active",
-                "monitored": "true",
+                "monitor": "true",
                 "hosted_zone": {
                     "id": "/hostedzone/hosted_zone_id",
                     "private": False,
@@ -2525,21 +2541,21 @@ class TestRoute53(ClinvGenericResourceTests, unittest.TestCase):
     def test_search_resource_by_type_insensitive(self):
         self.assertTrue(self.resource.search("cname"))
 
-    def test_monitored_property_works_as_expected_if_unset(self):
-        self.resource.raw.pop("monitored")
-        self.assertEqual(self.resource.monitored, "unknown")
+    def test_monitor_property_works_as_expected_if_unset(self):
+        self.resource.raw.pop("monitor")
+        self.assertEqual(self.resource.monitor, "unknown")
 
-    def test_monitored_property_works_as_expected_if_non_known_value(self):
-        self.resource.raw["monitored"] = "tbd"
-        self.assertEqual(self.resource.monitored, "unknown")
+    def test_monitor_property_works_as_expected_if_non_known_value(self):
+        self.resource.raw["monitor"] = "tbd"
+        self.assertEqual(self.resource.monitor, "unknown")
 
-    def test_monitored_property_works_as_expected_if_set_to_true(self):
-        self.resource.raw["monitored"] = True
-        self.assertEqual(self.resource.monitored, True)
+    def test_monitor_property_works_as_expected_if_set_to_true(self):
+        self.resource.raw["monitor"] = True
+        self.assertEqual(self.resource.monitor, True)
 
-    def test_monitored_property_works_as_expected_if_set_to_false(self):
-        self.resource.raw["monitored"] = False
-        self.assertEqual(self.resource.monitored, False)
+    def test_monitor_property_works_as_expected_if_set_to_false(self):
+        self.resource.raw["monitor"] = False
+        self.assertEqual(self.resource.monitor, False)
 
 
 class TestS3(ClinvGenericResourceTests, unittest.TestCase):

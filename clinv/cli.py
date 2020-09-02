@@ -1,5 +1,6 @@
-import logging
 import argparse
+import logging
+
 import argcomplete
 
 
@@ -114,8 +115,8 @@ def load_parser():
         "search_string", type=str, help="Regexp of a Clinv resource ID",
     )
 
-    monitored_parser = subparser.add_parser("monitored")
-    monitored_parser.add_argument(
+    monitor_parser = subparser.add_parser("monitor")
+    monitor_parser.add_argument(
         "monitor_status",
         type=str,
         nargs="?",

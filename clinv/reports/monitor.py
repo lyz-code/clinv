@@ -1,15 +1,15 @@
 """
-Module to store the MonitoredReport.
+Module to store the monitorReport.
 
 Classes:
-  MonitoredReport: {{ class_description }}
+  MonitorReport: {{ class_description }}
 
 """
 
 from clinv.reports import ClinvReport
 
 
-class MonitoredReport(ClinvReport):
+class MonitorReport(ClinvReport):
     """
     Report to print the monitoring status of the inventory resources.
 
@@ -20,7 +20,7 @@ class MonitoredReport(ClinvReport):
         output: Print the report to stdout.
 
     Internal methods:
-        _monitored_status: Classify resources based on their monitor status.
+        _monitor_status: Classify resources based on their monitor status.
 
     Public attributes:
         inv (Inventory): Clinv inventory.
@@ -31,8 +31,8 @@ class MonitoredReport(ClinvReport):
     def __init__(self, inventory):
         super().__init__(inventory)
         self.monitor_status = {
-            "monitored": {},
-            "unmonitored": {},
+            "monitor": {},
+            "unmonitor": {},
             "unknown": {},
         }
 
@@ -42,13 +42,13 @@ class MonitoredReport(ClinvReport):
         status populating the self.monitor_status attribute with the following
         structure:
             {
-                'monitored': {
+                'monitor': {
                     'ec2': [
                         EC2()
                     ],
                     ...
                 }
-                'unmonitored': {
+                'unmonitor': {
                     'ec2': [
                         EC2()
                     ],
@@ -67,22 +67,22 @@ class MonitoredReport(ClinvReport):
         """
 
         for resource_type in ["ec2", "route53", "rds"]:
-            self.monitor_status["monitored"][resource_type] = []
-            self.monitor_status["unmonitored"][resource_type] = []
+            self.monitor_status["monitor"][resource_type] = []
+            self.monitor_status["unmonitor"][resource_type] = []
             self.monitor_status["unknown"][resource_type] = []
 
             for resource_id, resource in sorted(self.inv[resource_type].items()):
                 if resource.state == "terminated":
                     continue
                 try:
-                    monitor_status = resource.monitored
+                    monitor_status = resource.monitor
                 except AttributeError:
                     monitor_status = "unknown"
 
                 if monitor_status is True:
-                    self.monitor_status["monitored"][resource_type].append(resource)
+                    self.monitor_status["monitor"][resource_type].append(resource)
                 elif monitor_status is False:
-                    self.monitor_status["unmonitored"][resource_type].append(resource)
+                    self.monitor_status["unmonitor"][resource_type].append(resource)
                 else:
                     self.monitor_status["unknown"][resource_type].append(resource)
 
@@ -98,11 +98,11 @@ class MonitoredReport(ClinvReport):
             stdout: Resource information
         """
         if monitor_status == "true":
-            status_message = "Monitored {} resources"
-            monitor_status = "monitored"
+            status_message = "monitor {} resources"
+            monitor_status = "monitor"
         elif monitor_status == "false":
-            status_message = "Unmonitored {} resources"
-            monitor_status = "unmonitored"
+            status_message = "Unmonitor {} resources"
+            monitor_status = "unmonitor"
         else:
             status_message = "Unknown monitor status of {} resources"
             monitor_status = "unknown"

@@ -119,9 +119,9 @@ class TestMain(unittest.TestCase):
             reportMock.return_value.output.assert_called_with("resource_id"), None,
         )
 
-    @patch("clinv.MonitoredReport")
+    @patch("clinv.MonitorReport")
     def test_monitor_subcommand(self, reportMock):
-        self.parser_args.subcommand = "monitored"
+        self.parser_args.subcommand = "monitor"
         self.parser_args.monitor_status = "true"
         main()
         self.assertTrue(self.inventory.return_value.load.called)
