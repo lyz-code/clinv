@@ -3,6 +3,21 @@ import logging
 
 import argcomplete
 
+resource_types = [
+    "asg",
+    "ec2",
+    "iam_groups",
+    "iam_users",
+    "informations",
+    "people",
+    "rds",
+    "route53",
+    "s3",
+    "services",
+    "security_groups",
+    "vpc",
+]
+
 
 def load_parser():
     """ Configure environment """
@@ -34,21 +49,7 @@ def load_parser():
         type=str,
         nargs="?",
         help="String used to search",
-        choices=[
-            "all",
-            "asg",
-            "ec2",
-            "iam_groups",
-            "iam_users",
-            "informations",
-            "people",
-            "rds",
-            "route53",
-            "s3",
-            "services",
-            "security_groups",
-            "vpc",
-        ],
+        choices=[*resource_types, "all"],
         default="all",
     )
 
@@ -57,22 +58,7 @@ def load_parser():
         "resource_type",
         type=str,
         help="String used to search",
-        choices=[
-            "asg",
-            "ec2",
-            "rds",
-            "services",
-            "iam_groups",
-            "iam_users",
-            "informations",
-            "people",
-            "projects",
-            "route53",
-            "s3",
-            "security_groups",
-            "vpc",
-            None,
-        ],
+        choices=[*resource_types, None],
         nargs="?",
     )
 
@@ -82,22 +68,7 @@ def load_parser():
         type=str,
         help="String used to search",
         default=None,
-        choices=[
-            "asg",
-            "ec2",
-            "rds",
-            "services",
-            "iam_groups",
-            "iam_users",
-            "informations",
-            "people",
-            "projects",
-            "route53",
-            "s3",
-            "security_groups",
-            "vpc",
-            None,
-        ],
+        choices=[*resource_types, None],
         nargs="?",
     )
 
@@ -121,7 +92,7 @@ def load_parser():
         type=str,
         nargs="?",
         help="Monitor status of the resources",
-        choices=["true", "false", "unknown",],
+        choices=["true", "false", "unknown"],
         default="true",
     )
 
