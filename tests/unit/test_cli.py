@@ -198,10 +198,10 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(
             self.logging.addLevelName.assert_has_calls(
                 [
-                    call(logging.INFO, "[\033[36mINFO\033[0m]"),
-                    call(logging.ERROR, "[\033[31mERROR\033[0m]"),
-                    call(logging.DEBUG, "[\033[32mDEBUG\033[0m]"),
-                    call(logging.WARNING, "[\033[33mWARNING\033[0m]"),
+                    call(logging.INFO, "[\033[36m+\033[0m]"),
+                    call(logging.ERROR, "[\033[31m+\033[0m]"),
+                    call(logging.DEBUG, "[\033[32m+\033[0m]"),
+                    call(logging.WARNING, "[\033[33m+\033[0m]"),
                 ]
             ),
             None,

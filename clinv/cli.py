@@ -132,8 +132,8 @@ def load_parser():
 
 
 def load_logger():
-    logging.addLevelName(logging.INFO, "[\033[36mINFO\033[0m]")
-    logging.addLevelName(logging.ERROR, "[\033[31mERROR\033[0m]")
-    logging.addLevelName(logging.DEBUG, "[\033[32mDEBUG\033[0m]")
-    logging.addLevelName(logging.WARNING, "[\033[33mWARNING\033[0m]")
+    logging.addLevelName(logging.INFO, "[\033[36m+\033[0m]")
+    logging.addLevelName(logging.ERROR, "[\033[31m+\033[0m]")
+    logging.addLevelName(logging.DEBUG, "[\033[32m+\033[0m]")
+    logging.addLevelName(logging.WARNING, "[\033[33m+\033[0m]")
     logging.basicConfig(level=logging.WARNING, format="  %(levelname)s %(message)s")
