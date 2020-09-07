@@ -41,7 +41,15 @@ def load_parser():
         "search_string", type=str, help="String used to search",
     )
 
-    subparser.add_parser("generate")
+    generate_parser = subparser.add_parser("generate")
+    generate_parser.add_argument(
+        "resource_type",
+        type=str,
+        nargs="?",
+        help="String used to search",
+        choices=[*resource_types, "all"],
+        default="all",
+    )
 
     unassigned_parser = subparser.add_parser("unassigned")
     unassigned_parser.add_argument(

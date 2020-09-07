@@ -41,6 +41,13 @@ class TestMain(unittest.TestCase):
         main()
         self.assertTrue(self.inventory.return_value.generate.called)
 
+    def test_generate_subcommand_with_resource_type(self):
+        self.parser_args.subcommand = "generate"
+        self.parser_args.resource_type = "ec2"
+        main()
+
+        self.inventory.return_value.generate.assert_called_with("ec2")
+
     @patch("clinv.SearchReport")
     def test_search_subcommand(self, reportMock):
         self.parser_args.subcommand = "search"

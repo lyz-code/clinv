@@ -32,6 +32,16 @@ class TestArgparse:
         parsed = parser.parse_args(["generate"])
 
         assert parsed.subcommand == "generate"
+        assert parsed.resource_type == "all"
+
+    @pytest.mark.parametrize("resource_type", resource_types)
+    def test_can_specify_resource_type_in_generate_subcommand(
+        self, parser, resource_type
+    ):
+        parsed = parser.parse_args(["generate", resource_type])
+
+        assert parsed.subcommand == "generate"
+        assert parsed.resource_type == resource_type
 
     def test_unassigned_subcommand_defaults_to_all(self, parser):
         parsed = parser.parse_args(["unassigned"])
@@ -105,7 +115,7 @@ class TestArgparse:
     def test_can_specify_active_subcommand(self, parser):
         parsed = parser.parse_args(["active"])
         assert parsed.subcommand == "active"
-        assert parsed.resource_type == None
+        assert parsed.resource_type is None
 
     def test_can_specify_active_resource_type(self, parser):
         parsed = parser.parse_args(["active", "ec2"])
