@@ -1,10 +1,12 @@
-from clinv.inventory import Inventory
-from unittest.mock import patch, call
-from yaml import YAMLError
 import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import call, patch
+
+import pytest
+from clinv.inventory import Inventory
+from yaml import YAMLError
 
 
 class ClinvBaseTestClass(object):
@@ -222,3 +224,8 @@ class TestInventoryPluginLoad(InventoryBaseTestClass, unittest.TestCase):
         self.assertTrue(userMock.called)
         self.assertTrue(inventoryMock.called)
         self.assertTrue(call(self.user_data_path) in loadMock.mock_calls)
+
+    @pytest.mark.skip("Wait till we don't use mocks ")
+    def test_generate_inventory_accepts_resource_type(self):
+
+        pass

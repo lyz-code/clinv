@@ -177,16 +177,11 @@ class Inventory:
             self.log.error("Error opening yaml file {}".format(yaml_path))
             raise (e)
 
-    def generate(self):
+    def generate(self, resource_type: str = "all") -> None:
         """
+        Build the inventory from source and user data.
 
         And saves the inventory to disk.
-
-        Parameters:
-            None.
-
-        Returns:
-            Nothing.
         """
 
         try:
@@ -195,12 +190,12 @@ class Inventory:
         except FileNotFoundError:
             pass
         self._load_plugins()
-        self._generate_source_data()
-        self._generate_user_data()
-        self._generate_inventory_objects()
+        self._generate_source_data(resource_type)
+        self._generate_user_data(resource_type)
+        self._generate_inventory_objects(resource_type)
         self.save()
 
-    def _generate_source_data(self):
+    def _generate_source_data(self, resource_type: str = "all") -> None:
         """
         Build the source data dictionary from the sources. Generates the
         self.source_data dictionary with the following structure:
@@ -219,18 +214,13 @@ class Inventory:
 
         Needs the self.sources data, so you'll need to call first
         self._load_plugins().
-
-        Parameters:
-            None.
-
-        Returns:
-            Nothing.
         """
 
         for source in self.sources:
-            self.source_data[source.id] = source.generate_source_data()
+            if resource_type == "all" or source.id == resource_type:
+                self.source_data[source.id] = source.generate_source_data()
 
-    def _generate_user_data(self):
+    def _generate_user_data(self, resource_type: str = "all") -> None:
         """
         Build the user data dictionary from the sources. Generates the
         self.user_data dictionary with the following structure:
@@ -252,18 +242,13 @@ class Inventory:
 
         Needs the self.sources data, so you'll need to call first
         self._load_plugins().
-
-        Parameters:
-            None.
-
-        Returns:
-            Nothing.
         """
 
         for source in self.sources:
-            self.user_data[source.id] = source.generate_user_data()
+            if resource_type == "all" or source.id == resource_type:
+                self.user_data[source.id] = source.generate_user_data()
 
-    def _generate_inventory_objects(self):
+    def _generate_inventory_objects(self, resource_type: str = "all") -> None:
         """
         Build the inventory dictionary from the sources. Generates the
         self.inv dictionary with the following structure:
@@ -285,16 +270,11 @@ class Inventory:
 
         Needs the self.sources data, so you'll need to call first
         self._load_plugins().
-
-        Parameters:
-            None.
-
-        Returns:
-            Nothing.
         """
 
         for source in self.sources:
-            self.inv[source.id] = source.generate_inventory()
+            if resource_type == "all" or source.id == resource_type:
+                self.inv[source.id] = source.generate_inventory()
 
     def save(self):
         """

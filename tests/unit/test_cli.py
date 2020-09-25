@@ -2,182 +2,125 @@ import logging
 import unittest
 from unittest.mock import call, patch
 
-from clinv.cli import load_logger, load_parser
+import pytest
+from clinv.cli import load_logger, load_parser, resource_types
 
 
-class TestArgparse(unittest.TestCase):
-    def setUp(self):
-        self.parser = load_parser()
+@pytest.fixture
+def parser():
+    yield load_parser()
 
-    def test_can_specify_data_path(self):
-        parsed = self.parser.parse_args(["-d", "/tmp/inventory.yaml"])
-        self.assertEqual(parsed.data_path, "/tmp/inventory.yaml")
 
-    def test_default_data_path(self):
-        parsed = self.parser.parse_args([])
-        self.assertEqual(
-            parsed.data_path, "~/.local/share/clinv",
-        )
+class TestArgparse:
+    def test_can_specify_data_path(self, parser):
+        parsed = parser.parse_args(["-d", "/tmp/inventory.yaml"])
 
-    def test_can_specify_search_subcommand(self):
-        parsed = self.parser.parse_args(["search", "instance_name"])
-        self.assertEqual(parsed.subcommand, "search")
-        self.assertEqual(parsed.search_string, "instance_name")
+        assert parsed.data_path == "/tmp/inventory.yaml"
 
-    def test_can_specify_generate_subcommand(self):
-        parsed = self.parser.parse_args(["generate"])
-        self.assertEqual(parsed.subcommand, "generate")
+    def test_default_data_path(self, parser):
+        parsed = parser.parse_args([])
 
-    def test_unassigned_subcommand_defaults_to_all(self):
-        parsed = self.parser.parse_args(["unassigned"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "all")
+        assert parsed.data_path == "~/.local/share/clinv"
 
-    def test_can_specify_unassigned_ec2_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "ec2"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "ec2")
+    def test_can_specify_search_subcommand(self, parser):
+        parsed = parser.parse_args(["search", "instance_name"])
 
-    def test_can_specify_unassigned_rds_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "rds"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "rds")
+        assert parsed.subcommand == "search"
+        assert parsed.search_string == "instance_name"
 
-    def test_can_specify_unassigned_services_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "services"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "services")
+    def test_generate_subcommand_defaults_to_all(self, parser):
+        parsed = parser.parse_args(["generate"])
 
-    def test_can_specify_unassigned_people_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "people"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "people")
+        assert parsed.subcommand == "generate"
+        assert parsed.resource_type == "all"
 
-    def test_can_specify_unassigned_iam_users_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "iam_users"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "iam_users")
+    @pytest.mark.parametrize("resource_type", resource_types)
+    def test_can_specify_resource_type_in_generate_subcommand(
+        self, parser, resource_type
+    ):
+        parsed = parser.parse_args(["generate", resource_type])
 
-    def test_can_specify_unassigned_iam_groups_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "iam_groups"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "iam_groups")
+        assert parsed.subcommand == "generate"
+        assert parsed.resource_type == resource_type
 
-    def test_can_specify_unassigned_informations_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "informations"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "informations")
+    def test_unassigned_subcommand_defaults_to_all(self, parser):
+        parsed = parser.parse_args(["unassigned"])
 
-    def test_can_specify_unassigned_route53_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "route53"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "route53")
+        assert parsed.subcommand == "unassigned"
+        assert parsed.resource_type == "all"
 
-    def test_can_specify_unassigned_security_groups_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "security_groups"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "security_groups")
+    @pytest.mark.parametrize("resource_type", resource_types)
+    def test_can_specify_resource_type_in_unassigned_subcommand(
+        self, parser, resource_type
+    ):
+        parsed = parser.parse_args(["unassigned", resource_type])
 
-    def test_can_specify_unassigned_vpc_subcommand(self):
-        parsed = self.parser.parse_args(["unassigned", "vpc"])
-        self.assertEqual(parsed.subcommand, "unassigned")
-        self.assertEqual(parsed.resource_type, "vpc")
+        assert parsed.subcommand == "unassigned"
+        assert parsed.resource_type == resource_type
 
-    def test_can_specify_list_subcommand(self):
-        parsed = self.parser.parse_args(["list"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, None)
+    def test_can_specify_list_subcommand_defaults_to_None(self, parser):
+        parsed = parser.parse_args(["list"])
 
-    def test_can_specify_list_rds_subcommand(self):
-        parsed = self.parser.parse_args(["list", "rds"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "rds")
+        assert parsed.subcommand == "list"
+        assert parsed.resource_type is None
 
-    def test_can_specify_list_ec2_subcommand(self):
-        parsed = self.parser.parse_args(["list", "ec2"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "ec2")
+    @pytest.mark.parametrize("resource_type", resource_types)
+    def test_can_specify_resource_type_in_list_subcommand(self, parser, resource_type):
+        parsed = parser.parse_args(["list", resource_type])
 
-    def test_can_specify_list_services_subcommand(self):
-        parsed = self.parser.parse_args(["list", "services"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "services")
+        assert parsed.subcommand == "list"
+        assert parsed.resource_type == resource_type
 
-    def test_can_specify_list_informations_subcommand(self):
-        parsed = self.parser.parse_args(["list", "informations"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "informations")
+    def test_can_specify_export_subcommand(self, parser):
+        parsed = parser.parse_args(["export"])
+        assert parsed.subcommand == "export"
 
-    def test_can_specify_list_people_subcommand(self):
-        parsed = self.parser.parse_args(["list", "people"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "people")
+    def test_export_has_default_file(self, parser):
+        parsed = parser.parse_args(["export"])
+        assert parsed.export_path == "~/.local/share/clinv/inventory.ods"
 
-    def test_can_specify_list_iam_users_subcommand(self):
-        parsed = self.parser.parse_args(["list", "iam_users"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "iam_users")
+    def test_export_can_specify_file_path(self, parser):
+        parsed = parser.parse_args(["export", "file.ods"])
+        assert parsed.export_path == "file.ods"
 
-    def test_can_specify_list_security_groups_subcommand(self):
-        parsed = self.parser.parse_args(["list", "security_groups"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "security_groups")
+    def test_can_specify_print_subcommand(self, parser):
+        parsed = parser.parse_args(["print", "resource_id"])
+        assert parsed.subcommand == "print"
+        assert parsed.search_string == "resource_id"
 
-    def test_can_specify_list_vpc_subcommand(self):
-        parsed = self.parser.parse_args(["list", "vpc"])
-        self.assertEqual(parsed.subcommand, "list")
-        self.assertEqual(parsed.resource_type, "vpc")
+    def test_can_specify_monitor_subcommand(self, parser):
+        parsed = parser.parse_args(["monitor"])
+        assert parsed.subcommand == "monitor"
+        assert parsed.monitor_status == "true"
 
-    def test_can_specify_export_subcommand(self):
-        parsed = self.parser.parse_args(["export"])
-        self.assertEqual(parsed.subcommand, "export")
+    def test_can_specify_monitor_monitor_subcommand(self, parser):
+        parsed = parser.parse_args(["monitor", "true"])
+        assert parsed.subcommand == "monitor"
+        assert parsed.monitor_status == "true"
 
-    def test_export_has_default_file(self):
-        parsed = self.parser.parse_args(["export"])
-        self.assertEqual(parsed.export_path, "~/.local/share/clinv/inventory.ods")
+    def test_can_specify_monitor_unmonitor_subcommand(self, parser):
+        parsed = parser.parse_args(["monitor", "false"])
+        assert parsed.subcommand == "monitor"
+        assert parsed.monitor_status == "false"
 
-    def test_export_can_specify_file_path(self):
-        parsed = self.parser.parse_args(["export", "file.ods"])
-        self.assertEqual(parsed.export_path, "file.ods")
+    def test_can_specify_monitor_unknown_subcommand(self, parser):
+        parsed = parser.parse_args(["monitor", "unknown"])
+        assert parsed.subcommand == "monitor"
+        assert parsed.monitor_status == "unknown"
 
-    def test_can_specify_print_subcommand(self):
-        parsed = self.parser.parse_args(["print", "resource_id"])
-        self.assertEqual(parsed.subcommand, "print")
-        self.assertEqual(parsed.search_string, "resource_id")
+    def test_can_specify_unused_subcommand(self, parser):
+        parsed = parser.parse_args(["unused"])
+        assert parsed.subcommand == "unused"
 
-    def test_can_specify_monitor_subcommand(self):
-        parsed = self.parser.parse_args(["monitor"])
-        self.assertEqual(parsed.subcommand, "monitor")
-        self.assertEqual(parsed.monitor_status, "true")
+    def test_can_specify_active_subcommand(self, parser):
+        parsed = parser.parse_args(["active"])
+        assert parsed.subcommand == "active"
+        assert parsed.resource_type is None
 
-    def test_can_specify_monitor_monitor_subcommand(self):
-        parsed = self.parser.parse_args(["monitor", "true"])
-        self.assertEqual(parsed.subcommand, "monitor")
-        self.assertEqual(parsed.monitor_status, "true")
-
-    def test_can_specify_monitor_unmonitor_subcommand(self):
-        parsed = self.parser.parse_args(["monitor", "false"])
-        self.assertEqual(parsed.subcommand, "monitor")
-        self.assertEqual(parsed.monitor_status, "false")
-
-    def test_can_specify_monitor_unknown_subcommand(self):
-        parsed = self.parser.parse_args(["monitor", "unknown"])
-        self.assertEqual(parsed.subcommand, "monitor")
-        self.assertEqual(parsed.monitor_status, "unknown")
-
-    def test_can_specify_unused_subcommand(self):
-        parsed = self.parser.parse_args(["unused"])
-        self.assertEqual(parsed.subcommand, "unused")
-
-    def test_can_specify_active_subcommand(self):
-        parsed = self.parser.parse_args(["active"])
-        self.assertEqual(parsed.subcommand, "active")
-        self.assertEqual(parsed.resource_type, None)
-
-    def test_can_specify_active_resource_type(self):
-        parsed = self.parser.parse_args(["active", "ec2"])
-        self.assertEqual(parsed.subcommand, "active")
-        self.assertEqual(parsed.resource_type, "ec2")
+    def test_can_specify_active_resource_type(self, parser):
+        parsed = parser.parse_args(["active", "ec2"])
+        assert parsed.subcommand == "active"
+        assert parsed.resource_type == "ec2"
 
 
 class TestLogger(unittest.TestCase):
@@ -198,10 +141,10 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(
             self.logging.addLevelName.assert_has_calls(
                 [
-                    call(logging.INFO, "[\033[36mINFO\033[0m]"),
-                    call(logging.ERROR, "[\033[31mERROR\033[0m]"),
-                    call(logging.DEBUG, "[\033[32mDEBUG\033[0m]"),
-                    call(logging.WARNING, "[\033[33mWARNING\033[0m]"),
+                    call(logging.INFO, "[\033[36m+\033[0m]"),
+                    call(logging.ERROR, "[\033[31m+\033[0m]"),
+                    call(logging.DEBUG, "[\033[32m+\033[0m]"),
+                    call(logging.WARNING, "[\033[33m+\033[0m]"),
                 ]
             ),
             None,

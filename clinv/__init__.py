@@ -50,7 +50,7 @@ def main():
         return
 
     if args.subcommand == "generate":
-        inventory.generate()
+        inventory.generate(args.resource_type)
     else:
         inventory.load()
         if args.subcommand == "search":

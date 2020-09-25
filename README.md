@@ -31,14 +31,24 @@ in your AWS account with your local inventory, execute `clinv generate`.
 
 ## Generate
 
-`clinv generate` uses boto3 to update what is in your AWS inventory, right now
+`clinv generate` uses `boto3` to update what is in your AWS inventory, right now
 it is able to import the following resources from all the regions:
 
-* EC2
-* RDS
-* Route53
-* S3
-* IAM users and groups
+* Autoscaling Groups.
+* EC2.
+* IAM users and groups.
+* RDS.
+* Route53.
+* S3.
+* Security Groups.
+* VPCs.
+
+As it's querying all regions, it can take long to fetch all the data. If you
+only want to update a resource type, pass it as an argument to generate. For
+example, `clinv generate ec2`.
+
+It will automatically mark the EC2 instances as monitored if they have the tag
+`monitor` with value `"True"`.
 
 It will automatically mark the EC2 instances as monitored if they have the tag
 `monitor` with value `"True"`.
