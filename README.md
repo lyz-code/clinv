@@ -18,7 +18,7 @@
 # Install
 
 ```bash
-pip3 install git+git://github.com/lyz-code/clinv
+pip install clinv
 ```
 
 `clinv` will use your AWS cli credentials, therefore you must have them
