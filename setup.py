@@ -32,7 +32,8 @@ setup(
     long_description=open("README.md").read(),
     url="https://github.com/lyz-code/clinv",
     long_description_content_type="text/markdown",
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages("clinv"),
+    package_dir={"": "clinv"},
     entry_points={"console_scripts": ["clinv = clinv:main"]},
     python_requires=">=3.6",
     classifiers=[

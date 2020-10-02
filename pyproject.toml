@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools >= 40.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 # Example configuration for Black.
 
 # NOTE: you have to use single-quoted strings in TOML for regular expressions.
@@ -26,10 +30,6 @@ exclude = '''
   | tests/data
   | profiling
 )/
-
-[build-system]
-requires = ["setuptools >= 40.6.0", "wheel"]
-build-backend = "setuptools.build_meta"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
