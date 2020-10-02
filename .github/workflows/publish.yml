@@ -1,5 +1,5 @@
 ---
-name: Build Python package
+name: Build Python package.
 
 on: [push]  # yamllint disable-line rule:truthy
 
