@@ -352,10 +352,10 @@ class EC2src(AWSBasesrc):
                             "region": region,
                         }
 
-                    for tag in instance["Tags"]:
-                        if tag["Key"] == "monitor" and tag["Value"] == "True":
-                            self.user_data[instance_id]["monitor"] = True
-
+                    if "Tags" in instance:
+                        for tag in instance["Tags"]:
+                            if tag["Key"] == "monitor" and tag["Value"] == "True":
+                                self.user_data[instance_id]["monitor"] = True
         return self.user_data
 
     def generate_inventory(self):
