@@ -1,0 +1,25 @@
+{
+  "template": "https://github.com/lyz-code/cookiecutter-python-project",
+  "commit": "7d7fff8eb0d496c39ddf6800c71e9c31560b62f8",
+  "context": {
+    "cookiecutter": {
+      "project_name": "Clinv",
+      "project_slug": "clinv",
+      "project_description": "DevSecOps command line asset inventory",
+      "requirements": "argcomplete, boto3, pyexcel, PyYAML, requests, tabulate",
+      "configure_command_line": "True",
+      "read_configuration_from_yaml": "True",
+      "github_user": "lyz-code",
+      "github_token_pass_path": "internet/github.lyz-code.api_token",
+      "pypi_token_pass_path": "internet/pypi.token",
+      "test_pypi_token_pass_path": "internet/test.pypi.token",
+      "author": "Lyz",
+      "author_email": "lyz-code-security-advisories@riseup.net",
+      "security_advisories_email": "lyz-code-security-advisories@riseup.net",
+      "project_underscore_slug": "clinv",
+      "_template": "https://github.com/lyz-code/cookiecutter-python-project"
+    }
+  },
+  "directory": null,
+  "checkout": null
+}

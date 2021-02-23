@@ -1,0 +1,13 @@
+---
+# Repository-orm compliant database endpoint: https://lyz-code.github.io/repository-orm/
+# We disable the database_endpoint as it will be set by the config fixture.
+# database_url: tinydb://~/.local/share/clinv/database.tinydb
+
+# Where should clinv search for entities for the inventory.
+sources:
+  # We disable aws to avoid external calls in the end to end tests.
+  # - aws
+  - risk
+
+# Level of logging verbosity. One of ['info', 'debug', 'warning'].
+verbose: info
