@@ -1,3 +1,19 @@
+## 1.0.0 (2021-06-01)
+
+### Refactor
+
+- **ec2**: EAFP approach
+
+### Fix
+
+- **ec2**: check if has tags
+- rename monitored report and attributes to monitor
+- upgrade dependencies
+
+### Feat
+
+- populate the ec2 monitor attribute with the instance tags
+
 ## 0.9.0 / 2020-09-07
 
 ### Feat
