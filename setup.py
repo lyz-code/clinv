@@ -1,5 +1,10 @@
+"""Python package building configuration."""
+
 import logging
 import os
+import re
+from glob import glob
+from os.path import basename, splitext
 
 from setuptools import find_packages, setup
 from setuptools.command.install import install
@@ -7,10 +12,13 @@ from setuptools.command.install import install
 log = logging.getLogger(__name__)
 
 
-class PostInstallCommand(install):
+# ignore: Install has class Any, and can't be subclassed. It's how I used it in the
+#   past and don't have time to fix it right now.
+class PostInstallCommand(install):  # type: ignore
     """Post-installation for installation mode."""
 
-    def run(self):
+    def run(self) -> None:
+        """Create data directory after installation."""
         install.run(self)
         try:
             data_directory = os.path.expanduser("~/.local/share/clinv")
@@ -20,21 +28,31 @@ class PostInstallCommand(install):
             log.info("Data directory already exits")
 
 
-exec(compile(open("clinv/version.py").read(), "clinv/version.py", "exec"))
+# Avoid loading the package to extract the version
+with open("src/clinv/version.py") as fp:
+    version_match = re.search(r'__version__ = "(?P<version>.*)"', fp.read())
+    if version_match is None:
+        raise ValueError("The version is not specified in the version.py file.")
+    version = version_match["version"]
+
+
+with open("README.md", "r") as readme_file:
+    readme = readme_file.read()
 
 setup(
     name="clinv",
-    version=__version__,  # noqa: F821
+    version=version,
     description="DevSecOps command line asset inventory",
     author="Lyz",
-    author_email="lyz@riseup.net",
+    author_email="lyz-code-security-advisories@riseup.net",
     license="GNU General Public License v3",
-    long_description=open("README.md").read(),
-    url="https://github.com/lyz-code/clinv",
+    long_description=readme,
     long_description_content_type="text/markdown",
-    packages=find_packages("clinv"),
-    package_dir={"": "clinv"},
-    entry_points={"console_scripts": ["clinv = clinv:main"]},
+    url="https://github.com/lyz-code/clinv",
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    package_data={"clinv": ["py.typed"]},
+    py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -50,12 +68,18 @@ setup(
         "Topic :: Utilities",
         "Natural Language :: English",
     ],
+    entry_points="""
+        [console_scripts]
+        clinv=clinv.entrypoints.cli:cli
+    """,
     install_requires=[
-        "argcomplete",
         "boto3",
-        "pyexcel",
-        "PyYAML",
+        "pydantic",
+        "ruyaml",
         "requests",
+        "repository_orm",
+        "rich",
         "tabulate",
+        "Click",
     ],
 )
