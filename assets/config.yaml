@@ -1,0 +1,11 @@
+---
+# Repository-orm compliant database endpoint: https://lyz-code.github.io/repository-orm/
+database_url: tinydb://~/.local/share/clinv/database.tinydb
+
+# Where should clinv search for entities for the inventory.
+sources:
+  - aws
+  - risk
+
+# Level of logging verbosity. One of ['info', 'debug', 'warning'].
+verbose: info
