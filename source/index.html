@@ -1,0 +1,222 @@
+<!doctype html><html lang=en class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=author content=Lyz><link href=https://lyz-code.github.io/clinv/source/ rel=canonical><link rel=icon href=../assets/images/favicon.png><meta name=generator content="mkdocs-1.1.2, mkdocs-material-7.1.6"><title>Source and Resource creation - Clinv</title><link rel=stylesheet href=../assets/stylesheets/main.875de78c.min.css><link rel=stylesheet href=../assets/stylesheets/palette.f1a3b89f.min.css><meta name=theme-color content=#546d78><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback"><style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style><link rel=stylesheet href=../css/timeago.css><link rel=stylesheet href=../assets/_mkdocstrings.css><link rel=stylesheet href=../stylesheets/extra.css><link rel=stylesheet href=../stylesheets/links.css></head> <body dir=ltr data-md-color-scheme data-md-color-primary=blue-grey data-md-color-accent=light-blue> <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#source-and-resource-creation class=md-skip> Skip to content </a> </div> <div data-md-component=announce> </div> <header class=md-header data-md-component=header> <nav class="md-header__inner md-grid" aria-label=Header> <a href=.. title=Clinv class="md-header__button md-logo" aria-label=Clinv data-md-component=logo> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg> </a> <label class="md-header__button md-icon" for=__drawer> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> Clinv </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> Source and Resource creation </span> </div> </div> </div> <label class="md-header__button md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input type=text class=md-search__input name=query aria-label=Search placeholder=Search autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query data-md-state=active required> <label class="md-search__icon md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg> </label> <button type=reset class="md-search__icon md-icon" aria-label=Clear tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg> </button> </form> <div class=md-search__output> <div class=md-search__scrollwrap data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> Initializing search </div> <ol class=md-search-result__list></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a href=https://github.com/lyz-code/clinv/ title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg> </div> <div class=md-source__repository> lyz-code/clinv </div> </a> </div> </nav> </header> <div class=md-container data-md-component=container> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--primary" aria-label=Navigation data-md-level=0> <label class=md-nav__title for=__drawer> <a href=.. title=Clinv class="md-nav__button md-logo" aria-label=Clinv data-md-component=logo> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg> </a> Clinv </label> <div class=md-nav__source> <a href=https://github.com/lyz-code/clinv/ title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg> </div> <div class=md-source__repository> lyz-code/clinv </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=.. class=md-nav__link> Clinv </a> </li> <li class=md-nav__item> <a href=../reference/ class=md-nav__link> Reference </a> </li> <li class=md-nav__item> <a href=../contributing/ class=md-nav__link> Contributing </a> </li> </ul> </nav> </div> </div> </div> <div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--secondary" aria-label="Table of contents"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#source-and-resource-creation class=md-nav__link> Source and Resource creation </a> <nav class=md-nav aria-label="Source and Resource creation"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#create-a-new-source class=md-nav__link> Create a new source </a> <nav class=md-nav aria-label="Create a new source"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#desired-interface class=md-nav__link> Desired Interface </a> </li> <li class=md-nav__item> <a href=#create-the-source-test-class class=md-nav__link> Create the source test class </a> </li> <li class=md-nav__item> <a href=#create-the-source-class class=md-nav__link> Create the source class </a> <nav class=md-nav aria-label="Create the source class"> <ul class=md-nav__list> <li class=md-nav__item> <a href=#create-the-generate_source_data-method class=md-nav__link> Create the generate_source_data method </a> </li> <li class=md-nav__item> <a href=#create-the-generate_user_data-method class=md-nav__link> Create the generate_user_data method </a> </li> <li class=md-nav__item> <a href=#create-the-generate_inventory-method class=md-nav__link> Create the generate_inventory method </a> </li> <li class=md-nav__item> <a href=#add-your-source-to-the-loaded-sources class=md-nav__link> Add your source to the loaded sources </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#create-the-resource-class class=md-nav__link> Create the resource class </a> </li> <li class=md-nav__item> <a href=#create-the-resource-test-class class=md-nav__link> Create the resource test class </a> </li> <li class=md-nav__item> <a href=#add-resource-to-the-reports class=md-nav__link> Add resource to the reports </a> </li> <li class=md-nav__item> <a href=#add-resource-to-the-cli class=md-nav__link> Add resource to the cli </a> </li> <li class=md-nav__item> <a href=#test-that-everything-works class=md-nav__link> Test that everything works </a> </li> <li class=md-nav__item> <a href=#add-documentation class=md-nav__link> Add documentation </a> </li> </ul> </nav> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <a href=https://github.com/lyz-code/clinv/edit/master/docs/source.md title="Edit this page" class="md-content__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg> </a> <h1>Source and Resource creation</h1> <h2 id=source-and-resource-creation>Source and Resource creation<a class=headerlink href=#source-and-resource-creation title="Permanent link">&para;</a></h2> <h3 id=create-a-new-source>Create a new source<a class=headerlink href=#create-a-new-source title="Permanent link">&para;</a></h3> <p>A source is an abstraction from where we obtain resources and index them into our inventory.</p> <p>For the purpose of this section, we'll assume that the new source we want to add to our inventory is called <code>newsource</code>.</p> <p>If you want to see similar sources go to <code>clinv/sources/</code>.</p> <h4 id=desired-interface>Desired Interface<a class=headerlink href=#desired-interface title="Permanent link">&para;</a></h4> <p>To ensure the expected behavior of the sources, the class must follow a common interface. Don't worry if you don't understand yet what does each element mean, you'll discover it as you read the hole document.</p> <p>It must have the following attributes:</p> <ul> <li>id (str): ID of the resource.</li> <li>source_data (dict): Aggregated source supplied data.</li> <li>user_data (dict): Aggregated user supplied data.</li> </ul> <p>And the following public methods:</p> <ul> <li>generate_source_data: Generates the source_data attribute and returns it.</li> <li>generate_user_data: Generates the user_data attribute and returns it.</li> <li>generate_inventory: Generates the inventory dictionary with the source resource.</li> </ul> <h4 id=create-the-source-test-class>Create the source test class<a class=headerlink href=#create-the-source-test-class title="Permanent link">&para;</a></h4> <p>On <code>test/sources/</code> create your source class from this template. Substitute <code>{{ class_name }}</code> with your value.</p> <p>Also fill up the <code>self.desired_source_data</code> and <code>self.desired_user_data</code> with a representative template of the data you want to store into the inventory.</p> <div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>clinv.sources</span> <span class=kn>import</span> <span class=p>{{</span> <span class=n>class_name</span> <span class=p>}}</span><span class=n>src</span>
+<span class=kn>from</span> <span class=nn>tests.sources</span> <span class=kn>import</span> <span class=n>ClinvSourceBaseTestClass</span>
+<span class=kn>import</span> <span class=nn>unittest</span>
+
+<span class=k>class</span> <span class=nc>Test</span><span class=p>{{</span> <span class=n>class_name</span> <span class=p>}}</span><span class=n>Source</span><span class=p>(</span><span class=n>ClinvSourceBaseTestClass</span><span class=p>,</span> <span class=n>unittest</span><span class=o>.</span><span class=n>TestCase</span><span class=p>):</span>
+    <span class=sd>&#39;&#39;&#39;</span>
+<span class=sd>    Test the {{ class_name }} implementation in the inventory.</span>
+<span class=sd>    &#39;&#39;&#39;</span>
+
+    <span class=k>def</span> <span class=nf>setUp</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>setUp</span><span class=p>()</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>source_obj</span> <span class=o>=</span> <span class=p>{{</span> <span class=n>class_name</span> <span class=p>}}</span><span class=n>src</span>
+
+        <span class=c1># Initialize object to test</span>
+        <span class=n>source_data</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=n>user_data</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>source_obj</span><span class=p>(</span><span class=n>source_data</span><span class=p>,</span> <span class=n>user_data</span><span class=p>)</span>
+
+        <span class=c1># What data we want to aggregate to our inventory</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>desired_source_data</span> <span class=o>=</span> <span class=p>{</span>
+        <span class=p>}</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>desired_user_data</span> <span class=o>=</span> <span class=p>{</span>
+        <span class=p>}</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>source_data</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>desired_source_data</span>
+
+    <span class=k>def</span> <span class=nf>tearDown</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>tearDown</span><span class=p>()</span>
+
+    <span class=k>def</span> <span class=nf>test_generate_source_data_creates_expected_source_data_attrib</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=c1># Mock here the call to your provider</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>source_data</span> <span class=o>=</span> <span class=p>{}</span>
+
+        <span class=n>generated_source_data</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>generate_source_data</span><span class=p>()</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>source_data</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>desired_source_data</span><span class=p>,</span>
+        <span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=n>generated_source_data</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>desired_source_data</span><span class=p>,</span>
+        <span class=p>)</span>
+
+    <span class=nd>@unittest</span><span class=o>.</span><span class=n>skip</span><span class=p>(</span><span class=s1>&#39;Not yet&#39;</span><span class=p>)</span>
+    <span class=k>def</span> <span class=nf>test_generate_user_data_creates_expected_user_data_attrib</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>generated_user_data</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>generate_user_data</span><span class=p>()</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>user_data</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>desired_user_data</span><span class=p>,</span>
+        <span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=n>generated_user_data</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>desired_user_data</span><span class=p>,</span>
+        <span class=p>)</span>
+
+    <span class=nd>@unittest</span><span class=o>.</span><span class=n>skip</span><span class=p>(</span><span class=s1>&#39;Not yet&#39;</span><span class=p>)</span>
+    <span class=k>def</span> <span class=nf>test_generate_user_data_doesnt_loose_existing_data</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=n>user_key</span> <span class=o>=</span> <span class=p>[</span><span class=n>key</span> <span class=k>for</span> <span class=n>key</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>desired_user_data</span><span class=o>.</span><span class=n>keys</span><span class=p>()][</span><span class=mi>0</span><span class=p>]</span>
+        <span class=n>desired_user_data</span> <span class=o>=</span> <span class=p>{</span><span class=n>user_key</span><span class=p>:</span> <span class=p>{}}</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>user_data</span> <span class=o>=</span> <span class=n>desired_user_data</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>generate_user_data</span><span class=p>()</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>user_data</span><span class=p>,</span>
+            <span class=n>desired_user_data</span><span class=p>,</span>
+        <span class=p>)</span>
+
+    <span class=nd>@unittest</span><span class=o>.</span><span class=n>skip</span><span class=p>(</span><span class=s1>&#39;Not yet&#39;</span><span class=p>)</span>
+    <span class=k>def</span> <span class=nf>test_generate_inventory_return_empty_dict_if_no_data</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>source_data</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>generate_inventory</span><span class=p>(),</span> <span class=p>{})</span>
+
+    <span class=nd>@unittest</span><span class=o>.</span><span class=n>skip</span><span class=p>(</span><span class=s1>&#39;Not yet&#39;</span><span class=p>)</span>
+    <span class=nd>@patch</span><span class=p>(</span><span class=s1>&#39;clinv.sources.{{ module_name }}.{{ class_name }}&#39;</span><span class=p>)</span>
+    <span class=k>def</span> <span class=nf>test_generate_inventory_creates_expected_dictionary</span><span class=p>(</span>
+        <span class=bp>self</span><span class=p>,</span>
+        <span class=n>resource_mock</span>
+    <span class=p>):</span>
+        <span class=n>resource_id</span> <span class=o>=</span> <span class=s1>&#39;{{ resource_id }}&#39;</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>user_data</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>desired_user_data</span>
+
+        <span class=n>desired_mock_input</span> <span class=o>=</span> <span class=p>{</span>
+            <span class=o>**</span><span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>user_data</span><span class=p>[</span><span class=n>resource_id</span><span class=p>],</span>
+            <span class=o>**</span><span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>source_data</span><span class=p>[</span><span class=n>resource_id</span><span class=p>],</span>
+        <span class=p>}</span>
+
+        <span class=n>desired_inventory</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>src</span><span class=o>.</span><span class=n>generate_inventory</span><span class=p>()</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=n>resource_mock</span><span class=o>.</span><span class=n>assert_called_with</span><span class=p>(</span>
+                <span class=p>{</span>
+                    <span class=n>resource_id</span><span class=p>:</span> <span class=n>desired_mock_input</span>
+                <span class=p>},</span>
+            <span class=p>),</span>
+            <span class=kc>None</span><span class=p>,</span>
+        <span class=p>)</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>assertEqual</span><span class=p>(</span>
+            <span class=n>desired_inventory</span><span class=p>,</span>
+            <span class=p>{</span>
+                <span class=n>resource_id</span><span class=p>:</span> <span class=n>resource_mock</span><span class=o>.</span><span class=n>return_value</span>
+            <span class=p>},</span>
+        <span class=p>)</span>
+</code></pre></div> <h4 id=create-the-source-class>Create the source class<a class=headerlink href=#create-the-source-class title="Permanent link">&para;</a></h4> <p>On <code>clinv/sources/</code> create your source class from this template. Substitute <code>{{ class_name }}</code> and <code>{{ class_id }}</code> with your values.</p> <div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>clinv.sources</span> <span class=kn>import</span> <span class=n>ClinvSourcesrc</span><span class=p>,</span> <span class=n>ClinvGenericResource</span>
+
+
+<span class=k>class</span> <span class=err>{{ </span><span class=nc>class_name</span> <span class=p>}}</span><span class=n>src</span><span class=p>(</span><span class=n>ClinvSourcesrc</span><span class=p>):</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Class to gather and manipulate the {{ class_name }} resources.</span>
+
+<span class=sd>    Parameters:</span>
+<span class=sd>        source_data (dict): {{ class_name }}src compatible source_data</span>
+<span class=sd>        dictionary.</span>
+<span class=sd>        user_data (dict): {{ class_name }}src compatible user_data dictionary.</span>
+
+<span class=sd>    Public methods:</span>
+<span class=sd>        generate_source_data: Generates the source_data attribute and returns</span>
+<span class=sd>            it.</span>
+<span class=sd>        generate_user_data: Generates the user_data attribute and returns it.</span>
+<span class=sd>        generate_inventory: Generates the inventory dictionary with the source</span>
+<span class=sd>            resource.</span>
+
+<span class=sd>    Public attributes:</span>
+<span class=sd>        id (str): ID of the resource.</span>
+<span class=sd>        source_data (dict): Aggregated source supplied data.</span>
+<span class=sd>        user_data (dict): Aggregated user supplied data.</span>
+<span class=sd>        log (logging object):</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+
+    <span class=k>def</span> <span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>source_data</span><span class=o>=</span><span class=p>{},</span> <span class=n>user_data</span><span class=o>=</span><span class=p>{}):</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>source_data</span><span class=p>,</span> <span class=n>user_data</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>id</span> <span class=o>=</span> <span class=s1>&#39;{{ class_id }}&#39;</span>
+
+    <span class=k>def</span> <span class=nf>generate_source_data</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Do aggregation of the source data to generate the source dictionary</span>
+<span class=sd>        into self.source_data, with the following structure:</span>
+<span class=sd>            {</span>
+<span class=sd>            }</span>
+
+<span class=sd>        Returns:</span>
+<span class=sd>            dict: content of self.source_data.</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>log</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;Fetching {{ class_name }} inventory&#39;</span><span class=p>)</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>source_data</span> <span class=o>=</span> <span class=p>{}</span>
+
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>source_data</span>
+
+    <span class=k>def</span> <span class=nf>generate_user_data</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Do aggregation of the user data to populate the self.user_data</span>
+<span class=sd>        attribute with the user_data.yaml information or with default values.</span>
+
+<span class=sd>        It needs the information of self.source_data, therefore it should be</span>
+<span class=sd>        called after generate_source_data.</span>
+
+<span class=sd>        Returns:</span>
+<span class=sd>            dict: content of self.user_data.</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>user_data</span>
+
+    <span class=k>def</span> <span class=nf>generate_inventory</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Do aggregation of the user and source data to populate the self.inv</span>
+<span class=sd>        attribute with {{ class_name }} resources.</span>
+
+<span class=sd>        It needs the information of self.source_data and self.user_data,</span>
+<span class=sd>        therefore it should be called after generate_source_data and</span>
+<span class=sd>        generate_user_data.</span>
+
+<span class=sd>        Returns:</span>
+<span class=sd>            dict: {{ class_name }} inventory with user and source data</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+
+        <span class=n>inventory</span> <span class=o>=</span> <span class=p>{}</span>
+
+        <span class=k>for</span> <span class=n>resource_id</span><span class=p>,</span> <span class=n>resource</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>source_data</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+            <span class=c1># Load the user_data into the source_data record</span>
+            <span class=k>for</span> <span class=n>key</span><span class=p>,</span> <span class=n>value</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>user_data</span><span class=p>[</span><span class=n>resource_id</span><span class=p>]</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+                <span class=n>resource</span><span class=p>[</span><span class=n>key</span><span class=p>]</span> <span class=o>=</span> <span class=n>value</span>
+
+            <span class=n>inventory</span><span class=p>[</span><span class=n>resource_id</span><span class=p>]</span> <span class=o>=</span> <span class=p>{{</span> <span class=n>class_name</span> <span class=p>}}({</span><span class=n>resource_id</span><span class=p>:</span> <span class=n>resource</span><span class=p>})</span>
+
+        <span class=k>return</span> <span class=n>inventory</span>
+</code></pre></div> <p>If you need to clean the dictionary created by your provider, use the <code>self.prune_dictionary</code> method.</p> <h5 id=create-the-generate_source_data-method>Create the generate_source_data method<a class=headerlink href=#create-the-generate_source_data-method title="Permanent link">&para;</a></h5> <p>This method is meant to extract the information from your source, for example AWS and save it into the <code>self.source_data</code>, as well as return it.</p> <h5 id=create-the-generate_user_data-method>Create the generate_user_data method<a class=headerlink href=#create-the-generate_user_data-method title="Permanent link">&para;</a></h5> <p>This method is meant to extract the information from the user, so it takes the resources saved on <code>self.source_data</code> and generates the basic template for each one and saves them into <code>self.user_data</code>.</p> <h5 id=create-the-generate_inventory-method>Create the generate_inventory method<a class=headerlink href=#create-the-generate_inventory-method title="Permanent link">&para;</a></h5> <p>This method is meant to initiate the resource object of the source we're adding. This object doesn't exist yet, but we'll do that later.</p> <p>After initializing all the objects they are returned.</p> <h5 id=add-your-source-to-the-loaded-sources>Add your source to the loaded sources<a class=headerlink href=#add-your-source-to-the-loaded-sources title="Permanent link">&para;</a></h5> <p>Import it in <code>clinv/inventory.py</code> and add it into the <code>active_source_plugins</code> variable</p> <h4 id=create-the-resource-class>Create the resource class<a class=headerlink href=#create-the-resource-class title="Permanent link">&para;</a></h4> <p>On <code>clinv/sources/</code> create your source class from this template. Substitute <code>{{ class_name }}</code> and <code>{{ class_id }}</code> with your values.</p> <div class=highlight><pre><span></span><code><span class=k>class</span> <span class=err>{{ </span><span class=nc>class_name</span> <span class=p>}}(</span><span class=n>ClinvGenericResource</span><span class=p>):</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Class to extend the ClinvGenericResource abstract class. It gathers methods</span>
+<span class=sd>    and attributes for the {{ class_name }} resources.</span>
+
+<span class=sd>    Public methods:</span>
+<span class=sd>        print: Prints information of the resource.</span>
+
+<span class=sd>    Public properties:</span>
+<span class=sd>        name: Returns the name of the record.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+
+    <span class=k>def</span> <span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>raw_data</span><span class=p>):</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Execute the __init__ of the parent class ClinvActiveResource.</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=fm>__init__</span><span class=p>(</span><span class=n>raw_data</span><span class=p>)</span>
+</code></pre></div> <h4 id=create-the-resource-test-class>Create the resource test class<a class=headerlink href=#create-the-resource-test-class title="Permanent link">&para;</a></h4> <div class=highlight><pre><span></span><code><span class=k>class</span> <span class=nc>Test</span><span class=p>{{</span> <span class=n>class_name</span> <span class=p>}}(</span><span class=n>ClinvGenericResourceTests</span><span class=p>,</span> <span class=n>unittest</span><span class=o>.</span><span class=n>TestCase</span><span class=p>):</span>
+    <span class=k>def</span> <span class=nf>setUp</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>module_name</span> <span class=o>=</span> <span class=s1>&#39;{{ module_name }}&#39;</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>id</span> <span class=o>=</span> <span class=s1>&#39;{{ class_id }}&#39;</span>
+
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>setUp</span><span class=p>()</span>
+
+        <span class=bp>self</span><span class=o>.</span><span class=n>raw</span> <span class=o>=</span> <span class=p>{</span>
+            <span class=c1># Example of the dictionary to initialize the object.</span>
+        <span class=p>}</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>resource</span> <span class=o>=</span> <span class=p>{{</span> <span class=n>class_name</span> <span class=p>}}(</span><span class=bp>self</span><span class=o>.</span><span class=n>raw</span><span class=p>)</span>
+
+    <span class=k>def</span> <span class=nf>tearDown</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=nb>super</span><span class=p>()</span><span class=o>.</span><span class=n>tearDown</span><span class=p>()</span>
+</code></pre></div> <p>Think if you can add more search filters in the object <code>search</code> method.</p> <h4 id=add-resource-to-the-reports>Add resource to the reports<a class=headerlink href=#add-resource-to-the-reports title="Permanent link">&para;</a></h4> <p>There are some reports that are generic, such as <code>list</code> or <code>print</code>, but there are some that still aren't.</p> <p>So you'll need to manually add your resource to <code>export</code> and <code>unassigned</code>.</p> <h4 id=add-resource-to-the-cli>Add resource to the cli<a class=headerlink href=#add-resource-to-the-cli title="Permanent link">&para;</a></h4> <p>For the reports that aren't generic add them in <code>clinv/cli.py</code>.</p> <h4 id=test-that-everything-works>Test that everything works<a class=headerlink href=#test-that-everything-works title="Permanent link">&para;</a></h4> <p>Execute the following tasks</p> <ul> <li>Generate the new inventory <code>clinv generate</code>.</li> <li>Edit the <code>use_data.yml</code>.</li> <li>Regenerate the inventory and check that no information is lost.</li> <li>Check the different reports.</li> </ul> <h4 id=add-documentation>Add documentation<a class=headerlink href=#add-documentation title="Permanent link">&para;</a></h4> <p>Complete the README.md and History.md</p> <hr> <div class=md-source-date> <small> Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago"><span class=timeago datetime=2020-06-22T14:35:27+00:00 locale=en></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2020-06-22</span> </small> </div> </article> </div> </div> </main> <footer class=md-footer> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-footer-copyright> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script> <script src=../assets/javascripts/bundle.34eae1b6.min.js></script> <script src=../js/timeago.min.js></script> <script src=../js/timeago_mkdocs_material.js></script> </body> </html>
