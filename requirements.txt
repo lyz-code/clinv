@@ -24,7 +24,7 @@ deepdiff==5.5.0
     # via repository-orm
 distro==1.5.0
     # via ruyaml
-idna==2.10
+idna==3.2
     # via requests
 importlib-metadata==4.4.0
     # via click
