@@ -2,7 +2,7 @@
 name: Update
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: '*/2 * * * *'
+    - cron: '*/10 * * * *'
 
 jobs:
   Update:
@@ -33,10 +33,10 @@ jobs:
           ls
           git branch
           git status
+          git pull
           git add requirements.txt docs/requirements.txt requirements-dev.txt
           git status
-          git diff-index --quiet HEAD \
-            || git commit -m "chore: update dependency requirements"
+          git diff-index --quiet HEAD || git commit -m "chore: update dependency requirements"
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
