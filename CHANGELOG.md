@@ -1,3 +1,13 @@
+## 1.1.0 (2021-06-02)
+
+### Fix
+
+- create required directories and files at installation
+
+### feat
+
+- add support to python 3.9
+
 ## 1.0.0 (2021-06-01)
 
 ### Refactor
