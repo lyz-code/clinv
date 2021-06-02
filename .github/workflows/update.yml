@@ -2,7 +2,7 @@
 name: Update
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: 11 08 * * *
 
 jobs:
   Update:
@@ -26,11 +26,12 @@ jobs:
         run: make all
       - name: Commit files
         run: |
+          rm -r .git/hooks
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          rm -r .git/hooks
           git add requirements.txt docs/requirements.txt requirements-dev.txt
-          git diff-index --quiet HEAD || git commit -m "chore: update dependency requirements"
+          git diff-index --quiet HEAD \
+            || git commit -m "chore: update dependency requirements"
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
