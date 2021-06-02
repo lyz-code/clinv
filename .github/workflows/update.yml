@@ -2,7 +2,7 @@
 name: Update
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: 11 08 * * *
+    - cron: */2 * * * *
 
 jobs:
   Update:
@@ -24,11 +24,17 @@ jobs:
         run: make install
       - name: Run tests
         run: make all
-      - name: Commit files
+      - name: Prepare git environment
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+      - name: Commit files
+        run: |
+          ls
+          git branch
+          git status
           git add requirements.txt docs/requirements.txt requirements-dev.txt
+          git status
           git diff-index --quiet HEAD \
             || git commit -m "chore: update dependency requirements"
       - name: Push changes
