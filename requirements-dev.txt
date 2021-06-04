@@ -43,11 +43,11 @@ beautifulsoup4==4.9.3
     #   mkdocs-htmlproofer-plugin
 black==21.5b2
     # via -r requirements-dev.in
-boto3==1.17.86
+boto3==1.17.87
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.20.86
+botocore==1.20.87
     # via
     #   -r requirements.txt
     #   boto3
@@ -119,7 +119,7 @@ factory-boy==3.2.0
     # via -r requirements-dev.in
 faker-enum==0.0.2
     # via -r requirements-dev.in
-faker==8.5.0
+faker==8.5.1
     # via
     #   factory-boy
     #   faker-enum
@@ -202,14 +202,14 @@ htmlmin==0.1.12
     # via
     #   -r docs/requirements.txt
     #   mkdocs-minify-plugin
-identify==2.2.7
+identify==2.2.8
     # via pre-commit
 idna==2.10
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
     #   requests
-importlib-metadata==4.4.0
+importlib-metadata==4.5.0
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
