@@ -26,7 +26,7 @@ distro==1.5.0
     # via ruyaml
 idna==2.10
     # via requests
-importlib-metadata==4.4.0
+importlib-metadata==4.5.0
     # via click
 jmespath==0.10.0
     # via
