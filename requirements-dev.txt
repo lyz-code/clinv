@@ -41,13 +41,13 @@ beautifulsoup4==4.9.3
     # via
     #   -r docs/requirements.txt
     #   mkdocs-htmlproofer-plugin
-black==21.5b2
+black==21.6b0
     # via -r requirements-dev.in
-boto3==1.17.91
+boto3==1.17.92
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.20.91
+botocore==1.20.92
     # via
     #   -r requirements.txt
     #   boto3
@@ -332,7 +332,7 @@ mypy-extensions==0.4.3
     # via
     #   black
     #   mypy
-mypy==0.901
+mypy==0.902
     # via -r requirements-dev.in
 nodeenv==1.6.0
     # via pre-commit
