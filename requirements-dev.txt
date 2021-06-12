@@ -43,11 +43,11 @@ beautifulsoup4==4.9.3
     #   mkdocs-htmlproofer-plugin
 black==21.6b0
     # via -r requirements-dev.in
-boto3==1.17.92
+boto3==1.17.93
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.20.92
+botocore==1.20.93
     # via
     #   -r requirements.txt
     #   boto3
@@ -118,7 +118,7 @@ factory-boy==3.2.0
     # via -r requirements-dev.in
 faker-enum==0.0.2
     # via -r requirements-dev.in
-faker==8.6.0
+faker==8.7.0
     # via
     #   factory-boy
     #   faker-enum
