@@ -295,7 +295,7 @@ mkdocs-material-extensions==1.0.1
     # via
     #   -r docs/requirements.txt
     #   mkdocs-material
-mkdocs-material==7.1.7
+mkdocs-material==7.1.8
     # via
     #   -r docs/requirements.in
     #   -r docs/requirements.txt
@@ -326,7 +326,7 @@ mkdocstrings==0.15.2
     #   -r docs/requirements.txt
 more-itertools==8.8.0
     # via moto
-moto==2.0.8
+moto==2.0.9
     # via -r requirements-dev.in
 mypy-extensions==0.4.3
     # via
