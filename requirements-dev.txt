@@ -41,11 +41,11 @@ beautifulsoup4==4.9.3
     #   mkdocs-htmlproofer-plugin
 black==21.6b0
     # via -r requirements-dev.in
-boto3==1.17.94
+boto3==1.17.95
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.20.94
+botocore==1.20.95
     # via
     #   -r requirements.txt
     #   boto3
@@ -190,7 +190,7 @@ gitdb==4.0.7
     # via
     #   -r docs/requirements.txt
     #   gitpython
-gitpython==3.1.17
+gitpython==3.1.14
     # via
     #   -r docs/requirements.txt
     #   bandit
@@ -403,7 +403,7 @@ pyparsing==2.4.7
     # via
     #   -r docs/requirements.txt
     #   packaging
-pypika==0.48.2
+pypika==0.48.3
     # via
     #   -r requirements.txt
     #   repository-orm
@@ -547,7 +547,6 @@ typing-extensions==3.10.0.0
     #   -r docs/requirements.txt
     #   -r requirements.txt
     #   black
-    #   gitpython
     #   importlib-metadata
     #   mypy
     #   pydantic
