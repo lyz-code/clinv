@@ -42,7 +42,7 @@ pygments==2.9.0
     # via rich
 pymysql==1.0.2
     # via repository-orm
-pypika==0.48.4
+pypika==0.48.5
     # via repository-orm
 python-dateutil==2.8.1
     # via botocore
@@ -50,7 +50,7 @@ repository-orm==0.5.1
     # via clinv (setup.py)
 requests==2.25.1
     # via clinv (setup.py)
-rich==10.3.0
+rich==10.4.0
     # via clinv (setup.py)
 ruyaml==0.20.0
     # via clinv (setup.py)

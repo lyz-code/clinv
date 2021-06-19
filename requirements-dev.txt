@@ -403,7 +403,7 @@ pyparsing==2.4.7
     # via
     #   -r docs/requirements.txt
     #   packaging
-pypika==0.48.4
+pypika==0.48.5
     # via
     #   -r requirements.txt
     #   repository-orm
@@ -468,7 +468,7 @@ requests==2.25.1
     #   safety
 responses==0.13.3
     # via moto
-rich==10.3.0
+rich==10.4.0
     # via -r requirements.txt
 ruyaml==0.20.0
     # via
