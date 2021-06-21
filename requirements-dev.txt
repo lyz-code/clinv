@@ -225,7 +225,7 @@ importlib-metadata==4.5.0
     #   virtualenv
 iniconfig==1.1.1
     # via pytest
-isort==5.8.0
+isort==5.9.0
     # via
     #   -r requirements-dev.in
     #   pylint
@@ -324,7 +324,7 @@ mkdocstrings==0.15.2
     #   -r docs/requirements.txt
 more-itertools==8.8.0
     # via moto
-moto==2.0.9
+moto==2.0.10
     # via -r requirements-dev.in
 mypy-extensions==0.4.3
     # via
