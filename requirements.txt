@@ -26,7 +26,7 @@ distro==1.5.0
     # via ruyaml
 idna==2.10
     # via requests
-importlib-metadata==4.5.0
+importlib-metadata==4.6.0
     # via click
 jmespath==0.10.0
     # via
@@ -64,7 +64,7 @@ tabulate==0.8.9
     # via
     #   clinv (setup.py)
     #   yoyo-migrations
-tinydb==4.4.0
+tinydb==4.5.0
     # via
     #   repository-orm
     #   tinydb-serialization
