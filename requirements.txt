@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.17.103
+boto3==1.17.105
     # via clinv (setup.py)
-botocore==1.20.103
+botocore==1.20.105
     # via
     #   boto3
     #   s3transfer
@@ -81,7 +81,7 @@ urllib3==1.26.6
     #   requests
 yoyo-migrations==7.3.2
     # via repository-orm
-zipp==3.4.1
+zipp==3.5.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
