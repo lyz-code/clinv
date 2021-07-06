@@ -50,7 +50,7 @@ repository-orm==0.5.1
     # via clinv (setup.py)
 requests==2.25.1
     # via clinv (setup.py)
-rich==10.4.0
+rich==10.5.0
     # via clinv (setup.py)
 ruyaml==0.20.0
     # via clinv (setup.py)

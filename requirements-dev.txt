@@ -454,7 +454,7 @@ pyyaml-env-tag==0.1
     # via
     #   -r docs/requirements.txt
     #   mkdocs
-regex==2021.7.1
+regex==2021.7.6
     # via black
 repository-orm==0.5.1
     # via -r requirements.txt
@@ -468,7 +468,7 @@ requests==2.25.1
     #   safety
 responses==0.13.3
     # via moto
-rich==10.4.0
+rich==10.5.0
     # via -r requirements.txt
 ruyaml==0.20.0
     # via
