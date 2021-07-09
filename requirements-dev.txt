@@ -41,11 +41,11 @@ beautifulsoup4==4.9.3
     #   mkdocs-htmlproofer-plugin
 black==21.6b0
     # via -r requirements-dev.in
-boto3==1.17.107
+boto3==1.17.108
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.20.107
+botocore==1.20.108
     # via
     #   -r requirements.txt
     #   boto3
@@ -60,7 +60,7 @@ certifi==2021.5.30
     #   -r docs/requirements.txt
     #   -r requirements.txt
     #   requests
-cffi==1.14.5
+cffi==1.14.6
     # via cryptography
 cfgv==3.3.0
     # via pre-commit
@@ -226,7 +226,7 @@ importlib-metadata==4.6.1
     #   virtualenv
 iniconfig==1.1.1
     # via pytest
-isort==5.9.1
+isort==5.9.2
     # via
     #   -r requirements-dev.in
     #   pylint
