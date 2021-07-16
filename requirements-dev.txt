@@ -15,9 +15,7 @@ astroid==2.6.2
 asttokens==2.0.5
     # via flake8-aaa
 astunparse==1.6.3
-    # via
-    #   -r docs/requirements.txt
-    #   pytkdocs
+    # via -r docs/requirements.txt
 attrs==21.2.0
     # via
     #   flake8-bugbear
@@ -52,9 +50,7 @@ botocore==1.21.0
     #   moto
     #   s3transfer
 cached-property==1.5.2
-    # via
-    #   -r docs/requirements.txt
-    #   pytkdocs
+    # via -r docs/requirements.txt
 certifi==2021.5.30
     # via
     #   -r docs/requirements.txt
@@ -211,20 +207,7 @@ importlib-metadata==4.6.1
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
-    #   backports.entry-points-selectable
-    #   click
-    #   flake8
-    #   flake8-comprehensions
-    #   flake8-simplify
-    #   flake8-typing-imports
-    #   markdown
     #   mkdocs
-    #   pep517
-    #   pluggy
-    #   pre-commit
-    #   pytest
-    #   stevedore
-    #   virtualenv
 iniconfig==1.1.1
     # via pytest
 isort==5.9.2
@@ -326,7 +309,7 @@ mkdocstrings==0.15.2
     #   -r docs/requirements.txt
 more-itertools==8.8.0
     # via moto
-moto==2.0.11
+moto==2.1.0
     # via -r requirements-dev.in
 mypy==0.910
     # via -r requirements-dev.in
@@ -540,24 +523,12 @@ toml==0.10.2
     #   pylint
     #   pytest
     #   pytest-cov
-typed-ast==1.4.3
-    # via
-    #   astroid
-    #   black
-    #   flake8-annotations
-    #   mypy
 typing-extensions==3.10.0.0
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
-    #   astroid
-    #   black
-    #   gitpython
-    #   importlib-metadata
     #   mypy
     #   pydantic
-    #   pytkdocs
-    #   rich
 urllib3==1.26.6
     # via
     #   -r docs/requirements.txt
@@ -596,7 +567,6 @@ zipp==3.5.0
     #   -r docs/requirements.txt
     #   -r requirements.txt
     #   importlib-metadata
-    #   pep517
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==21.1.3
@@ -611,4 +581,3 @@ setuptools==57.2.0
     #   pip-tools
     #   ruyaml
     #   safety
-    #   yamllint
