@@ -39,13 +39,13 @@ beautifulsoup4==4.9.3
     # via
     #   -r docs/requirements.txt
     #   mkdocs-htmlproofer-plugin
-black==21.6b0
+black==21.7b0
     # via -r requirements-dev.in
-boto3==1.18.0
+boto3==1.18.1
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.0
+botocore==1.21.1
     # via
     #   -r requirements.txt
     #   boto3
@@ -64,7 +64,7 @@ cffi==1.14.6
     # via cryptography
 cfgv==3.3.0
     # via pre-commit
-charset-normalizer==2.0.2
+charset-normalizer==2.0.3
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
@@ -326,7 +326,7 @@ mkdocstrings==0.15.2
     #   -r docs/requirements.txt
 more-itertools==8.8.0
     # via moto
-moto==2.0.11
+moto==2.1.0
     # via -r requirements-dev.in
 mypy==0.910
     # via -r requirements-dev.in
@@ -531,7 +531,6 @@ tinydb-serialization==2.1.0
     #   repository-orm
 toml==0.10.2
     # via
-    #   black
     #   dparse
     #   flakehell
     #   mypy
@@ -540,6 +539,8 @@ toml==0.10.2
     #   pylint
     #   pytest
     #   pytest-cov
+tomli==1.0.4
+    # via black
 typed-ast==1.4.3
     # via
     #   astroid
