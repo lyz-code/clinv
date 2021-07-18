@@ -64,7 +64,7 @@ tabulate==0.8.9
     # via
     #   clinv (setup.py)
     #   yoyo-migrations
-tinydb==4.5.0
+tinydb==4.5.1
     # via
     #   repository-orm
     #   tinydb-serialization
@@ -75,6 +75,7 @@ typing-extensions==3.10.0.0
     #   importlib-metadata
     #   pydantic
     #   rich
+    #   tinydb
 urllib3==1.26.6
     # via
     #   botocore
