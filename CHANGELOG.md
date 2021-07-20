@@ -1,3 +1,9 @@
+## 1.1.1 (2021-07-20)
+
+### Fix
+
+- change the way pip creates the configuration files
+
 ## 1.1.0 (2021-06-02)
 
 ### Fix
