@@ -8,44 +8,8 @@ from glob import glob
 from os.path import basename, splitext
 
 from setuptools import find_packages, setup
-from setuptools.command.egg_info import egg_info
-from setuptools.command.install import install
 
 log = logging.getLogger(__name__)
-
-
-# ignore: Install has class Any, and can't be subclassed. It's how I used it in the
-#   past and don't have time to fix it right now.
-class PostInstallCommand(install):  # type: ignore
-    """Post-installation for installation mode."""
-
-    def run(self) -> None:
-        """Create data directory after installation."""
-        install.run(self)
-        try:
-            data_directory = os.path.expanduser("~/.local/share/clinv")
-            os.makedirs(data_directory)
-            log.info("Data directory created")
-        except FileExistsError:
-            log.info("Data directory already exits")
-        config_path = os.path.join(data_directory, "config.yaml")
-        if os.path.isfile(config_path) and os.access(config_path, os.R_OK):
-            log.info(
-                "Configuration file already exists, check the documentation "
-                "for the new version changes."
-            )
-        else:
-            shutil.copyfile("assets/config.yaml", config_path)
-            log.info("Copied default configuration template")
-
-
-class PostEggInfoCommand(egg_info):  # type: ignore
-    """Post-installation for egg_info mode."""
-
-    def run(self) -> None:
-        """Create required directories and files."""
-        egg_info.run(self)
-
 
 # Avoid loading the package to extract the version
 with open("src/clinv/version.py") as fp:
@@ -92,7 +56,6 @@ setup(
         [console_scripts]
         clinv=clinv.entrypoints.cli:cli
     """,
-    cmdclass={"install": PostInstallCommand, "egg_info": PostEggInfoCommand},
     install_requires=[
         "boto3",
         "pydantic",
@@ -104,3 +67,19 @@ setup(
         "Click",
     ],
 )
+
+try:
+    data_directory = os.path.expanduser("~/.local/share/clinv")
+    os.makedirs(data_directory)
+    log.info("Data directory created")
+except FileExistsError:
+    log.info("Data directory already exits")
+config_path = os.path.join(data_directory, "config.yaml")
+if os.path.isfile(config_path) and os.access(config_path, os.R_OK):
+    log.info(
+        "Configuration file already exists, check the documentation "
+        "for the new version changes."
+    )
+else:
+    shutil.copyfile("assets/config.yaml", config_path)
+    log.info("Copied default configuration template")

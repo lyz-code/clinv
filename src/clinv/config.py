@@ -114,7 +114,7 @@ class Config(UserDict):  # type: ignore # noqa: R0901
                     raise ConfigError(str(error)) from error
         except FileNotFoundError as error:
             raise ConfigError(
-                "The configuration file {self.config_path} could not be found."
+                f"The configuration file {self.config_path} could not be found."
             ) from error
 
     def save(self) -> None:
