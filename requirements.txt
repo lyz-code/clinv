@@ -4,15 +4,15 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.9
+boto3==1.18.11
     # via clinv (setup.py)
-botocore==1.21.9
+botocore==1.21.11
     # via
     #   boto3
     #   s3transfer
 certifi==2021.5.30
     # via requests
-charset-normalizer==2.0.3
+charset-normalizer==2.0.4
     # via requests
 click==8.0.1
     # via clinv (setup.py)
@@ -22,11 +22,11 @@ commonmark==0.9.1
     # via rich
 deepdiff==5.5.0
     # via repository-orm
-distro==1.5.0
+distro==1.6.0
     # via ruyaml
 idna==3.2
     # via requests
-importlib-metadata==4.6.1
+importlib-metadata==4.6.2
     # via click
 jmespath==0.10.0
     # via
