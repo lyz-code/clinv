@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.18
+boto3==1.18.19
     # via clinv (setup.py)
-botocore==1.21.18
+botocore==1.21.19
     # via
     #   boto3
     #   s3transfer
