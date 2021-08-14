@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.20
+boto3==1.18.21
     # via clinv (setup.py)
-botocore==1.21.20
+botocore==1.21.21
     # via
     #   boto3
     #   s3transfer
@@ -26,7 +26,7 @@ distro==1.6.0
     # via ruyaml
 idna==3.2
     # via requests
-importlib-metadata==4.6.3
+importlib-metadata==4.6.4
     # via click
 jmespath==0.10.0
     # via
