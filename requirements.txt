@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.22
+boto3==1.18.23
     # via clinv (setup.py)
 botocore==1.21.22
     # via
