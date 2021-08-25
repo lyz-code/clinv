@@ -41,11 +41,11 @@ beautifulsoup4==4.9.3
     #   mkdocs-htmlproofer-plugin
 black==21.7b0
     # via -r requirements-dev.in
-boto3==1.18.27
+boto3==1.18.28
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.27
+botocore==1.21.28
     # via
     #   -r requirements.txt
     #   boto3
@@ -90,7 +90,7 @@ commonmark==0.9.1
     #   rich
 coverage==5.5
     # via pytest-cov
-cryptography==3.4.7
+cryptography==3.4.8
     # via moto
 deepdiff==5.5.0
     # via
@@ -114,7 +114,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.0
     # via -r requirements-dev.in
-faker==8.12.0
+faker==8.12.1
     # via
     #   factory-boy
     #   faker-enum
@@ -305,7 +305,7 @@ mkdocs-htmlproofer-plugin==0.6.0
     # via
     #   -r docs/requirements.in
     #   -r docs/requirements.txt
-mkdocs-material==7.2.4
+mkdocs-material==7.2.5
     # via
     #   -r docs/requirements.in
     #   -r docs/requirements.txt
@@ -589,7 +589,7 @@ wrapt==1.12.1
     # via astroid
 xmltodict==0.12.0
     # via moto
-yamlfix==0.7.0
+yamlfix==0.7.1
     # via -r requirements-dev.in
 yamllint==1.26.3
     # via -r requirements-dev.in
