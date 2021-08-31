@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.31
+boto3==1.18.32
     # via clinv (setup.py)
-botocore==1.21.31
+botocore==1.21.32
     # via
     #   boto3
     #   s3transfer
@@ -70,7 +70,7 @@ tinydb==4.5.1
     #   tinydb-serialization
 tinydb-serialization==2.1.0
     # via repository-orm
-typing-extensions==3.10.0.1
+typing-extensions==3.10.0.2
     # via
     #   importlib-metadata
     #   pydantic
