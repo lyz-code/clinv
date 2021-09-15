@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.41
+boto3==1.18.42
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.41
+botocore==1.21.42
     # via
     #   -r requirements.txt
     #   boto3
@@ -62,7 +62,7 @@ cffi==1.14.6
     # via cryptography
 cfgv==3.3.1
     # via pre-commit
-charset-normalizer==2.0.4
+charset-normalizer==2.0.5
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
