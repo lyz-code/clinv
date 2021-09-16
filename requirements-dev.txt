@@ -112,7 +112,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.0
     # via -r requirements-dev.in
-faker==8.12.1
+faker==8.13.2
     # via
     #   factory-boy
     #   faker-enum
