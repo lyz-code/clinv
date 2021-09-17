@@ -8,7 +8,7 @@ astor==0.8.1
     # via flake8-simplify
 astpretty==2.1.0
     # via flake8-expression-complexity
-astroid==2.7.3
+astroid==2.8.0
     # via pylint
 asttokens==2.0.5
     # via flake8-aaa
@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.42
+boto3==1.18.43
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.42
+botocore==1.21.43
     # via
     #   -r requirements.txt
     #   boto3
@@ -241,7 +241,7 @@ jmespath==0.10.0
     #   -r requirements.txt
     #   boto3
     #   botocore
-jsmin==2.2.2
+jsmin==3.0.0
     # via
     #   -r docs/requirements.txt
     #   mkdocs-minify-plugin
@@ -325,7 +325,7 @@ mkdocstrings==0.15.2
     #   -r docs/requirements.txt
 more-itertools==8.9.0
     # via moto
-moto==2.2.6
+moto==2.2.7
     # via -r requirements-dev.in
 mypy==0.910
     # via -r requirements-dev.in
@@ -394,7 +394,7 @@ pygments==2.10.0
     #   flakehell
     #   mkdocs-material
     #   rich
-pylint==2.10.2
+pylint==2.11.1
     # via -r requirements-dev.in
 pymdown-extensions==8.2
     # via
@@ -559,6 +559,7 @@ typing-extensions==3.10.0.2
     #   importlib-metadata
     #   mypy
     #   pydantic
+    #   pylint
     #   pytkdocs
     #   rich
     #   tinydb
@@ -570,7 +571,7 @@ urllib3==1.26.6
     #   flakehell
     #   requests
     #   responses
-virtualenv==20.7.2
+virtualenv==20.8.0
     # via pre-commit
 watchdog==2.1.5
     # via
