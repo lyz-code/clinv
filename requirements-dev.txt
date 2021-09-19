@@ -478,7 +478,7 @@ requests==2.26.0
     #   safety
 responses==0.14.0
     # via moto
-rich==10.9.0
+rich==10.10.0
     # via -r requirements.txt
 ruyaml==0.20.0
     # via
