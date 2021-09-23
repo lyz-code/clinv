@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.45
+boto3==1.18.46
     # via clinv (setup.py)
-botocore==1.21.45
+botocore==1.21.46
     # via
     #   boto3
     #   s3transfer
@@ -46,7 +46,7 @@ pypika==0.48.8
     # via repository-orm
 python-dateutil==2.8.2
     # via botocore
-repository-orm==0.5.3
+repository-orm==0.5.4
     # via clinv (setup.py)
 requests==2.26.0
     # via clinv (setup.py)
@@ -76,7 +76,7 @@ typing-extensions==3.10.0.2
     #   pydantic
     #   rich
     #   tinydb
-urllib3==1.26.6
+urllib3==1.26.7
     # via
     #   botocore
     #   requests
