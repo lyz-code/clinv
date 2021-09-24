@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.46
+boto3==1.18.47
     # via clinv (setup.py)
-botocore==1.21.46
+botocore==1.21.47
     # via
     #   boto3
     #   s3transfer
@@ -46,7 +46,7 @@ pypika==0.48.8
     # via repository-orm
 python-dateutil==2.8.2
     # via botocore
-repository-orm==0.5.4
+repository-orm==0.5.5
     # via clinv (setup.py)
 requests==2.26.0
     # via clinv (setup.py)
@@ -64,7 +64,7 @@ tabulate==0.8.9
     # via
     #   clinv (setup.py)
     #   yoyo-migrations
-tinydb==4.5.1
+tinydb==4.5.2
     # via
     #   repository-orm
     #   tinydb-serialization
