@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.47
+boto3==1.18.48
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.47
+botocore==1.21.48
     # via
     #   -r requirements.txt
     #   boto3
@@ -112,7 +112,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.0
     # via -r requirements-dev.in
-faker==8.13.2
+faker==8.14.0
     # via
     #   factory-boy
     #   faker-enum
@@ -464,7 +464,7 @@ pyyaml-env-tag==0.1
     # via
     #   -r docs/requirements.txt
     #   mkdocs
-regex==2021.8.28
+regex==2021.9.24
     # via black
 repository-orm==0.5.5
     # via -r requirements.txt
@@ -478,7 +478,7 @@ requests==2.26.0
     #   safety
 responses==0.14.0
     # via moto
-rich==10.10.0
+rich==10.11.0
     # via -r requirements.txt
 ruyaml==0.20.0
     # via
@@ -575,7 +575,7 @@ urllib3==1.26.7
     #   flakehell
     #   requests
     #   responses
-virtualenv==20.8.0
+virtualenv==20.8.1
     # via pre-commit
 watchdog==2.1.5
     # via
