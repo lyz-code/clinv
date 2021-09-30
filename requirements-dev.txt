@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.50
+boto3==1.18.51
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.50
+botocore==1.21.51
     # via
     #   -r requirements.txt
     #   boto3
@@ -88,7 +88,7 @@ commonmark==0.9.1
     #   rich
 coverage==5.5
     # via pytest-cov
-cryptography==3.4.8
+cryptography==35.0.0
     # via moto
 deepdiff==5.5.0
     # via
@@ -118,7 +118,7 @@ faker==8.14.0
     #   faker-enum
 faker-enum==0.0.2
     # via -r requirements-dev.in
-filelock==3.1.0
+filelock==3.2.0
     # via virtualenv
 flake8==3.9.2
     # via
@@ -145,7 +145,7 @@ flake8-annotations==2.6.2
     # via -r requirements-dev.in
 flake8-annotations-complexity==0.0.6
     # via -r requirements-dev.in
-flake8-bugbear==21.9.1
+flake8-bugbear==21.9.2
     # via -r requirements-dev.in
 flake8-comprehensions==3.6.1
     # via -r requirements-dev.in
@@ -600,7 +600,7 @@ yoyo-migrations==7.3.2
     # via
     #   -r requirements.txt
     #   repository-orm
-zipp==3.5.1
+zipp==3.6.0
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
