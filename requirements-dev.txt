@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.56
+boto3==1.18.57
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.56
+botocore==1.21.57
     # via
     #   -r requirements.txt
     #   boto3
@@ -112,7 +112,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.0
     # via -r requirements-dev.in
-faker==9.0.0
+faker==9.2.0
     # via
     #   factory-boy
     #   faker-enum
