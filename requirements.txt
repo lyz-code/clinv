@@ -4,17 +4,17 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.18.57
+boto3==1.18.58
     # via clinv (setup.py)
-botocore==1.21.57
+botocore==1.21.58
     # via
     #   boto3
     #   s3transfer
-certifi==2021.5.30
+certifi==2021.10.8
     # via requests
 charset-normalizer==2.0.6
     # via requests
-click==8.0.1
+click==8.0.2
     # via clinv (setup.py)
 colorama==0.4.4
     # via rich
