@@ -67,7 +67,7 @@ charset-normalizer==2.0.6
     #   -r docs/requirements.txt
     #   -r requirements.txt
     #   requests
-click==8.0.2
+click==8.0.3
     # via
     #   -r docs/requirements.txt
     #   -r requirements.txt
@@ -330,7 +330,7 @@ mkdocstrings==0.16.2
     #   -r docs/requirements.txt
 more-itertools==8.10.0
     # via moto
-moto==2.2.8
+moto==2.2.9
     # via -r requirements-dev.in
 mypy==0.910
     # via -r requirements-dev.in
