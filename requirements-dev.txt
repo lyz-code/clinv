@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.60
+boto3==1.18.61
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.60
+botocore==1.21.61
     # via
     #   -r requirements.txt
     #   boto3
@@ -58,7 +58,7 @@ certifi==2021.10.8
     #   -r docs/requirements.txt
     #   -r requirements.txt
     #   requests
-cffi==1.14.6
+cffi==1.15.0
     # via cryptography
 cfgv==3.3.1
     # via pre-commit
@@ -452,7 +452,7 @@ pytz==2021.3
     #   -r docs/requirements.txt
     #   babel
     #   moto
-pyyaml==5.4.1
+pyyaml==6.0
     # via
     #   -r docs/requirements.txt
     #   bandit
