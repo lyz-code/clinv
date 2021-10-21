@@ -39,11 +39,11 @@ beautifulsoup4==4.10.0
     #   mkdocs-htmlproofer-plugin
 black==21.9b0
     # via -r requirements-dev.in
-boto3==1.18.65
+boto3==1.19.0
     # via
     #   -r requirements.txt
     #   moto
-botocore==1.21.65
+botocore==1.22.0
     # via
     #   -r requirements.txt
     #   boto3
@@ -116,7 +116,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.0
     # via -r requirements-dev.in
-faker==9.5.0
+faker==9.5.1
     # via
     #   factory-boy
     #   faker-enum
@@ -179,7 +179,7 @@ flake8-simplify==0.14.2
     # via -r requirements-dev.in
 flake8-typing-imports==1.11.0
     # via -r requirements-dev.in
-flake8-use-fstring==1.2
+flake8-use-fstring==1.2.1
     # via -r requirements-dev.in
 flake8-variables-names==0.0.4
     # via -r requirements-dev.in
@@ -469,7 +469,7 @@ pyyaml-env-tag==0.1
     # via
     #   -r docs/requirements.txt
     #   mkdocs
-regex==2021.10.8
+regex==2021.10.21
     # via black
 repository-orm==0.5.5
     # via -r requirements.txt
@@ -564,6 +564,7 @@ typing-extensions==3.10.0.2
     #   -r requirements.txt
     #   astroid
     #   black
+    #   faker
     #   gitpython
     #   importlib-metadata
     #   mypy
