@@ -189,7 +189,7 @@ ghp-import==2.0.2
     # via
     #   -r docs/requirements.txt
     #   mkdocs
-gitdb==4.0.8
+gitdb==4.0.9
     # via
     #   -r docs/requirements.txt
     #   gitpython
@@ -414,7 +414,7 @@ pymysql==1.0.2
     # via
     #   -r requirements.txt
     #   repository-orm
-pyparsing==3.0.0
+pyparsing==3.0.1
     # via
     #   -r docs/requirements.txt
     #   packaging
