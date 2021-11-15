@@ -94,8 +94,9 @@ faker-enum==0.0.2
     # via -r requirements-dev.in
 filelock==3.3.2
     # via virtualenv
-flake8==4.0.1
+flake8==3.9.2
     # via
+    #   -r requirements-dev.in
     #   dlint
     #   flake8-annotations
     #   flake8-bugbear
@@ -239,7 +240,7 @@ py==1.11.0
     # via
     #   pytest
     #   pytest-forked
-pycodestyle==2.8.0
+pycodestyle==2.7.0
     # via
     #   flake8
     #   flake8-debugger
@@ -247,7 +248,7 @@ pycparser==2.21
     # via cffi
 pydocstyle==6.1.1
     # via flake8-docstrings
-pyflakes==2.4.0
+pyflakes==2.3.1
     # via
     #   autoflake
     #   flake8

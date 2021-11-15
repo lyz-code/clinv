@@ -37,6 +37,10 @@ pylint
 pre-commit
 dlint
 
+# Remove the next dependency when https://github.com/flakehell/flakehell/issues/22
+# is resolved
+flake8<4.0.0
+
 # Security
 pip-tools
 safety
