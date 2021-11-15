@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/lyz-code/cookiecutter-python-project",
-  "commit": "325222e32af95279a6773be4d79d89debdd95183",
+  "commit": "7077aa7dc32e0bacc43780813ea5bfd59b2450b3",
   "context": {
     "cookiecutter": {
       "project_name": "Clinv",
