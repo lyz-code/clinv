@@ -2,7 +2,7 @@
 
 from repository_orm import FakeRepository, Repository
 
-from clinv import FakeSource
+from clinv.adapters import FakeSource
 from clinv.services import search, update_sources
 
 from ..factories import EC2Factory, PeopleFactory

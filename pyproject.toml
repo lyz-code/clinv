@@ -46,7 +46,6 @@ norecursedirs = [
     "*/static/*",
     "docs",
     "venv",
-    "*/Clinv/*"
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

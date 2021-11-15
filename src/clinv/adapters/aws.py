@@ -14,14 +14,8 @@ from botocore.exceptions import (
 )
 from rich.progress import track
 
-from ..model import (
-    RESOURCE_TYPES,
-    EntityAttrs,
-    EntityState,
-    EntityType,
-    EntityUpdate,
-    aws,
-)
+from ..model import RESOURCE_TYPES, aws
+from ..model.entity import EntityAttrs, EntityState, EntityType, EntityUpdate
 from .abstract import AbstractSource
 
 log = logging.getLogger(__name__)
@@ -140,11 +134,13 @@ class AWSSource(AbstractSource):
                 if entity_data["state"] == "running":
                     entity_data["state"] = "active"
 
-                # Get the instance name
+                # Get the instance name and monitor status
                 with suppress(KeyError):
                     for tag in instance["Tags"]:
                         if tag["Key"] == "Name":
                             entity_data["name"] = tag["Value"]
+                        elif tag["Key"] == "monitor":
+                            entity_data["monitor"] = bool(tag["Value"])
 
                 # Get the security groups
                 with suppress(KeyError):
@@ -174,12 +170,6 @@ class AWSSource(AbstractSource):
                 # Get the state transition
                 with suppress(KeyError):
                     entity_data["state_transition"] = instance["StateTransitionReason"]
-
-                # Get the monitor status
-                with suppress(KeyError):
-                    for tag in instance["Tags"]:
-                        if tag["Key"] == "monitor":
-                            entity_data["monitor"] = bool(tag["Value"])
 
                 # ignore: I don't know why it's not able to infer the type of the
                 # argument 1 of _build_entity_update ¯\(°_o)/¯

@@ -11,7 +11,9 @@ from moto import mock_autoscaling, mock_ec2, mock_iam, mock_rds2, mock_route53, 
 from py._path.local import LocalPath
 from repository_orm import FakeRepository
 
-from clinv import Config, Entity, FakeSource
+from clinv.adapters.fake import FakeSource
+from clinv.config import Config
+from clinv.model.entity import Entity
 
 
 @pytest.fixture(name="config")

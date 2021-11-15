@@ -5,8 +5,8 @@ from typing import Any, Dict
 
 import pytest
 
-from clinv import AWSSource, EntityUpdate
-from clinv.model import aws
+from clinv.adapters.aws import AWSSource
+from clinv.model import EntityUpdate, aws
 
 from ..factories import EC2Factory
 
