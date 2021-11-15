@@ -10,9 +10,9 @@ from py._path.local import LocalPath
 from repository_orm import Repository, TinyDBRepository
 from tests.factories import PeopleFactory
 
-from clinv import Config, Entity
+from clinv.config import Config
 from clinv.entrypoints.cli import cli
-from clinv.model import SecurityGroup, SecurityGroupRule
+from clinv.model import Entity, SecurityGroup, SecurityGroupRule
 from clinv.version import __version__
 
 log = logging.getLogger(__name__)

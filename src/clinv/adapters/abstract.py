@@ -3,7 +3,7 @@
 import abc
 from typing import List, Optional
 
-from ..model import EntityType, EntityUpdate
+from ..model.entity import EntityType, EntityUpdate
 
 
 class AbstractSource(abc.ABC):
