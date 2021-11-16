@@ -27,11 +27,11 @@ bandit==1.7.1
     # via -r requirements-dev.in
 black==21.10b0
     # via -r requirements-dev.in
-boto3==1.20.5
+boto3==1.20.6
     # via
     #   -c requirements.txt
     #   moto
-botocore==1.23.5
+botocore==1.23.6
     # via
     #   -c requirements.txt
     #   boto3
@@ -86,7 +86,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.1
     # via -r requirements-dev.in
-faker==9.8.1
+faker==9.8.2
     # via
     #   factory-boy
     #   faker-enum
@@ -164,7 +164,7 @@ gitpython==3.1.24
     # via
     #   -c docs/requirements.txt
     #   bandit
-identify==2.3.5
+identify==2.3.6
     # via pre-commit
 idna==3.3
     # via
@@ -388,7 +388,7 @@ yamllint==1.26.3
 # The following packages are considered to be unsafe in a requirements file:
 pip==21.3.1
     # via pip-tools
-setuptools==59.1.0
+setuptools==59.1.1
     # via
     #   -c requirements.txt
     #   astroid
