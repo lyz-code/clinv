@@ -27,7 +27,9 @@ htmlmin==0.1.12
 idna==3.3
     # via requests
 importlib-metadata==4.8.2
-    # via mkdocs
+    # via
+    #   markdown
+    #   mkdocs
 jinja2==3.0.3
     # via
     #   mkdocs
@@ -37,7 +39,7 @@ jsmin==3.0.0
     # via mkdocs-minify-plugin
 lxml==4.6.4
     # via mkdocs-htmlproofer-plugin
-markdown==3.3.4
+markdown==3.3.5
     # via
     #   markdown-include
     #   mkdocs
