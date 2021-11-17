@@ -86,7 +86,7 @@ class Service(Entity):
         informations: Information ids used by the project.
     """
 
-    access: ServiceAccess
+    access: Optional[ServiceAccess] = None
     responsible: Optional[str] = None
     authentication: List[str] = Field(default_factory=list)
     informations: List[str] = Field(default_factory=list)
