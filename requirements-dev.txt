@@ -19,7 +19,7 @@ attrs==21.2.0
     #   pytest
 autoflake==1.4
     # via autoimport
-autoimport==0.7.5
+autoimport==0.8.0
     # via -r requirements-dev.in
 backports.entry-points-selectable==1.1.1
     # via virtualenv
@@ -27,11 +27,11 @@ bandit==1.7.1
     # via -r requirements-dev.in
 black==21.11b1
     # via -r requirements-dev.in
-boto3==1.20.11
+boto3==1.20.12
     # via
     #   -c requirements.txt
     #   moto
-botocore==1.23.11
+botocore==1.23.12
     # via
     #   -c requirements.txt
     #   boto3
@@ -57,6 +57,7 @@ click==8.0.3
     #   -c requirements.txt
     #   autoimport
     #   black
+    #   maison
     #   pip-tools
     #   safety
     #   yamlfix
@@ -188,6 +189,8 @@ jmespath==0.10.0
     #   botocore
 lazy-object-proxy==1.6.0
     # via astroid
+maison==1.2.3
+    # via autoimport
 markupsafe==2.0.1
     # via
     #   -c docs/requirements.txt
@@ -244,6 +247,10 @@ pycodestyle==2.7.0
     #   flake8-debugger
 pycparser==2.21
     # via cffi
+pydantic==1.8.2
+    # via
+    #   -c requirements.txt
+    #   maison
 pydocstyle==6.1.1
     # via flake8-docstrings
 pyflakes==2.3.1
@@ -342,6 +349,7 @@ toml==0.10.2
     # via
     #   dparse
     #   flakehell
+    #   maison
     #   mypy
     #   pre-commit
     #   pylint
@@ -359,6 +367,7 @@ typing-extensions==4.0.0
     #   black
     #   gitpython
     #   mypy
+    #   pydantic
     #   pylint
 urllib3==1.26.7
     # via
