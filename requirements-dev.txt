@@ -363,12 +363,9 @@ typing-extensions==4.0.0
     # via
     #   -c docs/requirements.txt
     #   -c requirements.txt
-    #   astroid
     #   black
-    #   gitpython
     #   mypy
     #   pydantic
-    #   pylint
 urllib3==1.26.7
     # via
     #   -c docs/requirements.txt
@@ -387,7 +384,7 @@ wrapt==1.13.3
     # via astroid
 xmltodict==0.12.0
     # via moto
-yamlfix==0.7.4
+yamlfix==0.7.5
     # via -r requirements-dev.in
 yamllint==1.26.3
     # via -r requirements-dev.in
