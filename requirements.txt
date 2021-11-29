@@ -4,15 +4,15 @@
 #
 #    pip-compile --allow-unsafe
 #
-boto3==1.20.5
+boto3==1.20.15
     # via clinv (setup.py)
-botocore==1.23.5
+botocore==1.23.15
     # via
     #   boto3
     #   s3transfer
 certifi==2021.10.8
     # via requests
-charset-normalizer==2.0.7
+charset-normalizer==2.0.8
     # via requests
 click==8.0.3
     # via clinv (setup.py)
@@ -48,7 +48,7 @@ repository-orm==0.5.5
     # via clinv (setup.py)
 requests==2.26.0
     # via clinv (setup.py)
-rich==10.13.0
+rich==10.15.0
     # via clinv (setup.py)
 ruyaml==0.20.0
     # via clinv (setup.py)
@@ -78,5 +78,5 @@ yoyo-migrations==7.3.2
     # via repository-orm
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==59.1.0
+setuptools==59.4.0
     # via ruyaml

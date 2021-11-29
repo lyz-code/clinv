@@ -9,6 +9,7 @@ pytest-xdist
 factory_boy
 faker_enum
 moto
+pydantic-factories
 
 # Linting
 yamllint

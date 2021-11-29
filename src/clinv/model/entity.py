@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 from enum import Enum
-from typing import Any, Dict, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel  # noqa: E0611
 from pydantic import root_validator
@@ -43,6 +43,13 @@ class Entity(BasicEntity):
     name: Optional[str] = None
     state: EntityState
     description: Optional[str] = None
+
+    def uses(self, unused: List["Entity"]) -> List["Entity"]:
+        """Return the used entities by self."""
+        return []
+
+
+Entity.update_forward_refs()
 
 
 EntityType = TypeVar("EntityType", bound=Entity)

@@ -21,6 +21,7 @@ class Information(Entity):
         responsible: Person who is legally responsible of the entity.
     """
 
+    id_: str = Field(regex="inf_.*")
     responsible: Optional[str] = None
     personal_data: bool = False
 
@@ -37,6 +38,7 @@ class People(Entity):
         email:
     """
 
+    id_: str = Field(regex="peo_.*")
     iam_user: Optional[str] = None
     email: Optional[str] = None
 
@@ -56,6 +58,7 @@ class Project(Entity):
         responsible: Person who is legally responsible of the entity.
     """
 
+    id_: str = Field(regex="pro_.*")
     responsible: Optional[str] = None
     aliases: List[str] = Field(default_factory=list)
     services: List[str] = Field(default_factory=list)
@@ -86,6 +89,7 @@ class Service(Entity):
         informations: Information ids used by the project.
     """
 
+    id_: str = Field(regex="ser_.*")
     access: Optional[ServiceAccess] = None
     responsible: Optional[str] = None
     authentication: List[str] = Field(default_factory=list)

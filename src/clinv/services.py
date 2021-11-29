@@ -15,7 +15,8 @@ from rich.progress import track
 
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Entity
-from .model.risk import Project, Service
+from .model.aws import VPC, IAMGroup, SecurityGroup
+from .model.risk import People, Project, Service
 
 log = logging.getLogger(__name__)
 
@@ -188,55 +189,85 @@ def search(
             )
 
 
-def unassigned(
+def unused(
     repo: Repository,
     resource_types: Optional[List[str]] = None,
 ) -> List[Entity]:
-    """Search for not assigned resources.
+    """Search for not used resources.
 
-    Resources are marked as unassigned if they are:
-    * Infrastructure resources that are not assigned to a Service
-    * Service resources that are not assigned to a Project
+    Resources are marked as unused if they are:
+
+    * Infrastructure resources that are not used by a Service or other infrastructure
+        resources.
+    * Service resources that are not used by a Project.
+
+    The next resources won't show up in the report because:
+
+    * Project: can't be used by any other resource.
+    * IAMGroup: until we don't have the concept of group of people doesn't make sense
+        to be used by any service or project.
+    * VPC: doesn't make any sense to be used by a project or service either.
 
     Args:
         repo: Repository with all the entities.
         resource_types: Only retrieve the state of these type.
 
     Returns:
-        List of unassigned entities.
+        List of unused entities.
     """
-    # Projects are never unassigned
-    models = _deduce_models(resource_types, ignore=[Project])
+    # Projects are never unused
+    models = _deduce_models(
+        resource_types, ignore=[Project, IAMGroup, VPC, SecurityGroup]
+    )
 
     try:
         services = repo.search({"state": "active"}, [Service])
+        service_resources = (
+            # Informations used by Services
+            [str(info_id) for service in services for info_id in service.informations]
+            # Resources used by Services
+            + [
+                str(resource_id)
+                for service in services
+                for resource_id in service.resources
+            ]
+        )
     except EntityNotFoundError:
-        services = []
+        service_assigned_resources = []
+
     try:
         projects = repo.search({"state": "active"}, [Project])
+        project_assigned_resources = (
+            # Services assigned to Projects
+            [str(service_id) for project in projects for service_id in project.services]
+            # People assigned to Projects
+            + [str(person_id) for project in projects for person_id in project.people]
+            # Informations assigned to Projects
+            + [str(info_id) for project in projects for info_id in project.informations]
+        )
     except EntityNotFoundError:
-        projects = []
+        project_assigned_resources = []
+
+    try:
+        people = repo.search({"state": "active"}, [People])
+        people_assigned_resources = (
+            # IAM Users assigned to People
+            [person.iam_user for person in people if person.iam_user]
+        )
+    except EntityNotFoundError:
+        people_assigned_resources = []
+
     try:
         resources = repo.search({"state": "active"}, models)
     except EntityNotFoundError:
         return []
 
-    assigned_resources = (
-        # Services assigned to Projects
-        [str(service_id) for project in projects for service_id in project.services]
-        # People assigned to Projects
-        + [str(person_id) for project in projects for person_id in project.people]
-        # Informations assigned to Projects
-        + [str(info_id) for project in projects for info_id in project.informations]
-        # Informations assigned to Services
-        + [str(info_id) for service in services for info_id in service.informations]
-        # Resources assigned to Services
-        + [
-            str(resource_id)
-            for service in services
-            for resource_id in service.resources
-        ]
+    assigned_resources = set(
+        project_assigned_resources
+        + people_assigned_resources
+        + service_assigned_resources
     )
+
     return [
         resource for resource in resources if resource.id_ not in assigned_resources
     ]

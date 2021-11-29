@@ -1,13 +1,64 @@
 """Define the models of the AWS resources."""
 
+import re
 from datetime import datetime
 from enum import Enum
+from ipaddress import IPv4Address, IPv6Address
 from typing import List, Optional
 
 from pydantic import BaseModel  # noqa: E0611
-from pydantic import Field
+from pydantic import ConstrainedStr, Field, IPvAnyAddress, IPvAnyNetwork
 
 from .entity import Entity, Environment
+
+# -------------------------------
+# --        Resource IDs       --
+# -------------------------------
+
+# Once https://github.com/samuelcolvin/pydantic/issues/2551 is solved, use Annotated
+# Fields instead, as it's a cleaner solution.
+# For example: EC2ID = Annotated[str, Field(regex="^i-.*")]
+
+
+class AMIID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^ami-.*$")
+
+
+class ASGID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^asg-.*$")
+
+
+class EC2ID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^i-.*$")
+
+
+class SecurityGroupID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^sg-.*$")
+
+
+class SubnetID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^subnet-.*$")
+
+
+class VPCID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^vpc-.*$")
+
+
+# -------------------------------
+# --      Resource Models      --
+# -------------------------------
 
 
 class AWSEntity(Entity):
@@ -21,6 +72,13 @@ class AWSEntity(Entity):
 
     environment: Optional[List[Environment]] = Field(default_factory=list)
     monitor: Optional[bool] = None
+
+
+class ASGHealthcheck(str, Enum):
+    """Set the possible ASG healtchecks."""
+
+    ELB = "ELB"
+    EC2 = "EC2"
 
 
 class ASG(AWSEntity):
@@ -44,6 +102,7 @@ class ASG(AWSEntity):
         healthcheck: if the healthcheck is of type EC2 or ELB
     """
 
+    id_: ASGID
     min_size: int
     max_size: int
     desired_size: int
@@ -51,8 +110,12 @@ class ASG(AWSEntity):
     launch_configuration: Optional[str] = None
     launch_template: Optional[str] = None
     availability_zones: List[str] = Field(default_factory=list)
-    instances: List[str] = Field(default_factory=list)
-    healthcheck: str
+    instances: List[EC2ID] = Field(default_factory=list)
+    healthcheck: ASGHealthcheck
+
+    def uses(self, unused: List[Entity]) -> List[Entity]:
+        """Return the used entities."""
+        return [entity for entity in unused if entity.id_ in self.instances]
 
 
 class EC2(AWSEntity):
@@ -76,16 +139,27 @@ class EC2(AWSEntity):
         vpc:
     """
 
-    ami: str
-    private_ips: List[str] = Field(default_factory=list)
-    public_ips: List[str] = Field(default_factory=list)
+    id_: EC2ID
+    ami: AMIID
+    private_ips: List[IPvAnyAddress] = Field(default_factory=list)
+    public_ips: List[IPvAnyAddress] = Field(default_factory=list)
     region: str
     start_date: datetime
-    security_groups: List[str] = Field(default_factory=list)
+    security_groups: List[SecurityGroupID] = Field(default_factory=list)
     size: str
     state_transition: Optional[str] = None
-    subnet: Optional[str] = None
-    vpc: str
+    subnet: Optional[SubnetID] = None
+    vpc: VPCID
+
+    def uses(self, unused: List[Entity]) -> List[Entity]:
+        """Return the used entities."""
+        return [
+            entity
+            for entity in unused
+            if entity.id_ in self.security_groups
+            or entity.id_ == self.vpc
+            or entity.id_ == self.subnet
+        ]
 
 
 class IAMGroup(Entity):
@@ -96,8 +170,19 @@ class IAMGroup(Entity):
         users: list of users ids.
     """
 
+    id_: str = Field(regex="iamg-.*")
     arn: str
     users: List[str] = Field(default_factory=list)
+
+    def assigned(self, unassigned_entities: List[Entity]) -> List[Entity]:
+        """Return the assigned resources.
+
+        Until we don't have the concept of group of people in the risk models, it
+        doesn't make sense to be assigned to any service or project.
+        """
+        return [
+            entity for entity in unassigned_entities if entity.id_ in self.instances
+        ]
 
 
 class IAMUser(Entity):
@@ -107,6 +192,7 @@ class IAMUser(Entity):
         arn: AWS ARN identifier of the resource.
     """
 
+    id_: str = Field(regex="iamu-.*")
     arn: str
 
 
@@ -130,6 +216,7 @@ class RDS(AWSEntity):
         vpc:
     """
 
+    id_: str = Field(regex="db-.*")
     engine: str
     endpoint: str
     start_date: datetime
@@ -156,6 +243,7 @@ class Route53(AWSEntity):
         public: If the record is accessed by the general public.
     """
 
+    id_: str = Field(regex="[A-Z0-9]+-.*-(cname|a|txt|soa|ns|mx)")
     hosted_zone: str
     values: List[str] = Field(default_factory=list)
     type_: str
@@ -177,6 +265,7 @@ class S3(AWSEntity):
         state:
     """
 
+    id_: str = Field(regex="s3-.*")
     public_read: bool
     public_write: bool
     start_date: datetime
@@ -196,7 +285,8 @@ class VPC(AWSEntity):
         state:
     """
 
-    cidr: str
+    id_: VPCID
+    cidr: IPvAnyNetwork
     region: str
 
 
@@ -225,9 +315,9 @@ class SecurityGroupRule(BaseModel):
 
     protocol: NetworkProtocol
     ports: List[int] = Field(default_factory=list)
-    sg_range: List[str] = Field(default_factory=list)
-    ip_range: List[str] = Field(default_factory=list)
-    ipv6_range: List[str] = Field(default_factory=list)
+    sg_range: List[SecurityGroupID] = Field(default_factory=list)
+    ip_range: List[IPv4Address] = Field(default_factory=list)
+    ipv6_range: List[IPv6Address] = Field(default_factory=list)
 
 
 class SecurityGroup(AWSEntity):
@@ -243,5 +333,6 @@ class SecurityGroup(AWSEntity):
         state:
     """
 
+    id_: SecurityGroupID
     egress: List[SecurityGroupRule] = Field(default_factory=list)
     ingress: List[SecurityGroupRule] = Field(default_factory=list)

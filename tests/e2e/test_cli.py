@@ -8,7 +8,6 @@ from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
 from py._path.local import LocalPath
 from repository_orm import Repository, TinyDBRepository
-from tests.factories import PeopleFactory
 
 from clinv.config import Config
 from clinv.entrypoints.cli import cli

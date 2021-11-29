@@ -1,47 +1,48 @@
 """Define the factories of the program models."""
 
-import factory
+from factory import Factory, Faker
 from faker_enum import EnumProvider
+from pydantic_factories import ModelFactory
 
-from clinv.model import EC2, EntityState, People
+from clinv.model import aws, risk
+from clinv.model.entity import EntityState
 
-factory.Faker.add_provider(EnumProvider)
+Faker.add_provider(EnumProvider)
 
 
-class PeopleFactory(factory.Factory):  # type: ignore
+class ASGFactory(ModelFactory):  # type: ignore
+    """Define the factory for the model ASG."""
+
+    __model__ = aws.ASG
+
+
+class EC2Factory(ModelFactory):  # type: ignore
+    """Define the factory for the model EC2."""
+
+    __model__ = aws.EC2
+
+
+class SecurityGroupFactory(ModelFactory):  # type: ignore
+    """Define the factory for the model SecurityGroup."""
+
+    __model__ = aws.SecurityGroup
+
+
+class VPCFactory(ModelFactory):  # type: ignore
+    """Define the factory for the model VPC."""
+
+    __model__ = aws.VPC
+
+
+class PeopleFactory(Factory):  # type: ignore
     """Generate a fake entity."""
 
-    id_ = factory.Faker("word")
-    name = factory.Faker("name")
-    description = factory.Faker("sentence")
-    state = factory.Faker("enum", enum_cls=EntityState)
+    id_ = Faker("pystr_format", string_format="peo_#######{{random_letter}}")
+    name = Faker("name")
+    description = Faker("sentence")
+    state = Faker("enum", enum_cls=EntityState)
 
     class Meta:
         """Declare the model of the factory."""
 
-        model = People
-
-
-class EC2Factory(factory.Factory):  # type: ignore
-    """Create a fake Elastic Compute Cloud AWS instance."""
-
-    id_ = factory.Faker("word")
-    name = factory.Faker("name")
-    description = factory.Faker("sentence")
-    state = factory.Faker("enum", enum_cls=EntityState)
-    ami = factory.Faker("word")
-    # I know it's not ideal, but it's the best I can do right now
-    private_ips = factory.Faker("pylist", value_types=str)
-    public_ips = factory.Faker("pylist", value_types=str)
-    region = factory.Faker("word")
-    start_date = factory.Faker("date_time")
-    security_groups = factory.Faker("pylist", value_types=str)
-    size = factory.Faker("word")
-    state_transition = factory.Faker("word")
-    subnet = factory.Faker("word")
-    vpc = factory.Faker("word")
-
-    class Meta:
-        """Declare the model of the factory."""
-
-        model = EC2
+        model = risk.People
