@@ -27,11 +27,11 @@ bandit==1.7.1
     # via -r requirements-dev.in
 black==21.11b1
     # via -r requirements-dev.in
-boto3==1.20.15
+boto3==1.20.16
     # via
     #   -c requirements.txt
     #   moto
-botocore==1.23.15
+botocore==1.23.16
     # via
     #   -c requirements.txt
     #   boto3
@@ -87,7 +87,7 @@ execnet==1.9.0
     # via pytest-xdist
 factory-boy==3.2.1
     # via -r requirements-dev.in
-faker==9.8.3
+faker==9.9.0
     # via
     #   factory-boy
     #   faker-enum
@@ -121,7 +121,7 @@ flake8-annotations==2.7.0
     # via -r requirements-dev.in
 flake8-annotations-complexity==0.0.6
     # via -r requirements-dev.in
-flake8-bugbear==21.11.28
+flake8-bugbear==21.11.29
     # via -r requirements-dev.in
 flake8-comprehensions==3.7.0
     # via -r requirements-dev.in
@@ -200,7 +200,7 @@ mccabe==0.6.1
     # via
     #   flake8
     #   pylint
-moto==2.2.16
+moto==2.2.17
     # via -r requirements-dev.in
 mypy==0.910
     # via -r requirements-dev.in
@@ -387,7 +387,7 @@ wrapt==1.13.3
     # via astroid
 xmltodict==0.12.0
     # via moto
-yamlfix==0.7.4
+yamlfix==0.7.5
     # via -r requirements-dev.in
 yamllint==1.26.3
     # via -r requirements-dev.in
