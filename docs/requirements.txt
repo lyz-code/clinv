@@ -75,7 +75,7 @@ mkdocs-git-revision-date-localized-plugin==0.10.3
     # via -r docs/requirements.in
 mkdocs-htmlproofer-plugin==0.7.0
     # via -r docs/requirements.in
-mkdocs-material==8.0.1
+mkdocs-material==8.0.2
     # via -r docs/requirements.in
 mkdocs-material-extensions==1.0.3
     # via mkdocs-material
@@ -115,7 +115,7 @@ smmap==5.0.0
     # via gitdb
 soupsieve==2.3.1
     # via beautifulsoup4
-typing-extensions==4.0.0
+typing-extensions==4.0.1
     # via gitpython
 urllib3==1.26.7
     # via requests
