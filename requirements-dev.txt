@@ -262,7 +262,7 @@ pygments==2.10.0
     #   -c docs/requirements.txt
     #   -c requirements.txt
     #   flakehell
-pylint==2.12.1
+pylint==2.12.2
     # via -r requirements-dev.in
 pyparsing==3.0.6
     # via
@@ -363,12 +363,9 @@ typing-extensions==4.0.1
     # via
     #   -c docs/requirements.txt
     #   -c requirements.txt
-    #   astroid
     #   black
-    #   gitpython
     #   mypy
     #   pydantic
-    #   pylint
 urllib3==1.26.7
     # via
     #   -c docs/requirements.txt
