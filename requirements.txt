@@ -78,5 +78,5 @@ yoyo-migrations==7.3.2
     # via repository-orm
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==59.4.0
+setuptools==59.5.0
     # via ruyaml
