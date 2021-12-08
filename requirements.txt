@@ -50,7 +50,7 @@ requests==2.26.0
     # via clinv (setup.py)
 rich==10.15.1
     # via clinv (setup.py)
-ruyaml==0.20.0
+ruyaml==0.91.0
     # via clinv (setup.py)
 s3transfer==0.5.0
     # via boto3
