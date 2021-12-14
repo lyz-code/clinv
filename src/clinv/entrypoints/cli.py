@@ -33,9 +33,10 @@ log = logging.getLogger(__name__)
 def cli(ctx: Context, config_path: str) -> None:
     """Command line DevSecOps asset inventory."""
     ctx.ensure_object(dict)
-    ctx.obj["config"] = load_config(config_path)
-    ctx.obj["repo"] = load_repository(MODELS, ctx.obj["config"]["database_url"])
-    ctx.obj["adapters"] = load_adapters(ctx.obj["config"])
+    config = load_config(config_path)
+    ctx.obj["config"] = config
+    ctx.obj["repo"] = load_repository(config.database_url, MODELS)
+    ctx.obj["adapters"] = load_adapters(config)
 
 
 @cli.command()

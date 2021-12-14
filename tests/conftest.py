@@ -1,12 +1,10 @@
 """Store the classes and fixtures used throughout the tests."""
 
 import os
-from shutil import copyfile
 from typing import Any, Dict
 
 import boto3
 import pytest
-from _pytest.tmpdir import TempdirFactory
 from moto import mock_autoscaling, mock_ec2, mock_iam, mock_rds2, mock_route53, mock_s3
 from py._path.local import LocalPath
 from repository_orm import FakeRepository
@@ -17,16 +15,13 @@ from clinv.model.entity import Entity
 
 
 @pytest.fixture(name="config")
-def fixture_config(tmpdir_factory: TempdirFactory) -> Config:
+def fixture_config(db_tinydb: str) -> Config:
     """Configure the Config object for the tests."""
-    data = tmpdir_factory.mktemp("data")
-    config_file = str(data.join("config.yaml"))
-    copyfile("tests/assets/config.yaml", config_file)
-    config = Config(config_file)
-    config["database_url"] = f"tinydb://{data}/database.tinydb"
-    config.save()
-
-    return config
+    # Once https://github.com/lincolnloop/goodconf/issues/10 is solved prepend
+    # the environment variables with CLINV_
+    os.environ["DATABASE_URL"] = db_tinydb
+    os.environ["SOURCES"] = '["risk"]'
+    return Config(load=True)
 
 
 @pytest.fixture(name="db_tinydb")

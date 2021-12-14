@@ -2,13 +2,9 @@
 
 from typing import Any
 
-from factory import Faker
-from faker_enum import EnumProvider
 from pydantic_factories import ModelFactory
 
 from clinv.model import aws, risk
-
-Faker.add_provider(EnumProvider)
 
 # -------------------------------
 # --      AWS Factories

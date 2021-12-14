@@ -1,12 +1,11 @@
 .DEFAULT_GOAL := test
-isort = isort src tests setup.py
-black = black --target-version py37 src tests setup.py
+flakehell = poetry run flakehell lint src/ tests/
+isort = poetry run isort src tests
+black = poetry run black --target-version py37 src tests
 
 .PHONY: install
 install:
-	python -m pip install -U setuptools pip pip-tools
-	python -m piptools sync requirements.txt requirements-dev.txt docs/requirements.txt
-	pip install -e .
+	poetry install --remove-untracked
 	pre-commit install
 
 .PHONY: update
@@ -15,27 +14,17 @@ update:
 	@echo "- Updating dependencies -"
 	@echo "-------------------------"
 
-  # Sync your virtualenv with the expected state
-	python -m piptools sync requirements.txt requirements-dev.txt docs/requirements.txt
+	poetry update
 
-	pip install -U pip
+	@echo ""
 
-	rm requirements.txt
-	touch requirements.txt
-	pip-compile -Ur --allow-unsafe
+.PHONY: upgrade
+upgrade:
+	@echo "-------------------------"
+	@echo "- Upgrading dependencies -"
+	@echo "-------------------------"
 
-	rm docs/requirements.txt
-	touch docs/requirements.txt
-	pip-compile -Ur --allow-unsafe docs/requirements.in --output-file docs/requirements.txt
-
-	rm requirements-dev.txt
-	touch requirements-dev.txt
-	pip-compile -Ur --allow-unsafe requirements-dev.in --output-file requirements-dev.txt
-
-  # Sync your virtualenv with the new state
-	python -m piptools sync requirements.txt requirements-dev.txt docs/requirements.txt
-
-	pip install -e .
+	poetryup
 
 	@echo ""
 
@@ -56,7 +45,7 @@ lint:
 	@echo "- Testing the lint -"
 	@echo "--------------------"
 
-	flakehell lint src/ tests/ setup.py
+	$(flakehell)
 	$(isort) --check-only --df
 	$(black) --check --diff
 
@@ -68,8 +57,7 @@ mypy:
 	@echo "- Testing mypy -"
 	@echo "----------------"
 
-	mypy --version
-	mypy src tests
+	poetry run mypy src tests
 
 	@echo ""
 
@@ -82,7 +70,7 @@ test-code:
 	@echo "- Testing code -"
 	@echo "----------------"
 
-	pytest --cov-report term-missing --cov src tests ${ARGS}
+	poetry run pytest --cov-report term-missing --cov src tests ${ARGS}
 
 	@echo ""
 
@@ -120,7 +108,6 @@ clean:
 	rm -rf build
 	rm -rf dist
 	rm -f src/*.c pydantic/*.so
-	python setup.py clean
 	rm -rf site
 	rm -rf docs/_build
 	rm -rf docs/.changelog.md docs/.version.md docs/.tmp_schema_mappings.html
@@ -135,7 +122,7 @@ docs: test-examples
 	@echo "- Serving documentation -"
 	@echo "-------------------------"
 
-	mkdocs serve
+	poetry run mkdocs serve
 
 	@echo ""
 
@@ -159,8 +146,7 @@ build-package: clean
 	@echo "- Building the package -"
 	@echo "------------------------"
 
-	python setup.py -q bdist_wheel
-	python setup.py -q sdist
+	poetry build
 
 	@echo ""
 
@@ -170,7 +156,7 @@ build-docs: test-examples
 	@echo "- Building documentation -"
 	@echo "--------------------------"
 
-	mkdocs build
+	poetry run mkdocs build
 
 	@echo ""
 
@@ -180,7 +166,7 @@ upload-pypi:
 	@echo "- Uploading package to pypi -"
 	@echo "-----------------------------"
 
-	twine upload -r pypi dist/*
+	poetry publish
 
 	@echo ""
 
@@ -190,7 +176,7 @@ upload-testing-pypi:
 	@echo "- Uploading package to pypi testing -"
 	@echo "-------------------------------------"
 
-	twine upload -r testpypi dist/*
+	poetry publish -r test-pypi
 
 	@echo ""
 
@@ -200,7 +186,7 @@ bump-version:
 	@echo "- Bumping program version -"
 	@echo "---------------------------"
 
-	cz bump --changelog --no-verify
+	poetry run cz bump --changelog --no-verify
 	git push
 	git push --tags
 
@@ -212,9 +198,9 @@ security:
 	@echo "- Testing security -"
 	@echo "--------------------"
 
-	safety check
+	poetry run safety check
 	@echo ""
-	bandit -r src
+	poetry run bandit -r src
 
 	@echo ""
 

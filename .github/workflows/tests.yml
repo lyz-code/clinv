@@ -4,12 +4,9 @@ name: Tests
 on:  # yamllint disable-line rule:truthy
   push:
     branches:
-      - '*'          # matches every branch that doesn't contain a '/'
-      - '*/*'        # matches every branch containing a single '/'
-      - '**'         # matches every branch
-      - '!gh-pages'  # excludes gh-pages
+      - master
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
 jobs:
   Tests:
     runs-on: ubuntu-latest
@@ -44,41 +41,17 @@ jobs:
           COVERALLS_PARALLEL: true
       - name: Test documentation
         run: make build-docs
-  # It fails badly, I don't know why and after two hours trying to fix I
-  # temporarily give up
-  # Coveralls:
-  #   name: Finish Coveralls
-  #   needs: Tests
-  #   runs-on: ubuntu-latest
-  #   container: python:3-slim
-  #   steps:
-  #     - name: Finished
-  #       run: |
-  #         pip3 install coveralls
-  #         coveralls --service=github --finish
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-  Python_Package:
-    name: Build the Python package
+      - name: Build the package
+        run: make build-package
+  Coveralls:
+    name: Finish Coveralls
+    needs: Tests
     runs-on: ubuntu-latest
+    container: python:3-slim
     steps:
-      - uses: actions/checkout@master
-      - name: Set up Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.9
-      - name: Install PEP517
-        run: >-
-          python -m
-          pip install
-          pep517
-          --user
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          pep517.build
-          --source
-          --binary
-          --out-dir dist/
-          .
+      - name: Finished
+        run: |
+          pip3 install coveralls
+          coveralls --service=github --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

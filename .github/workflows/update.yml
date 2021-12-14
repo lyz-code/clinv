@@ -17,11 +17,9 @@ jobs:
         with:
           python-version: 3.9
       - name: Install dependencies
-        run: pip install pip-tools
+        run: make install
       - name: Update requirements
         run: make update
-      - name: Install the program
-        run: make install
       - name: Run tests
         run: make all
       - name: Commit files

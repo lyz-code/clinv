@@ -6,7 +6,6 @@ import re
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
-from py._path.local import LocalPath
 from repository_orm import Repository, TinyDBRepository
 from tests.factories import PersonFactory
 
@@ -24,13 +23,13 @@ log = logging.getLogger(__name__)
 @pytest.fixture(name="runner")
 def fixture_runner(config: Config) -> CliRunner:
     """Configure the Click cli test runner."""
-    return CliRunner(mix_stderr=False, env={"CLINV_CONFIG_PATH": config.config_path})
+    return CliRunner(mix_stderr=False)
 
 
 @pytest.fixture(name="repo")
 def repo_(config: Config) -> TinyDBRepository:
     """Configure a TinyDBRepository instance"""
-    return TinyDBRepository([Entity], config["database_url"])
+    return TinyDBRepository([Entity], config.database_url)
 
 
 def test_version(runner: CliRunner) -> None:
@@ -42,30 +41,6 @@ def test_version(runner: CliRunner) -> None:
         fr" *clinv version: {__version__}\n" r" *python version: .*\n *platform: .*",
         result.stdout,
     )
-
-
-def test_load_config_handles_wrong_file_format(
-    runner: CliRunner, tmpdir: LocalPath, caplog: LogCaptureFixture
-) -> None:
-    """
-    Given: A wrong configuration file
-    When: cli is used
-    Then: an error is returned.
-    """
-    config_file = tmpdir.join("config.yaml")  # type: ignore
-    config_file.write("[ invalid yaml")
-
-    result = runner.invoke(cli, ["-c", str(config_file), "null"])
-
-    assert result.exit_code == 1
-    assert (
-        "clinv.entrypoints",
-        logging.ERROR,
-        f"Error parsing yaml of configuration file {config_file}: "
-        f'while parsing a flow sequence\n  in "{config_file}", '
-        "line 1, column 1\nexpected ',' or ']', but got '<stream end>'\n  in"
-        f' "{config_file}", line 1, column 15',
-    ) in caplog.record_tuples
 
 
 class TestUpdate:
@@ -81,7 +56,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(cli, ["--config_path", config.config_path, "update"])
+        result = runner.invoke(cli, ["update"])
 
         assert result.exit_code == 0
         assert (
@@ -100,9 +75,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "update", "peo"]
-        )
+        result = runner.invoke(cli, ["update", "peo"])
 
         assert result.exit_code == 0
         assert (
@@ -121,9 +94,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "update", "peo", "info"]
-        )
+        result = runner.invoke(cli, ["update", "peo", "info"])
 
         assert result.exit_code == 0
         assert (
@@ -148,9 +119,7 @@ class TestPrint:
         repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "print", entity.id_]
-        )
+        result = runner.invoke(cli, ["print", entity.id_])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -179,9 +148,7 @@ class TestPrint:
         repo.add(complex_entity)
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "print", "sg-xxxxxx"]
-        )
+        result = runner.invoke(cli, ["print", "sg-xxxxxx"])
 
         assert result.exit_code == 0
         assert "SecurityGroup" in result.stdout
@@ -195,9 +162,7 @@ class TestPrint:
         When: printing by it's id
         Then: A message is shown.
         """
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "print", "inexistent-id"]
-        )
+        result = runner.invoke(cli, ["print", "inexistent-id"])
 
         assert result.exit_code == 1
         assert (
@@ -224,7 +189,7 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(cli, ["--config_path", config.config_path, "list"])
+        result = runner.invoke(cli, ["list"])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -244,9 +209,7 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "list", "peo"]
-        )
+        result = runner.invoke(cli, ["list", "peo"])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -265,9 +228,7 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "list", "peo", "info"]
-        )
+        result = runner.invoke(cli, ["list", "peo", "info"])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -289,9 +250,7 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "list", "--inactive"]
-        )
+        result = runner.invoke(cli, ["list", "--inactive"])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -314,9 +273,7 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "list", "--all"]
-        )
+        result = runner.invoke(cli, ["list", "--all"])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -331,7 +288,7 @@ class TestList:
         When: listing is called
         Then: A message is shown.
         """
-        result = runner.invoke(cli, ["--config_path", config.config_path, "list"])
+        result = runner.invoke(cli, ["list"])
 
         assert result.exit_code == 1
         assert (
@@ -348,9 +305,7 @@ class TestList:
         When: listing is called with the resource type
         Then: A message is shown.
         """
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "list", "peo"]
-        )
+        result = runner.invoke(cli, ["list", "peo"])
 
         assert result.exit_code == 1
         assert (
@@ -380,9 +335,7 @@ class TestSearch:
         repo.commit()
         search_regexp = f"{entities[0].name[:-1]}."
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "search", search_regexp]
-        )
+        result = runner.invoke(cli, ["search", search_regexp])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -405,9 +358,7 @@ class TestSearch:
         repo.commit()
         search_regexp = "entity_.*"
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "search", search_regexp, "peo"]
-        )
+        result = runner.invoke(cli, ["search", search_regexp, "peo"])
 
         assert result.exit_code == 0
         assert "People" in result.stdout
@@ -423,9 +374,7 @@ class TestSearch:
         When: searching is called with a regexp
         Then: A message is shown.
         """
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "search", "regexp"]
-        )
+        result = runner.invoke(cli, ["search", "regexp"])
 
         assert result.exit_code == 1
         assert (
@@ -452,7 +401,7 @@ class TestUnused:
         project = repo.add(Project(id_="pro_01", state="active"))
         repo.commit()
 
-        result = runner.invoke(cli, ["--config_path", config.config_path, "unused"])
+        result = runner.invoke(cli, ["unused"])
 
         assert result.exit_code == 0
         assert entity.id_ in result.stdout
@@ -473,9 +422,7 @@ class TestUnused:
         project = repo.add(Project(id_="pro_01", state="active"))
         repo.commit()
 
-        result = runner.invoke(
-            cli, ["--config_path", config.config_path, "unused", "ec2"]
-        )
+        result = runner.invoke(cli, ["unused", "ec2"])
 
         assert result.exit_code == 0
         assert entity.id_ in result.stdout
