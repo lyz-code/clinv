@@ -34,7 +34,7 @@ jobs:
         run: make test
       - name: Upload Coverage
         run: |
-          pip3 install coveralls[toml]
+          pip3 install 'coveralls[toml]'
           coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,7 +53,7 @@ jobs:
     steps:
       - name: Finished
         run: |
-          pip3 install coveralls
+          pip3 install 'coveralls[toml]'
           coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
