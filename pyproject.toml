@@ -28,7 +28,7 @@ documentation = "https://lyz-code.github.io/clinv"
 classifiers=[
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU General Public License v3 only (GPLv3)",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: Unix",
     "Operating System :: POSIX",
     "Programming Language :: Python",
