@@ -334,7 +334,7 @@ class TestSearch:
         for entity in entities:
             repo.add(entity)
         repo.commit()
-        search_regexp = f"{entities[0].name[:-1]}."
+        search_regexp = "entity_.*"
 
         result = runner.invoke(cli, ["search", search_regexp])
 
