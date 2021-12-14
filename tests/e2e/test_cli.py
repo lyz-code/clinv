@@ -403,7 +403,7 @@ class TestSearch:
         for entity in entities:
             repo.add(entity)
         repo.commit()
-        search_regexp = f"entity_.*"
+        search_regexp = "entity_.*"
 
         result = runner.invoke(
             cli, ["--config_path", config.config_path, "search", search_regexp, "peo"]
