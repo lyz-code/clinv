@@ -31,29 +31,18 @@ jobs:
       - name: Test security
         run: make security
       - name: Test with pytest
-        run: make test
-      - name: Upload Coverage
         run: |
-          pip3 install coveralls
-          coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          COVERALLS_FLAG_NAME: ${{ matrix.test-name }}
-          COVERALLS_PARALLEL: true
+          ARGS='--cov-report xml' make test
+          coverage combine
       - name: Test documentation
         run: make build-docs
       - name: Build the package
         run: make build-package
-  Coveralls:
-    name: Finish Coveralls
+  Upload Coverage:
+    name: Upload Coverage
     needs: Tests
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
-      - name: Finished
-        run: |
-          pip3 install coveralls
-          coveralls --service=github --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@v2
