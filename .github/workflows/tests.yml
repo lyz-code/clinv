@@ -25,6 +25,8 @@ jobs:
         with:
           path: ~/.local
           key: "dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/pr-deployer.yml') }}"
+      - name: Install pre-commit
+        run: pip install pre-commit
       - name: Install Poetry
         uses: snok/install-poetry@v1
       - name: Install dependencies
