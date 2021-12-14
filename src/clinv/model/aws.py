@@ -3,11 +3,10 @@
 import re
 from datetime import datetime
 from enum import Enum
-from ipaddress import IPv4Address, IPv6Address
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from pydantic import BaseModel  # noqa: E0611
-from pydantic import ConstrainedStr, Field, IPvAnyAddress, IPvAnyNetwork
+from pydantic import ConstrainedStr, Field
 
 from .entity import Entity, Environment
 
@@ -23,37 +22,85 @@ from .entity import Entity, Environment
 class AMIID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^ami-.*$")
+    regex = re.compile("^ami-[0-9a-zA-Z]+$")
 
 
 class ASGID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^asg-.*$")
+    regex = re.compile("^asg-[0-9a-zA-Z_-]+$")
 
 
 class EC2ID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^i-.*$")
+    regex = re.compile("^i-[0-9a-zA-Z]+$")
+
+
+class IAMUserID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^iamu-[0-9a-zA-Z_-]+$")
+
+
+class IAMGroupID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^iamg-[0-9a-zA-Z_-]+$")
+
+
+class RDSID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^db-[0-9a-zA-Z_-]+$")
+
+
+class Route53ID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("[A-Z0-9]+-.*-(cname|a|txt|soa|ns|mx)")
+
+
+class S3ID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^s3-[0-9a-zA-Z._-]+$")
 
 
 class SecurityGroupID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^sg-.*$")
+    regex = re.compile("^sg-[0-9a-za-z]+$")
 
 
 class SubnetID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^subnet-.*$")
+    regex = re.compile("^subnet-[0-9a-za-z]+$")
 
 
 class VPCID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^vpc-.*$")
+    regex = re.compile("^vpc-[0-9a-za-z]+$")
+
+
+class IPvAnyAddress(ConstrainedStr):
+    """Define the regular expression of an IP address.
+
+    The pydantic's IPvAnyAddress will be usable once repository_orm supports it.
+    """
+
+    regex = re.compile(r"(?:\d{1,3}\.){3}\d{1,3}")
+
+
+class IPvAnyNetwork(ConstrainedStr):
+    """Define the regular expression of an IP network.
+
+    The pydantic's IPvAnyNetwork will be usable once repository_orm supports it.
+    """
+
+    regex = re.compile(r"(?:\d{1,3}\.){3}\d{1,3}(?:/\d\d?)?")
 
 
 # -------------------------------
@@ -113,9 +160,9 @@ class ASG(AWSEntity):
     instances: List[EC2ID] = Field(default_factory=list)
     healthcheck: ASGHealthcheck
 
-    def uses(self, unused: List[Entity]) -> List[Entity]:
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities."""
-        return [entity for entity in unused if entity.id_ in self.instances]
+        return {entity for entity in unused if entity.id_ in self.instances}
 
 
 class EC2(AWSEntity):
@@ -151,15 +198,15 @@ class EC2(AWSEntity):
     subnet: Optional[SubnetID] = None
     vpc: VPCID
 
-    def uses(self, unused: List[Entity]) -> List[Entity]:
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities."""
-        return [
+        return {
             entity
             for entity in unused
             if entity.id_ in self.security_groups
             or entity.id_ == self.vpc
             or entity.id_ == self.subnet
-        ]
+        }
 
 
 class IAMGroup(Entity):
@@ -170,19 +217,17 @@ class IAMGroup(Entity):
         users: list of users ids.
     """
 
-    id_: str = Field(regex="iamg-.*")
+    id_: IAMGroupID
     arn: str
-    users: List[str] = Field(default_factory=list)
+    users: List[IAMUserID] = Field(default_factory=list)
 
-    def assigned(self, unassigned_entities: List[Entity]) -> List[Entity]:
-        """Return the assigned resources.
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
+        """Return the used resources.
 
         Until we don't have the concept of group of people in the risk models, it
         doesn't make sense to be assigned to any service or project.
         """
-        return [
-            entity for entity in unassigned_entities if entity.id_ in self.instances
-        ]
+        return {entity for entity in unused if entity.id_ in self.users}
 
 
 class IAMUser(Entity):
@@ -192,7 +237,7 @@ class IAMUser(Entity):
         arn: AWS ARN identifier of the resource.
     """
 
-    id_: str = Field(regex="iamu-.*")
+    id_: IAMUserID
     arn: str
 
 
@@ -216,15 +261,25 @@ class RDS(AWSEntity):
         vpc:
     """
 
-    id_: str = Field(regex="db-.*")
+    id_: RDSID
     engine: str
     endpoint: str
     start_date: datetime
     region: str
-    security_groups: List[str] = Field(default_factory=list)
+    security_groups: List[SecurityGroupID] = Field(default_factory=list)
     size: str
-    subnets: List[str] = Field(default_factory=list)
-    vpc: str
+    subnets: List[SubnetID] = Field(default_factory=list)
+    vpc: VPCID
+
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
+        """Return the used entities."""
+        return {
+            entity
+            for entity in unused
+            if entity.id_ in self.security_groups
+            or entity.id_ == self.vpc
+            or entity.id_ in self.subnets
+        }
 
 
 class Route53(AWSEntity):
@@ -243,7 +298,7 @@ class Route53(AWSEntity):
         public: If the record is accessed by the general public.
     """
 
-    id_: str = Field(regex="[A-Z0-9]+-.*-(cname|a|txt|soa|ns|mx)")
+    id_: Route53ID
     hosted_zone: str
     values: List[str] = Field(default_factory=list)
     type_: str
@@ -265,7 +320,7 @@ class S3(AWSEntity):
         state:
     """
 
-    id_: str = Field(regex="s3-.*")
+    id_: S3ID
     public_read: bool
     public_write: bool
     start_date: datetime
@@ -316,8 +371,8 @@ class SecurityGroupRule(BaseModel):
     protocol: NetworkProtocol
     ports: List[int] = Field(default_factory=list)
     sg_range: List[SecurityGroupID] = Field(default_factory=list)
-    ip_range: List[IPv4Address] = Field(default_factory=list)
-    ipv6_range: List[IPv6Address] = Field(default_factory=list)
+    ip_range: List[IPvAnyAddress] = Field(default_factory=list)
+    ipv6_range: List[str] = Field(default_factory=list)
 
 
 class SecurityGroup(AWSEntity):

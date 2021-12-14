@@ -5,6 +5,7 @@ from typing import Any, Dict, Type
 
 import pytest
 from pydantic import ValidationError
+from tests.factories import IAMGroupFactory, IAMUserFactory, RDSFactory
 
 from clinv.model import aws
 from clinv.model.entity import Entity
@@ -80,23 +81,38 @@ def test_aws_models_have_validation_of_id_content(
             id="ASG uses EC2",
         ),
         pytest.param(
-            SecurityGroupFactory(id_="sg-xx"),
-            EC2Factory(security_groups=["sg-xx"]),
+            SecurityGroupFactory.build(id_="sg-xx"),
+            EC2Factory.build(security_groups=["sg-xx"]),
             id="EC2 uses SG",
         ),
         pytest.param(
-            VPCFactory(id_="vpc-xx"),
-            EC2Factory(vpc="vpc-xx"),
+            VPCFactory.build(id_="vpc-xx"),
+            EC2Factory.build(vpc="vpc-xx"),
             id="EC2 uses VPC",
+        ),
+        pytest.param(
+            IAMUserFactory.build(id_="iamu-xx"),
+            IAMGroupFactory.build(users=["iamu-xx"]),
+            id="IAM Group uses IAM User",
+        ),
+        pytest.param(
+            SecurityGroupFactory.build(id_="sg-xx"),
+            RDSFactory.build(security_groups=["sg-xx"]),
+            id="RDS uses SG",
+        ),
+        pytest.param(
+            VPCFactory.build(id_="vpc-xx"),
+            RDSFactory.build(vpc="vpc-xx"),
+            id="RDS uses VPC",
         ),
     ],
 )
 def test_entity_detects_used_entity(used: Entity, entity: Entity) -> None:
     """
     Given: An entity that uses the `used` entity
-    When: used is called with the used entity
+    When: uses is called with the entity that is using the other one
     Then: The used entity is returned.
     """
-    result = entity.uses([used])
+    result = entity.uses({used})
 
-    assert result == [used]
+    assert result == {used}

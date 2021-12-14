@@ -129,17 +129,17 @@ def search(
             sys.exit(1)
 
 
-@cli.command(name="unassigned")
+@cli.command(name="unused")
 @click.pass_context
 @click.argument(
     "resource_types", type=click.Choice(RESOURCE_NAMES), required=False, nargs=-1
 )
-def unassigned(
+def unused(
     ctx: Context,
     resource_types: Optional[List[str]] = None,
 ) -> None:
     """Search resources that don't belong to a Service or Project."""
-    entities = services.unassigned(ctx.obj["repo"], resource_types)
+    entities = services.unused(ctx.obj["repo"], resource_types)
 
     views.list_entities(entities)
 

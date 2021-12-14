@@ -708,7 +708,7 @@ def test_update_marks_aws_resources_as_terminated_if_they_dont_appear(ec2: Any) 
     When: update_sources doesn't contain data of that entity
     Then: the entity is marked as terminated
     """
-    entity = EC2Factory.create(state="active")
+    entity = EC2Factory.build(state="active")
 
     result = AWSSource().update(["ec2"], [entity])
 
@@ -725,7 +725,7 @@ def test_update_doesnt_marks_unprocessed_resources_as_terminated(
     When: update_sources doesn't contain data of that entity, but it wasn't processed
     Then: the entity is not marked as terminated
     """
-    entity = EC2Factory.create(state="active")
+    entity = EC2Factory.build(state="active")
 
     result = AWSSource().update(["rds"], [entity])
 

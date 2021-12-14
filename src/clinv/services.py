@@ -15,8 +15,8 @@ from rich.progress import track
 
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Entity
-from .model.aws import VPC, IAMGroup, SecurityGroup
-from .model.risk import People, Project, Service
+from .model.aws import IAMGroup
+from .model.risk import Project
 
 log = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ def _deduce_models(
         ignore: List of models to ignore
     """
     if resource_types is None or len(resource_types) == 0:
-        models = MODELS
+        models = MODELS.copy()
     else:
         models = [RESOURCE_TYPES[resource_type] for resource_type in resource_types]
 
@@ -195,19 +195,6 @@ def unused(
 ) -> List[Entity]:
     """Search for not used resources.
 
-    Resources are marked as unused if they are:
-
-    * Infrastructure resources that are not used by a Service or other infrastructure
-        resources.
-    * Service resources that are not used by a Project.
-
-    The next resources won't show up in the report because:
-
-    * Project: can't be used by any other resource.
-    * IAMGroup: until we don't have the concept of group of people doesn't make sense
-        to be used by any service or project.
-    * VPC: doesn't make any sense to be used by a project or service either.
-
     Args:
         repo: Repository with all the entities.
         resource_types: Only retrieve the state of these type.
@@ -215,59 +202,16 @@ def unused(
     Returns:
         List of unused entities.
     """
-    # Projects are never unused
-    models = _deduce_models(
-        resource_types, ignore=[Project, IAMGroup, VPC, SecurityGroup]
-    )
-
+    active_entities = repo.search({"state": "active"}, _deduce_models())
+    models_to_test = _deduce_models(resource_types, ignore=[Project, IAMGroup])
     try:
-        services = repo.search({"state": "active"}, [Service])
-        service_resources = (
-            # Informations used by Services
-            [str(info_id) for service in services for info_id in service.informations]
-            # Resources used by Services
-            + [
-                str(resource_id)
-                for service in services
-                for resource_id in service.resources
-            ]
-        )
-    except EntityNotFoundError:
-        service_assigned_resources = []
-
-    try:
-        projects = repo.search({"state": "active"}, [Project])
-        project_assigned_resources = (
-            # Services assigned to Projects
-            [str(service_id) for project in projects for service_id in project.services]
-            # People assigned to Projects
-            + [str(person_id) for project in projects for person_id in project.people]
-            # Informations assigned to Projects
-            + [str(info_id) for project in projects for info_id in project.informations]
-        )
-    except EntityNotFoundError:
-        project_assigned_resources = []
-
-    try:
-        people = repo.search({"state": "active"}, [People])
-        people_assigned_resources = (
-            # IAM Users assigned to People
-            [person.iam_user for person in people if person.iam_user]
-        )
-    except EntityNotFoundError:
-        people_assigned_resources = []
-
-    try:
-        resources = repo.search({"state": "active"}, models)
+        unused_entities = set(repo.search({"state": "active"}, models_to_test))
     except EntityNotFoundError:
         return []
 
-    assigned_resources = set(
-        project_assigned_resources
-        + people_assigned_resources
-        + service_assigned_resources
-    )
+    for entity in active_entities:
+        unused_entities = unused_entities - entity.uses(unused_entities)
+        if len(unused_entities) == 0:
+            break
 
-    return [
-        resource for resource in resources if resource.id_ not in assigned_resources
-    ]
+    return list(unused_entities)

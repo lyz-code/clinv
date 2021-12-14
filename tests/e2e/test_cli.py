@@ -8,6 +8,7 @@ from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
 from py._path.local import LocalPath
 from repository_orm import Repository, TinyDBRepository
+from tests.factories import PersonFactory
 
 from clinv.config import Config
 from clinv.entrypoints.cli import cli
@@ -15,7 +16,7 @@ from clinv.model import Entity, SecurityGroup, SecurityGroupRule
 from clinv.model.risk import Project, Service
 from clinv.version import __version__
 
-from ..factories import EC2Factory, PeopleFactory
+from ..factories import EC2Factory
 
 log = logging.getLogger(__name__)
 
@@ -143,7 +144,7 @@ class TestPrint:
         When: printing by it's id
         Then: The entity attributes are shown.
         """
-        entity = PeopleFactory.create()
+        entity = PersonFactory.build()
         repo.add(entity)
         repo.commit()
 
@@ -217,8 +218,8 @@ class TestList:
         When: listing is called
         Then: The entity id and names are shown
         """
-        entities = PeopleFactory.create_batch(2, state="active")
-        entities.append(PeopleFactory.create(state="terminated"))
+        entities = PersonFactory.batch(2, state="active")
+        entities.append(PersonFactory.build(state="terminated"))
         for entity in entities:
             repo.add(entity)
         repo.commit()
@@ -238,7 +239,7 @@ class TestList:
         When: listing is called with the resource type
         Then: The entity id and names of the active are shown
         """
-        entities = PeopleFactory.create_batch(2, state="active")
+        entities = PersonFactory.batch(2, state="active")
         for entity in entities:
             repo.add(entity)
         repo.commit()
@@ -259,7 +260,7 @@ class TestList:
         When: listing is called with two resource types
         Then: The entity id and names of the active are shown
         """
-        entities = PeopleFactory.create_batch(2, state="active")
+        entities = PersonFactory.batch(2, state="active")
         for entity in entities:
             repo.add(entity)
         repo.commit()
@@ -281,8 +282,8 @@ class TestList:
         Then: The entity id and names of the inactive entities are shown.
         """
         entities = [
-            PeopleFactory.create(state="active"),
-            PeopleFactory.create(state="terminated"),
+            PersonFactory.build(state="active"),
+            PersonFactory.build(state="terminated"),
         ]
         for entity in entities:
             repo.add(entity)
@@ -306,8 +307,8 @@ class TestList:
         Then: The entity id and names of all entitites are shown
         """
         entities = [
-            PeopleFactory.create(state="active"),
-            PeopleFactory.create(state="terminated"),
+            PersonFactory.build(state="active"),
+            PersonFactory.build(state="terminated"),
         ]
         for entity in entities:
             repo.add(entity)
@@ -373,7 +374,7 @@ class TestSearch:
         When: search is called with a regular expression that matches the first element
         Then: The entity id and names of the first element are shown
         """
-        entities = PeopleFactory.create_batch(2, state="active")
+        entities = PersonFactory.batch(2, state="active")
         for entity in entities:
             repo.add(entity)
         repo.commit()
@@ -397,7 +398,7 @@ class TestSearch:
             and the resource_type
         Then: The entity id and names of the first element are shown
         """
-        entities = PeopleFactory.create_batch(2, state="active")
+        entities = PersonFactory.batch(2, state="active")
         for entity in entities:
             repo.add(entity)
         repo.commit()
@@ -432,46 +433,46 @@ class TestSearch:
         ) in caplog.record_tuples
 
 
-class TestUnassigned:
-    """Test the command line implementation of the unassigned service."""
+class TestUnused:
+    """Test the command line implementation of the unused service."""
 
-    def test_unassigned_detects_unassigned_resources(
+    def test_unused_detects_unused_resources(
         self, config: Config, runner: CliRunner, repo: Repository
     ) -> None:
         """
         Given: One project with no service assigned, one service without any
             resource assigned, and an infrastructure resource in the inventory.
-        When: unassigned is called.
+        When: unused is called.
         Then: the EC2 resource and the service are returned.
         """
-        entity = repo.add(EC2Factory.create(state="active"))
+        entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(Service(id_="ser_01", access="public", state="active"))
         project = repo.add(Project(id_="pro_01", state="active"))
         repo.commit()
 
-        result = runner.invoke(cli, ["--config_path", config.config_path, "unassigned"])
+        result = runner.invoke(cli, ["--config_path", config.config_path, "unused"])
 
         assert result.exit_code == 0
         assert entity.id_ in result.stdout
         assert str(service.id_) in result.stdout
         assert str(project.id_) not in result.stdout
 
-    def test_unassigned_can_filter_unassigned_resources(
+    def test_unused_can_filter_unused_resources(
         self, config: Config, runner: CliRunner, repo: Repository
     ) -> None:
         """
         Given: One project with no service assigned, one service without any
             resource assigned, and an infrastructure resource in the inventory.
-        When: unassigned is called with only the infra resource model.
+        When: unused is called with only the infra resource model.
         Then: the EC2 resource is returned, but not the service.
         """
-        entity = repo.add(EC2Factory.create(state="active"))
+        entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(Service(id_="ser_01", access="public", state="active"))
         project = repo.add(Project(id_="pro_01", state="active"))
         repo.commit()
 
         result = runner.invoke(
-            cli, ["--config_path", config.config_path, "unassigned", "ec2"]
+            cli, ["--config_path", config.config_path, "unused", "ec2"]
         )
 
         assert result.exit_code == 0

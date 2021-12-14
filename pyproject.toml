@@ -1,3 +1,20 @@
+# --------- Autoimport -------------
+
+[tool.autoimport.common_statements]
+"ServiceFactory" = "from tests.factories import ServiceFactory"
+"ASGFactory" = "from tests.factories import ASGFactory"
+"EC2Factory" = "from tests.factories import EC2Factory"
+"IAMUserFactory" = "from tests.factories import IAMUserFactory"
+"IAMGroupFactory" = "from tests.factories import IAMGroupFactory"
+"RDSFactory" = "from tests.factories import RDSFactory"
+"Route53Factory" = "from tests.factories import Route53Factory"
+"S3Factory" = "from tests.factories import S3Factory"
+"SecurityGroupFactory" = "from tests.factories import SecurityGroupFactory"
+"VPCFactory" = "from tests.factories import VPCFactory"
+"InformationFactory" = "from tests.factories import InformationFactory"
+"PersonFactory" = "from tests.factories import PersonFactory"
+"ProjectFactory" = "from tests.factories import ProjectFactory"
+
 # --------- Commitizen -------------
 
 [tool.commitizen]

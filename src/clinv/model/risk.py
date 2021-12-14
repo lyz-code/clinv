@@ -1,11 +1,50 @@
 """Define the Risk management entities."""
 
+import re
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Set
 
-from pydantic import Field
+from pydantic import ConstrainedStr, Field
 
+from .aws import IAMUserID
 from .entity import Entity, Environment
+
+# -------------------------------
+# --        Resource IDs       --
+# -------------------------------
+
+# Once https://github.com/samuelcolvin/pydantic/issues/2551 is solved, use Annotated
+# Fields instead, as it's a cleaner solution.
+# For example: EC2ID = Annotated[str, Field(regex="^i-.*")]
+
+
+class InformationID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^inf_[0-9]+$")
+
+
+class ServiceID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^ser_[0-9]+$")
+
+
+class ProjectID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^pro_[0-9]+$")
+
+
+class PersonID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^peo_[0-9]+$")
+
+
+# -------------------------------
+# --      Resource Models      --
+# -------------------------------
 
 
 class Information(Entity):
@@ -21,9 +60,13 @@ class Information(Entity):
         responsible: Person who is legally responsible of the entity.
     """
 
-    id_: str = Field(regex="inf_.*")
-    responsible: Optional[str] = None
+    id_: InformationID
+    responsible: Optional[PersonID] = None
     personal_data: bool = False
+
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
+        """Return the used entities by self."""
+        return {entity for entity in unused if entity.id_ == self.responsible}
 
 
 class People(Entity):
@@ -38,9 +81,13 @@ class People(Entity):
         email:
     """
 
-    id_: str = Field(regex="peo_.*")
-    iam_user: Optional[str] = None
+    id_: PersonID
+    iam_user: Optional[IAMUserID] = None
     email: Optional[str] = None
+
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
+        """Return the used entities by self."""
+        return {entity for entity in unused if entity.id_ == self.iam_user}
 
 
 class Project(Entity):
@@ -58,12 +105,23 @@ class Project(Entity):
         responsible: Person who is legally responsible of the entity.
     """
 
-    id_: str = Field(regex="pro_.*")
-    responsible: Optional[str] = None
+    id_: ProjectID
+    responsible: Optional[PersonID] = None
     aliases: List[str] = Field(default_factory=list)
-    services: List[str] = Field(default_factory=list)
-    informations: List[str] = Field(default_factory=list)
-    people: List[str] = Field(default_factory=list)
+    services: List[ServiceID] = Field(default_factory=list)
+    informations: List[InformationID] = Field(default_factory=list)
+    people: List[PersonID] = Field(default_factory=list)
+
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
+        """Return the used entities by self."""
+        return {
+            entity
+            for entity in unused
+            if entity.id_ == self.responsible
+            or entity.id_ in self.people
+            or entity.id_ in self.services
+            or entity.id_ in self.informations
+        }
 
 
 class ServiceAccess(str, Enum):
@@ -89,12 +147,23 @@ class Service(Entity):
         informations: Information ids used by the project.
     """
 
-    id_: str = Field(regex="ser_.*")
+    id_: ServiceID
     access: Optional[ServiceAccess] = None
-    responsible: Optional[str] = None
+    responsible: Optional[PersonID] = None
     authentication: List[str] = Field(default_factory=list)
-    informations: List[str] = Field(default_factory=list)
-    dependencies: List[str] = Field(default_factory=list)
+    informations: List[InformationID] = Field(default_factory=list)
+    dependencies: List[ServiceID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)
     users: List[str] = Field(default_factory=list)
     environment: Optional[Environment] = None
+
+    def uses(self, unused: Set[Entity]) -> Set[Entity]:
+        """Return the used entities by self."""
+        return {
+            entity
+            for entity in unused
+            if entity.id_ == self.responsible
+            or entity.id_ in self.dependencies
+            or entity.id_ in self.resources
+            or entity.id_ in self.informations
+        }
