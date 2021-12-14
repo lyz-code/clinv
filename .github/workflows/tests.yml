@@ -38,7 +38,7 @@ jobs:
         run: make build-docs
       - name: Build the package
         run: make build-package
-  Upload Coverage:
+  UploadCoverage:
     name: Upload Coverage
     needs: Tests
     runs-on: ubuntu-latest
