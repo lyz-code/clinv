@@ -399,10 +399,11 @@ class TestSearch:
         Then: The entity id and names of the first element are shown
         """
         entities = PersonFactory.batch(2, state="active")
+        entities.append(PersonFactory.build(name="entity_12352", state="active"))
         for entity in entities:
             repo.add(entity)
         repo.commit()
-        search_regexp = f"{entities[0].name[:-1]}."
+        search_regexp = f"entity_.*"
 
         result = runner.invoke(
             cli, ["--config_path", config.config_path, "search", search_regexp, "peo"]
@@ -410,8 +411,9 @@ class TestSearch:
 
         assert result.exit_code == 0
         assert "People" in result.stdout
-        assert entities[0].id_ in result.stdout
+        assert entities[0].id_ not in result.stdout
         assert entities[1].id_ not in result.stdout
+        assert entities[2].id_ in result.stdout
 
     def test_search_handles_entity_not_found_when_type_is_specified(
         self, config: Config, runner: CliRunner, caplog: LogCaptureFixture
