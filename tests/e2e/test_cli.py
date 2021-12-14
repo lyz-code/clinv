@@ -330,6 +330,7 @@ class TestSearch:
         Then: The entity id and names of the first element are shown
         """
         entities = PersonFactory.batch(2, state="active")
+        entities.append(PersonFactory.build(name="entity_12352", state="active"))
         for entity in entities:
             repo.add(entity)
         repo.commit()
@@ -339,8 +340,9 @@ class TestSearch:
 
         assert result.exit_code == 0
         assert "People" in result.stdout
-        assert entities[0].id_ in result.stdout
+        assert entities[0].id_ not in result.stdout
         assert entities[1].id_ not in result.stdout
+        assert entities[2].id_ in result.stdout
 
     def test_search_returns_entity_information_with_type(
         self, config: Config, runner: CliRunner, repo: Repository
