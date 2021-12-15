@@ -16,8 +16,10 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
       - name: Install dependencies
-        run: make install
+        run: poetry install
       - name: Build package
         run: make build-package
       - name: Publish distribution to Test PyPI
@@ -38,9 +40,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
       - name: Install dependencies
-        run: >-
-          make install
+        run: poetry install
       - name: Build the Documentation
         run: make build-docs
       - name: Deploy
