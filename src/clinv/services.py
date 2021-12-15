@@ -1,4 +1,4 @@
-"""Gather all the orchestration functionality required by the program to work.
+"""Define all the orchestration functionality required by the program to work.
 
 Classes and functions that connect the different domain model objects with the adapters
 and handlers to achieve the program's purpose.
@@ -8,13 +8,15 @@ import itertools
 import logging
 import operator
 from contextlib import suppress
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Type
 
 from repository_orm import EntityNotFoundError, Repository
 from rich.progress import track
 
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Entity
+from .model.aws import IAMGroup
+from .model.risk import Project
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ log = logging.getLogger(__name__)
 def update_sources(
     repo: Repository,
     adapter_sources: List[AdapterSource],
-    resource_types: List[str],
+    resource_types: Optional[List[str]] = None,
 ) -> None:
     """Update the repository entities with the source adapters current state.
 
@@ -31,11 +33,9 @@ def update_sources(
         adapter_sources: List of source adapters to check.
         resource_types: Only retrieve the state of these types.
     """
-    resource_models = [
-        RESOURCE_TYPES[resource_type] for resource_type in resource_types
-    ]
+    models = _deduce_models(resource_types)
     try:
-        active_resources = repo.search({"state": "active"}, resource_models)
+        active_resources = repo.search({"state": "active"}, models)
     except EntityNotFoundError:
         active_resources = []
 
@@ -67,11 +67,7 @@ def list_entities(
     Returns:
         List of entities that match the criteria
     """
-    if resource_types is None or len(resource_types) == 0:
-        models = MODELS
-    else:
-        models = [RESOURCE_TYPES[resource_type] for resource_type in resource_types]
-
+    models = _deduce_models(resource_types)
     entities = _filter_entities(repo.all(models), all_, inactive)
 
     if len(entities) == 0:
@@ -118,6 +114,32 @@ def _filter_entities(
     return output_entities
 
 
+ListTypeEntity = List[Type[Entity]]
+
+
+def _deduce_models(
+    resource_types: Optional[List[str]] = None,
+    ignore: Optional[ListTypeEntity] = None,
+) -> List[Type[Entity]]:
+    """Select the model classes from a list of resource type strings.
+
+    Args:
+        resource_types: Identifiers of the models to select.
+        ignore: List of models to ignore
+    """
+    if resource_types is None or len(resource_types) == 0:
+        models = MODELS.copy()
+    else:
+        models = [RESOURCE_TYPES[resource_type] for resource_type in resource_types]
+
+    if ignore is not None:
+        for model in ignore:
+            with suppress(ValueError):
+                models.remove(model)
+
+    return models
+
+
 def search(
     repo: Repository,
     regexp: str,
@@ -137,10 +159,7 @@ def search(
     Returns:
         List of entities that match the criteria.
     """
-    if resource_types is None or len(resource_types) == 0:
-        models = MODELS
-    else:
-        models = [RESOURCE_TYPES[resource_type] for resource_type in resource_types]
+    models = _deduce_models(resource_types)
 
     # Attributes to search
     attributes = []
@@ -168,3 +187,31 @@ def search(
                 f"There are no entities of type {', '.join(resource_types)} in the "
                 "repository that match the criteria."
             )
+
+
+def unused(
+    repo: Repository,
+    resource_types: Optional[List[str]] = None,
+) -> List[Entity]:
+    """Search for not used resources.
+
+    Args:
+        repo: Repository with all the entities.
+        resource_types: Only retrieve the state of these type.
+
+    Returns:
+        List of unused entities.
+    """
+    active_entities = repo.search({"state": "active"}, _deduce_models())
+    models_to_test = _deduce_models(resource_types, ignore=[Project, IAMGroup])
+    try:
+        unused_entities = set(repo.search({"state": "active"}, models_to_test))
+    except EntityNotFoundError:
+        return []
+
+    for entity in active_entities:
+        unused_entities = unused_entities - entity.uses(unused_entities)
+        if len(unused_entities) == 0:
+            break
+
+    return list(unused_entities)

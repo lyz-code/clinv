@@ -16,12 +16,12 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
       - name: Install dependencies
-        run: pip install pip-tools
+        run: poetry install
       - name: Update requirements
         run: make update
-      - name: Install the program
-        run: make install
       - name: Run tests
         run: make all
       - name: Commit files

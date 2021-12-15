@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/lyz-code/cookiecutter-python-project",
-  "commit": "325222e32af95279a6773be4d79d89debdd95183",
+  "commit": "4494cea58b041d81178c92448058c1f52f2a079f",
   "context": {
     "cookiecutter": {
       "project_name": "Clinv",
@@ -21,5 +21,5 @@
     }
   },
   "directory": null,
-  "checkout": null
+  "checkout": "feat/use-poetry"
 }

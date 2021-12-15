@@ -33,9 +33,10 @@ log = logging.getLogger(__name__)
 def cli(ctx: Context, config_path: str) -> None:
     """Command line DevSecOps asset inventory."""
     ctx.ensure_object(dict)
-    ctx.obj["config"] = load_config(config_path)
-    ctx.obj["repo"] = load_repository(MODELS, ctx.obj["config"]["database_url"])
-    ctx.obj["adapters"] = load_adapters(ctx.obj["config"])
+    config = load_config(config_path)
+    ctx.obj["config"] = config
+    ctx.obj["repo"] = load_repository(config.database_url, MODELS)
+    ctx.obj["adapters"] = load_adapters(config)
 
 
 @cli.command()
@@ -127,6 +128,21 @@ def search(
         except EntityNotFoundError as error:
             log.error(str(error))
             sys.exit(1)
+
+
+@cli.command(name="unused")
+@click.pass_context
+@click.argument(
+    "resource_types", type=click.Choice(RESOURCE_NAMES), required=False, nargs=-1
+)
+def unused(
+    ctx: Context,
+    resource_types: Optional[List[str]] = None,
+) -> None:
+    """Search resources that don't belong to a Service or Project."""
+    entities = services.unused(ctx.obj["repo"], resource_types)
+
+    views.list_entities(entities)
 
 
 @cli.command(hidden=True)

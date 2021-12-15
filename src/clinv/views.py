@@ -1,6 +1,7 @@
 """Define the representations of the data."""
 
 from contextlib import suppress
+from operator import attrgetter
 from typing import Any, Dict, List
 
 from rich import box
@@ -51,6 +52,9 @@ def list_entities(entities: List[Entity]) -> None:
     table.add_column("Name", justify="left", style="magenta")
     table.add_column("Type", justify="center", style="cyan")
 
+    # Group the entities by entity type
+    entities.sort()
+    entities.sort(key=attrgetter("__class__.__name__"))
     add_entities_to_table(table, entities)
 
     console = Console()

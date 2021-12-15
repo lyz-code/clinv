@@ -1,47 +1,94 @@
 """Define the factories of the program models."""
 
-import factory
-from faker_enum import EnumProvider
+from typing import Any
 
-from clinv.model import EC2, EntityState, People
+from pydantic_factories import ModelFactory
 
-factory.Faker.add_provider(EnumProvider)
+from clinv.model import aws, risk
 
-
-class PeopleFactory(factory.Factory):  # type: ignore
-    """Generate a fake entity."""
-
-    id_ = factory.Faker("word")
-    name = factory.Faker("name")
-    description = factory.Faker("sentence")
-    state = factory.Faker("enum", enum_cls=EntityState)
-
-    class Meta:
-        """Declare the model of the factory."""
-
-        model = People
+# -------------------------------
+# --      AWS Factories
+# -------------------------------
 
 
-class EC2Factory(factory.Factory):  # type: ignore
-    """Create a fake Elastic Compute Cloud AWS instance."""
+class ASGFactory(ModelFactory[Any]):
+    """Define the factory for the model ASG."""
 
-    id_ = factory.Faker("word")
-    name = factory.Faker("name")
-    description = factory.Faker("sentence")
-    state = factory.Faker("enum", enum_cls=EntityState)
-    ami = factory.Faker("word")
-    # I know it's not ideal, but it's the best I can do right now
-    private_ips = factory.Faker("pylist", value_types=str)
-    public_ips = factory.Faker("pylist", value_types=str)
-    region = factory.Faker("word")
-    start_date = factory.Faker("date_time")
-    security_groups = factory.Faker("pylist", value_types=str)
-    size = factory.Faker("word")
-    state_transition = factory.Faker("word")
-    subnet = factory.Faker("word")
-    vpc = factory.Faker("word")
+    __model__ = aws.ASG
 
-    class Meta:
-        """Declare the model of the factory."""
 
-        model = EC2
+class EC2Factory(ModelFactory[Any]):
+    """Define the factory for the model EC2."""
+
+    __model__ = aws.EC2
+
+
+class IAMUserFactory(ModelFactory[Any]):
+    """Define the factory for the model IAM User."""
+
+    __model__ = aws.IAMUser
+
+
+class IAMGroupFactory(ModelFactory[Any]):
+    """Define the factory for the model IAM Group."""
+
+    __model__ = aws.IAMGroup
+
+
+class RDSFactory(ModelFactory[Any]):
+    """Define the factory for the model RDS."""
+
+    __model__ = aws.RDS
+
+
+class Route53Factory(ModelFactory[Any]):
+    """Define the factory for the model Route53."""
+
+    __model__ = aws.RDS
+
+
+class S3Factory(ModelFactory[Any]):
+    """Define the factory for the model S3."""
+
+    __model__ = aws.SecurityGroup
+
+
+class SecurityGroupFactory(ModelFactory[Any]):
+    """Define the factory for the model SecurityGroup."""
+
+    __model__ = aws.SecurityGroup
+
+
+class VPCFactory(ModelFactory[Any]):
+    """Define the factory for the model VPC."""
+
+    __model__ = aws.VPC
+
+
+# -------------------------------
+# --      Risk Factories
+# -------------------------------
+
+
+class InformationFactory(ModelFactory[Any]):
+    """Define the factory for the model Information."""
+
+    __model__ = risk.Information
+
+
+class PersonFactory(ModelFactory[Any]):
+    """Define the factory for the model People."""
+
+    __model__ = risk.People
+
+
+class ProjectFactory(ModelFactory[Any]):
+    """Define the factory for the model Project."""
+
+    __model__ = risk.Project
+
+
+class ServiceFactory(ModelFactory[Any]):
+    """Define the factory for the model Service."""
+
+    __model__ = risk.Service

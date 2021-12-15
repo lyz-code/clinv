@@ -48,7 +48,8 @@ markdown_extensions:
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
@@ -59,6 +60,9 @@ theme:
   # logo: 'images/logo.bmp'
   features:
     - navigation.instant
+    - navigation.top
+    - content.code.annotate
+
   palette:
     primary: blue grey
     accent: light blue
