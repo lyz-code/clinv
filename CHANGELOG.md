@@ -1,3 +1,18 @@
+## 1.2.0 (2021-12-15)
+
+### Feat
+
+- use poetry as package and dependency manager
+- create the unassigned service and entrypoint
+
+### feat
+
+- migrate config to GoodConf
+
+### Perf
+
+- improve the imports to decrease the cli loading time
+
 ## 1.1.1 (2021-07-20)
 
 ### Fix
