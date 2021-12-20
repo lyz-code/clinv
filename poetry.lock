@@ -1036,7 +1036,7 @@ requests = "*"
 
 [[package]]
 name = "mkdocs-material"
-version = "8.1.2"
+version = "8.1.3"
 description = "A Material Design theme for MkDocs"
 category = "dev"
 optional = false
@@ -1961,7 +1961,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7, <=3.10"
-content-hash = "5f7fe82e6aef5a8a855980324c3e0ff6dc7c10673bb9a80ad6494e78e2361e79"
+content-hash = "597b9e6f0c1b17d861aa2ed8637129f5f67a13f6e2abf98955f00b4f2367a68b"
 
 [metadata.files]
 astor = [
@@ -2573,8 +2573,8 @@ mkdocs-htmlproofer-plugin = [
     {file = "mkdocs_htmlproofer_plugin-0.7.0-py3-none-any.whl", hash = "sha256:6a54ae77c0401fd7cf64e599d43e9bcce08bf9c0fc28670cafb2357c24572c8a"},
 ]
 mkdocs-material = [
-    {file = "mkdocs-material-8.1.2.tar.gz", hash = "sha256:83b73d62b11cbc97c3b05de44f2fad3b96edf3fe2cf977851972e2c25348893b"},
-    {file = "mkdocs_material-8.1.2-py2.py3-none-any.whl", hash = "sha256:2fe84abc86daa3cb5b5e7e0438c20c6e2a99c1f4a7527c783b0f8b1fb4fb840a"},
+    {file = "mkdocs-material-8.1.3.tar.gz", hash = "sha256:b8014d8a77ba45879525e0e7619d0833d10897487a77d6697ef94240fed8c892"},
+    {file = "mkdocs_material-8.1.3-py2.py3-none-any.whl", hash = "sha256:ee153b8130ae580acd57082af0e54d644fe2a37c62f2ec9400f77e389ac1b294"},
 ]
 mkdocs-material-extensions = [
     {file = "mkdocs-material-extensions-1.0.3.tar.gz", hash = "sha256:bfd24dfdef7b41c312ede42648f9eb83476ea168ec163b613f9abd12bbfddba2"},
