@@ -1318,7 +1318,7 @@ email = ["email-validator (>=1.0.3)"]
 
 [[package]]
 name = "pydantic-factories"
-version = "0.5.0"
+version = "0.6.3"
 description = "Mock data generation for pydantic based models"
 category = "dev"
 optional = false
@@ -1961,7 +1961,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7, <=3.10"
-content-hash = "422674cb553bddf734e637b7d333208e86b0721579735c6e582051aff986aa16"
+content-hash = "6b7f95bf2d40a0361989aca582adc316a2454e9fd753e6c72d78d1a08b00a8f7"
 
 [metadata.files]
 astor = [
@@ -2701,8 +2701,8 @@ pydantic = [
     {file = "pydantic-1.8.2.tar.gz", hash = "sha256:26464e57ccaafe72b7ad156fdaa4e9b9ef051f69e175dbbb463283000c05ab7b"},
 ]
 pydantic-factories = [
-    {file = "pydantic-factories-0.5.0.tar.gz", hash = "sha256:412b3960de868dac52b5ddb77bb2a242bde3506b09c16910041f549f01788f47"},
-    {file = "pydantic_factories-0.5.0-py3-none-any.whl", hash = "sha256:a7467688931814a637b67379dcdbbd4456e40c1e0b9591097e194e5073bc64ef"},
+    {file = "pydantic-factories-0.6.3.tar.gz", hash = "sha256:d2c7e385a8d05e433af0857883dac62c92d81447d0a184fcdbca9e37bd4258b8"},
+    {file = "pydantic_factories-0.6.3-py3-none-any.whl", hash = "sha256:f0a0ef6d2de90d689b643b08b41d6d7b4cefcc91393319d509b6298a25e329f4"},
 ]
 pydocstyle = [
     {file = "pydocstyle-6.1.1-py3-none-any.whl", hash = "sha256:6987826d6775056839940041beef5c08cc7e3d71d63149b48e36727f70144dc4"},
