@@ -168,13 +168,13 @@ def search(
             if attribute not in attributes:
                 attributes.append(attribute)
 
-    entities = []
+    entities: List[Entity] = []
     for attribute in attributes:
         with suppress(EntityNotFoundError):
             new_entities = _filter_entities(
                 repo.search({attribute: regexp}, models), all_, inactive
             )
-            yield new_entities
+            yield list(set(new_entities) - set(entities))
             entities += new_entities
 
     if len(entities) == 0:
