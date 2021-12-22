@@ -1,3 +1,13 @@
+## 1.3.0 (2021-12-22)
+
+### Fix
+
+- prevent search from showing duplicates
+
+### feat
+
+- make search case insensitive
+
 ## 1.2.0 (2021-12-15)
 
 ### Feat
