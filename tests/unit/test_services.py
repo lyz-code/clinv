@@ -56,23 +56,46 @@ def test_update_sources_updates_entity_data(
     assert repo_entity.description == entity.description
 
 
-def test_search_finds_ips_in_ec2_instances(repo: Repository) -> None:
-    """
-    Given: A repository with an ec2 instance
-    When: search by a regular expression of the ip
-    Then: the entity is found.
-    """
-    entity = EC2Factory.build(state="active")
-    entity.private_ips = ["192.168.1.2"]
-    repo.add(entity)
-    repo.commit()
-    regexp = r"192.*"
-    found_entities = []
+class TestSearch:
+    """Test the search service implementation."""
 
-    for entities in search(repo, regexp):  # act
-        found_entities += entities
+    def test_search_finds_ips_in_ec2_instances(self, repo: Repository) -> None:
+        """
+        Given: A repository with an ec2 instance
+        When: search by a regular expression of the ip
+        Then: the entity is found.
+        """
+        entity = EC2Factory.build(state="active")
+        entity.private_ips = ["192.168.1.2"]
+        repo.add(entity)
+        repo.commit()
+        regexp = r"192.*"
+        found_entities = []
 
-    assert found_entities == [entity]
+        for entities in search(repo, regexp):  # act
+            found_entities += entities
+
+        assert found_entities == [entity]
+
+    def test_search_doesnt_duplicate_results(self, repo: Repository) -> None:
+        """
+        Given: A repository with an ec2 instance that two of it's attributes match the
+            search criteria
+        When: search by a regular expression of the ip
+        Then: the entity is returned only once.
+        """
+        entity = EC2Factory.build(
+            state="active", private_ips=["192.168.1.2"], public_ips=["192.168.1.2"]
+        )
+        repo.add(entity)
+        repo.commit()
+        regexp = r"192.*"
+        found_entities = []
+
+        for entities in search(repo, regexp):  # act
+            found_entities += entities
+
+        assert found_entities == [entity]
 
 
 class TestUnused:
