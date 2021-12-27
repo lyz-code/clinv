@@ -124,7 +124,7 @@ mkdocs-section-index = "^0.3.2"
 # Dependency maintenance
 # Until https://github.com/python-poetry/poetry/issues/461 is solved
 poetryup = "^0.3.15"
-moto = "^2.2.19"
+moto = "^2.3.0"
 coverage = {extras = ["toml"], version = "^6.2"}
 
 [build-system]
