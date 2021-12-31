@@ -119,7 +119,7 @@ mkdocs-autolinks-plugin = "^0.4.0"
 mkdocs-material = "^8.0.5"
 mkdocstrings = "^0.16.2"
 markdown-include = "^0.6.0"
-mkdocs-section-index = "^0.3.2"
+mkdocs-section-index = "^0.3.3"
 
 # Dependency maintenance
 # Until https://github.com/python-poetry/poetry/issues/461 is solved
