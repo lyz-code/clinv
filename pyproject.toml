@@ -65,7 +65,7 @@ pytest = "^6.2.5"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.4.0"
 pytest-freezegun = "^0.4.2"
-pydantic-factories = "^0.5.0"
+pydantic-factories = "^1.2.3"
 
 # Linting
 yamllint = "^1.26.3"
