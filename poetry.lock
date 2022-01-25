@@ -91,7 +91,7 @@ pyflakes = ">=1.1.0"
 
 [[package]]
 name = "autoimport"
-version = "0.10.0"
+version = "1.0.4"
 description = "Autoimport missing python libraries."
 category = "dev"
 optional = false
@@ -1961,7 +1961,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7, <=3.10"
-content-hash = "422674cb553bddf734e637b7d333208e86b0721579735c6e582051aff986aa16"
+content-hash = "80d1a4d1e69680161dd1bcb0183d8dae2704255150a2d37eedc9d98c3b14c312"
 
 [metadata.files]
 astor = [
@@ -1996,8 +1996,8 @@ autoflake = [
     {file = "autoflake-1.4.tar.gz", hash = "sha256:61a353012cff6ab94ca062823d1fb2f692c4acda51c76ff83a8d77915fba51ea"},
 ]
 autoimport = [
-    {file = "autoimport-0.10.0-py3-none-any.whl", hash = "sha256:1a14a052d04d135944631ea28025b80a9aa580bddc0f075ba5720ab73f3ab3ac"},
-    {file = "autoimport-0.10.0.tar.gz", hash = "sha256:fdf6107a8ad7454365b3b4471a0fcc813940a3879aec09179c862f3b9bee7231"},
+    {file = "autoimport-1.0.4-py3-none-any.whl", hash = "sha256:de8cba5d42c462041ba9a0ce99846e1ad99953ab8897f1658cafb922d0289d00"},
+    {file = "autoimport-1.0.4.tar.gz", hash = "sha256:3fdea9c02fc2c90bc2b330cf883c30d346434acb010a7442bcc0d815c0aa74c3"},
 ]
 babel = [
     {file = "Babel-2.9.1-py2.py3-none-any.whl", hash = "sha256:ab49e12b91d937cd11f0b67cb259a57ab4ad2b59ac7a3b41d6c06c0ac5b0def9"},
