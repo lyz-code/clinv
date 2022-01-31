@@ -8,15 +8,16 @@ import itertools
 import logging
 import operator
 from contextlib import suppress
-from typing import Generator, List, Optional, Type
+from functools import lru_cache
+from typing import Dict, Generator, List, Optional, Type
 
 from repository_orm import EntityNotFoundError, Repository
 from rich.progress import track
 
 from .adapters import AdapterSource
-from .model import MODELS, RESOURCE_TYPES, Entity
+from .model import MODELS, RESOURCE_TYPES, Choices, Entity
 from .model.aws import IAMGroup
-from .model.risk import Project
+from .model.risk import Information, People, Project, Service
 
 log = logging.getLogger(__name__)
 
@@ -215,3 +216,48 @@ def unused(
             break
 
     return list(unused_entities)
+
+
+def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
+    """Create the possible choices of the attributes of a model."""
+    choices: Choices = {}
+
+    if model == Project:
+        attribute_models = {
+            "responsible": People,
+            "services": Service,
+            "informations": Information,
+            "people": People,
+        }
+
+    for key, value in attribute_models.items():
+        choices[key] = _build_attribute_choices(repo=repo, model=value)
+
+    return choices
+
+
+@lru_cache()
+def _build_attribute_choices(repo: Repository, model: Type[Entity]) -> Dict[str, str]:
+    """Create the possible choices of the attributes of the project model."""
+    return {
+        entity.name: str(entity.id_)
+        for entity in repo.search({"state": "active"}, [model])
+        if entity.name is not None
+    }
+
+
+def next_id(repo: Repository, model: Type[Entity]) -> str:
+    """Return the next id of a model."""
+    try:
+        last_entity = max(repo.all([model]))
+    except ValueError:
+        raise ValueError(model)
+    last_id = str(last_entity.id_).split("_")
+    new_id = f"{last_id[0]}_{int(last_id[1]) + 1}"
+    return new_id
+
+
+def add(repo: Repository, entity: Entity) -> None:
+    """Add an entity to the repository"""
+    repo.add(entity)
+    repo.commit()

@@ -123,6 +123,21 @@ class Project(Entity):
             or entity.id_ in self.informations
         }
 
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "responsible",
+                "aliases",
+                "services",
+                "informations",
+                "people",
+            ]
+        }
+
 
 class ServiceAccess(str, Enum):
     """Represent possible states of the service access."""
@@ -130,6 +145,23 @@ class ServiceAccess(str, Enum):
     PUBLIC = "public"
     INTERNAL = "internal"
     TBD = "tbd"
+
+
+class AuthenticationMethod(str, Enum):
+    """Represent possible authentication methods."""
+
+    TWOFA_KEY = "2fa key"
+    TWOFA_CODE = "2fa code"
+    OPEN = "open"
+    BASIC_AUTH = "basic auth"
+    USER_PASSWORD = "user and password"
+    SSL_CERTIFICATE = "ssl client certificate"
+    LDAP = "ldap"
+    NETWORK_ISOLATED = "network isolated"
+    VPN = "vpn"
+    API_KEY = "api key"
+    SSH_KEYS = "ssh keys"
+    OAUTH = "oauth"
 
 
 class Service(Entity):
@@ -150,7 +182,7 @@ class Service(Entity):
     id_: ServiceID
     access: Optional[ServiceAccess] = None
     responsible: Optional[PersonID] = None
-    authentication: List[str] = Field(default_factory=list)
+    authentication: List[AuthenticationMethod] = Field(default_factory=list)
     informations: List[InformationID] = Field(default_factory=list)
     dependencies: List[ServiceID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)

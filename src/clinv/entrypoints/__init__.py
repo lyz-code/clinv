@@ -25,6 +25,7 @@ def load_logger(verbose: bool = False) -> None:  # pragma: no cover
     """
     logging.getLogger("boto3").setLevel(logging.WARNING)
     logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("goodconf").setLevel(logging.WARNING)
     if verbose:
         logging.basicConfig(
             stream=sys.stderr, level=logging.DEBUG, format="%(message)s"

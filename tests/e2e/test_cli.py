@@ -3,15 +3,24 @@
 import logging
 import re
 
+import pexpect
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
+from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
+from prompt_toolkit.keys import Keys
 from repository_orm import Repository, TinyDBRepository
-from tests.factories import PersonFactory
+from tests.factories import (
+    InformationFactory,
+    PersonFactory,
+    RDSFactory,
+    ServiceFactory,
+)
 
 from clinv.config import Config
 from clinv.entrypoints.cli import cli
 from clinv.model import Entity, SecurityGroup, SecurityGroupRule
+from clinv.model.entity import EntityState
 from clinv.model.risk import Project, Service
 from clinv.version import __version__
 
@@ -430,3 +439,158 @@ class TestUnused:
         assert entity.id_ in result.stdout
         assert str(service.id_) not in result.stdout
         assert str(project.id_) not in result.stdout
+
+
+class TestAdd:
+    """Test the command line implementation of the add service."""
+
+    def test_add_creates_project(
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with two services, a person, a project and an information
+        When: add is called with the pro argument and the tui interface is used to
+            define the project data.
+        Then: the Project resource is added
+        """
+        repo.add(Project(id_="pro_01", state="active"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_01", name="ldap"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_02", name="haproxy"))
+        repo.add(
+            ServiceFactory.build(state="active", id_="ser_03", name="monitorization")
+        )
+        repo.add(PersonFactory.build(state="active", id_="peo_01", name="Alice"))
+        repo.add(
+            InformationFactory.build(state="active", id_="inf_01", name="user data")
+        )
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add pro", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("project_2")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Responsible:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Aliases.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search of haproxy
+        tui.expect(".*Services.*")
+        tui.send("h")
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search of ldap
+        # WARNING: your terminal doesn't support cursor position requests (CPR)
+        tui.expect(".*Services.*")
+        tui.sendline("ldap")
+        # Nothing more to add to services
+        tui.expect(".*Services.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Informations.*")
+        # Fuzzy search of user data
+        tui.sendline("user data")
+        # Nothing more to add to informations
+        tui.expect(".*Informations.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*People.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect_exact(pexpect.EOF)
+
+        # assert tui.status == 0
+        project = repo.get("pro_2", [Project])
+        assert project == Project(
+            id_="pro_2",
+            name="project_2",
+            state=EntityState.RUNNING,
+            description="description",
+            responsible="peo_01",
+            aliases=[],
+            services=["ser_02", "ser_01"],
+            informations=["inf_01"],
+            people=[],
+        )
+
+    def test_add_creates_service(
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with two services, a person, a project, an EC2 resource,
+            an RDS resource, and an information
+        When: add is called with the ser argument and the tui interface is used to
+            define the service data.
+        Then: the Service resource is added
+        """
+        repo.add(Project(id_="pro_01", state="active"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_01", name="ldap"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_02", name="haproxy"))
+        repo.add(PersonFactory.build(state="active", id_="peo_01", name="Alice"))
+        repo.add(
+            InformationFactory.build(state="active", id_="inf_01", name="user data")
+        )
+        repo.add(EC2Factory.build(state="active", id_="i-01", name="instance"))
+        repo.add(RDSFactory.build(state="active", id_="db-01", name="database"))
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add ser", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new service")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Responsible:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Access.*")
+        tui.send("p")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Authentication.*")
+        tui.send("p")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        # Fuzzy search of haproxy
+        tui.expect(".*Services.*")
+        tui.send("h")
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search of ldap
+        # WARNING: your terminal doesn't support cursor position requests (CPR)
+        tui.expect(".*Services.*")
+        tui.sendline("ldap")
+        # Nothing more to add to services
+        tui.expect(".*Services.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Informations.*")
+        # Fuzzy search of user data
+        tui.sendline("user data")
+        # Nothing more to add to informations
+        tui.expect(".*Informations.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*People.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect_exact(pexpect.EOF)
+
+        # assert tui.status == 0
+        project = repo.get("pro_2", [Project])
+        assert project == Project(
+            id_="pro_2",
+            name="project_2",
+            state=EntityState.RUNNING,
+            description="description",
+            responsible="peo_01",
+            aliases=[],
+            services=["ser_02", "ser_01"],
+            informations=["inf_01"],
+            people=[],
+        )

@@ -1,5 +1,7 @@
 """Module to store the common business model of all entities."""
 
+from typing import Dict
+
 from .aws import (
     ASG,
     EC2,
@@ -34,6 +36,8 @@ RESOURCE_TYPES = {
 
 RESOURCE_NAMES = list(RESOURCE_TYPES.keys())
 MODELS = [value for _, value in RESOURCE_TYPES.items()]
+
+Choices = Dict[str, Dict[str, str]]
 
 __all__ = [
     "EC2",
