@@ -47,7 +47,8 @@ def update_sources(
                 entity = entity_data.model(**entity_data.data)
             except ValidationError as error:
                 log.error(
-                    f"Can't build object {entity_data.model} with content {entity_data.data}"
+                    f"Can't build object {entity_data.model} "
+                    f"with content {entity_data.data}"
                 )
                 raise error
 
