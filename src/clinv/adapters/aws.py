@@ -126,8 +126,6 @@ class AWSSource(AbstractSource):
                     "size": instance["InstanceType"],
                     "start_date": instance["LaunchTime"],
                     "state": instance["State"]["Name"],
-                    "subnet": instance["SubnetId"],
-                    "vpc": instance["VpcId"],
                 }
 
                 # Correct the state
@@ -148,6 +146,11 @@ class AWSSource(AbstractSource):
                         security_group["GroupId"]
                         for security_group in instance["SecurityGroups"]
                     ]
+
+                # Get the instance network information
+                with suppress(KeyError):
+                    entity_data["vpc"] = instance["VpcId"]
+                    entity_data["subnet"] = instance["SubnetId"]
 
                 # Get the private ips
                 with suppress(KeyError):
