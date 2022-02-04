@@ -91,18 +91,18 @@ pyflakes = ">=1.1.0"
 
 [[package]]
 name = "autoimport"
-version = "0.10.0"
+version = "1.1.1"
 description = "Autoimport missing python libraries."
 category = "dev"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.7,<3.11"
 
 [package.dependencies]
-autoflake = "*"
-Click = "*"
-maison = "*"
-pyprojroot = "*"
-sh = "*"
+autoflake = ">=1.4"
+click = ">=8.0.3"
+maison = ">=1.3.0"
+pyprojroot = ">=0.2.0"
+sh = ">=1.14.2"
 
 [[package]]
 name = "babel"
@@ -900,7 +900,7 @@ source = ["Cython (>=0.29.7)"]
 
 [[package]]
 name = "maison"
-version = "1.2.3"
+version = "1.4.0"
 description = "Maison"
 category = "dev"
 optional = false
@@ -1961,7 +1961,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7, <=3.10"
-content-hash = "422674cb553bddf734e637b7d333208e86b0721579735c6e582051aff986aa16"
+content-hash = "f19aa2e562d6342614ce466c96c4300ece7e67a7bf9426cbd80b074618b87118"
 
 [metadata.files]
 astor = [
@@ -1996,8 +1996,8 @@ autoflake = [
     {file = "autoflake-1.4.tar.gz", hash = "sha256:61a353012cff6ab94ca062823d1fb2f692c4acda51c76ff83a8d77915fba51ea"},
 ]
 autoimport = [
-    {file = "autoimport-0.10.0-py3-none-any.whl", hash = "sha256:1a14a052d04d135944631ea28025b80a9aa580bddc0f075ba5720ab73f3ab3ac"},
-    {file = "autoimport-0.10.0.tar.gz", hash = "sha256:fdf6107a8ad7454365b3b4471a0fcc813940a3879aec09179c862f3b9bee7231"},
+    {file = "autoimport-1.1.1-py3-none-any.whl", hash = "sha256:f839cc3ed6c923104b40932aafa6babd8260629c76cca7fc9a27729a85906095"},
+    {file = "autoimport-1.1.1.tar.gz", hash = "sha256:0ebd6d639693b3f3127abee171a2486142a606953b409d618f9104206bf05a33"},
 ]
 babel = [
     {file = "Babel-2.9.1-py2.py3-none-any.whl", hash = "sha256:ab49e12b91d937cd11f0b67cb259a57ab4ad2b59ac7a3b41d6c06c0ac5b0def9"},
@@ -2463,8 +2463,8 @@ lxml = [
     {file = "lxml-4.7.1.tar.gz", hash = "sha256:a1613838aa6b89af4ba10a0f3a972836128801ed008078f8c1244e65958f1b24"},
 ]
 maison = [
-    {file = "maison-1.2.3-py3-none-any.whl", hash = "sha256:7bd15431639d42c07a6657b2883087fe437c47d9300d89070cce485cee635eb4"},
-    {file = "maison-1.2.3.tar.gz", hash = "sha256:be77cb3793b68c3c7375b7570df0bd955a834ea6d6af995dbee8e9fb0a0fdf96"},
+    {file = "maison-1.4.0-py3-none-any.whl", hash = "sha256:591a6ffe972558685cf2c3fdbff3dfa1e6b57a0227c50d387426ab9745e5939b"},
+    {file = "maison-1.4.0.tar.gz", hash = "sha256:9843758d7772e0fc3ca93cf3abfdd39656f41bc75f026fd8bfb5a0ac17f27a7e"},
 ]
 markdown = [
     {file = "Markdown-3.3.6-py3-none-any.whl", hash = "sha256:9923332318f843411e9932237530df53162e29dc7a4e2b91e35764583c46c9a3"},
