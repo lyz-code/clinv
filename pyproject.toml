@@ -95,7 +95,7 @@ pylint = "^2.12.2"
 
 # Remove the next dependency when https://github.com/flakehell/flakehell/issues/22
 # is resolved
-flake8 = "^3.9.2"
+flake8 = "^4.0.1"
 
 # Security
 safety = "^1.10.3"
