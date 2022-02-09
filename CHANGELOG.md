@@ -1,3 +1,13 @@
+## 1.4.0 (2022-02-09)
+
+### Fix
+
+- process terminated instances
+
+### perf
+
+- update repository-orm
+
 ## 1.3.0 (2021-12-22)
 
 ### Fix
