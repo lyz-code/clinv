@@ -340,18 +340,16 @@ class AWSSource(AbstractSource):
                 instances += records["ResourceRecordSets"]
 
             for instance in instances:
+                hosted_zone_id = re.sub(r"/hostedzone/", "", hosted_zone["Id"])
+                name = re.sub(r"\.$", "", instance["Name"])
                 entity_data = {
-                    "hosted_zone": re.sub(r"/hostedzone/", "", hosted_zone["Id"]),
-                    "name": re.sub(r"\.$", "", instance["Name"]),
+                    "id_": f"{hosted_zone_id}-{name}-{instance['Type'].lower()}",
+                    "hosted_zone": hosted_zone_id,
+                    "name": name,
                     "type_": instance["Type"],
                     "state": "active",
                     "public": not hosted_zone["Config"]["PrivateZone"],
                 }
-
-                entity_data["id_"] = (
-                    f"{entity_data['hosted_zone']}-"
-                    f"{entity_data['name']}-{entity_data['type_'].lower()}"
-                )
 
                 try:
                     entity_data["values"] = [
