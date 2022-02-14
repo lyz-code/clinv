@@ -7,11 +7,12 @@ on:  # yamllint disable-line rule:truthy
       - master
   pull_request:
     types: [opened, synchronize]
+  workflow_dispatch:
 jobs:
   Tests:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 3
+      max-parallel: 4
       matrix:
         python-version: [3.7, 3.8, 3.9, '3.10']
     steps:
@@ -20,30 +21,45 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-      - name: Install dependencies
-        run: poetry install
+      - name: Install program
+        run: |
+          # All these steps are required so that mypy behaves equally than the
+          # local environment, once mypy supports __pypackages__ try to use the
+          # github action
+          pip install virtualenv pdm
+          virtualenv .venv
+          source .venv/bin/activate
+          pdm config use_venv True
+          make install
       - name: Test linters
         run: make lint
       - name: Test type checkers
         run: make mypy
       - name: Test security
         run: make security
-# Disable until it works
-#      - name: Test with pytest
-#        run: |
-#          ARGS='--cov-report xml' make test
-#          coverage combine
+      - name: Test with pytest
+        run: make test
+      - name: Upload Coverage
+        run: |
+          pip3 install coveralls
+          coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.test-name }}
+          COVERALLS_PARALLEL: true
       - name: Test documentation
         run: make build-docs
       - name: Build the package
         run: make build-package
-#  UploadCoverage:
-#    name: Upload Coverage
-#    needs: Tests
-#    runs-on: ubuntu-latest
-#    container: python:3-slim
-#    steps:
-#      - name: "Upload coverage to Codecov"
-#        uses: codecov/codecov-action@v2
+  Coveralls:
+    name: Finish Coveralls
+    needs: Tests
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+      - name: Finished
+        run: |
+          pip3 install coveralls
+          coveralls --service=github --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

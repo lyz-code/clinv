@@ -5,6 +5,7 @@ Functions:
 """
 
 import logging
+import os
 from typing import List
 
 from rich.logging import RichHandler
@@ -41,16 +42,15 @@ def load_logger(verbose: bool = False) -> None:  # pragma: no cover
     logging.getLogger("goodconf").setLevel(logging.WARNING)
 
 
-def load_config(config_file: str) -> Config:
+def load_config(config_path: str) -> Config:
     """Configure the Logging logger.
 
     Args:
         config_file: Path to the config file
     """
     config = Config()
-
     try:
-        config.load(config_file)
+        config.load(os.path.expanduser(config_path))
     except FileNotFoundError:
         config.load()
 

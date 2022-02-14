@@ -5,21 +5,18 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   PyPI:
-    name: Build and publish Python distributions to PyPI and TestPyPI
+    name: Build and publish Python distributions to TestPyPI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Set up Python
-        uses: actions/setup-python@v1
+      - uses: pdm-project/setup-pdm@main
+        name: Setup Python and PDM
         with:
           python-version: 3.9
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-      - name: Install dependencies
-        run: poetry install
       - name: Build package
         run: make build-package
       - name: Publish distribution to Test PyPI
@@ -37,13 +34,12 @@ jobs:
           # Number of commits to fetch. 0 indicates all history.
           # Default: 1
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: pdm-project/setup-pdm@main
+        name: Setup Python and PDM
         with:
           python-version: 3.9
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
       - name: Install dependencies
-        run: poetry install
+        run: make install
       - name: Build the Documentation
         run: make build-docs
       - name: Deploy
