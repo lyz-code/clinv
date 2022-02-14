@@ -11,6 +11,7 @@ from contextlib import suppress
 from functools import lru_cache
 from typing import Dict, Generator, List, Optional, Type
 
+from pydantic import ValidationError
 from repository_orm import EntityNotFoundError, Repository
 from rich.progress import track
 
@@ -43,7 +44,14 @@ def update_sources(
     for source in adapter_sources:
         source_updates = source.update(resource_types, active_resources)
         for entity_data in track(source_updates, description="Updating repo data"):
-            entity = entity_data.model(**entity_data.data)
+            try:
+                entity = entity_data.model(**entity_data.data)
+            except ValidationError as error:
+                log.error(
+                    f"Can't build object {entity_data.model} "
+                    f"with content {entity_data.data}"
+                )
+                raise error
 
             repo.add(entity)
 

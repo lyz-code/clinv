@@ -196,7 +196,7 @@ class EC2(AWSEntity):
     size: str
     state_transition: Optional[str] = None
     subnet: Optional[SubnetID] = None
-    vpc: VPCID
+    vpc: Optional[VPCID] = None
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities."""

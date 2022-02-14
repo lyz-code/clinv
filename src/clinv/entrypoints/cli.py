@@ -18,7 +18,6 @@ from ..version import version_info
 from . import load_adapters, load_config, load_logger
 from .tui import PydanticQuestions
 
-load_logger()
 log = logging.getLogger(__name__)
 
 
@@ -31,10 +30,12 @@ log = logging.getLogger(__name__)
     help="configuration file path",
     envvar="CLINV_CONFIG_PATH",
 )
+@click.option("-v", "--verbose", is_flag=True)
 @click.pass_context
-def cli(ctx: Context, config_path: str) -> None:
+def cli(ctx: Context, config_path: str, verbose: bool) -> None:
     """Command line DevSecOps asset inventory."""
     ctx.ensure_object(dict)
+    load_logger(verbose)
     config = load_config(config_path)
     ctx.obj["config"] = config
     ctx.obj["repo"] = load_repository(config.database_url, MODELS)

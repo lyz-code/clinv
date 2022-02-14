@@ -5,7 +5,6 @@ Functions:
 """
 
 import logging
-import sys
 from typing import List
 
 from rich.logging import RichHandler
@@ -23,20 +22,23 @@ def load_logger(verbose: bool = False) -> None:  # pragma: no cover
     Args:
         verbose: Set the logging level to Debug.
     """
-    logging.getLogger("boto3").setLevel(logging.WARNING)
-    logging.getLogger("botocore").setLevel(logging.WARNING)
-    logging.getLogger("goodconf").setLevel(logging.WARNING)
     if verbose:
         logging.basicConfig(
-            stream=sys.stderr, level=logging.DEBUG, format="%(message)s"
+            level=logging.DEBUG,
+            format="  %(message)s (%(name)s)",
+            datefmt="[%X]",
+            handlers=[RichHandler(rich_tracebacks=True)],
         )
     else:
         logging.basicConfig(
             level=logging.INFO,
-            format="%(message)s",
+            format="  %(message)s",
             datefmt="[%X]",
             handlers=[RichHandler(rich_tracebacks=True)],
         )
+    logging.getLogger("boto3").setLevel(logging.WARNING)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("goodconf").setLevel(logging.WARNING)
 
 
 def load_config(config_file: str) -> Config:

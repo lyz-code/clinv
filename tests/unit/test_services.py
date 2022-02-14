@@ -143,7 +143,7 @@ class TestUnused:
         When: unused is called.
         Then: the resource is not shown.
         """
-        entity = repo.add(entity)
+        entity = repo.add(entity)  # type: ignore
         repo.commit()
 
         result = unused(repo)

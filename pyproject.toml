@@ -18,7 +18,7 @@
 # --------- Poetry -------------
 [tool.poetry]
 name = "clinv"
-version = "1.3.0"
+version = "1.4.0"
 description = "DevSecOps command line asset inventory"
 authors = ["Lyz <lyz-code-security-advisories@riseup.net>"]
 license = "GPL-3.0-only"
@@ -137,7 +137,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.3.0"
+version = "1.4.0"
 tag_format = "$version"
 version_files = [
     "pyproject.toml:version",
