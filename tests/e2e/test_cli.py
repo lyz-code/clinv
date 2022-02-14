@@ -473,7 +473,7 @@ class TestAdd:
         )
         repo.commit()
 
-        tui = pexpect.spawn("clinv add pro", timeout=5)
+        tui = pexpect.spawn("clinv add pro", timeout=5)  # noqa: AAA01
         tui.expect(".*Name:.*")
         tui.sendline("project_2")
         tui.expect(".*Description:.*")
@@ -546,7 +546,8 @@ class TestAdd:
         repo.add(RDSFactory.build(state="active", id_="db-01", name="database"))
         repo.commit()
 
-        tui = pexpect.spawn("clinv add ser", timeout=5)
+        __import__("pdb").set_trace()  # XXX BREAKPOINT
+        tui = pexpect.spawn("clinv add ser", timeout=5)  # noqa: AAA01
         tui.expect(".*Name:.*")
         tui.sendline("new service")
         tui.expect(".*Description:.*")

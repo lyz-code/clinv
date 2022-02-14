@@ -56,7 +56,6 @@ class PydanticQuestions(Prompter):
         Raises:
             KeyboardInterrupt: if the user canceled the fill up.
         """
-
         print("Enter q to abort")
         if choices is None:
             choices = {}
@@ -108,7 +107,7 @@ class PydanticQuestions(Prompter):
             KeyboardInterrupt: if the user canceled the fill up.
         """
         try:
-            attribute_choices = [choice for choice in choices[attribute].keys()]
+            attribute_choices = list(choices[attribute].keys())
         except KeyError:
             attribute_choices = []
 

@@ -8,8 +8,9 @@ import itertools
 import logging
 import operator
 from contextlib import suppress
+from enum import EnumMeta
 from functools import lru_cache
-from typing import Dict, Generator, List, Optional, Type
+from typing import Any, Dict, Generator, List, Optional, Type
 
 from pydantic import ValidationError
 from repository_orm import EntityNotFoundError, Repository
@@ -18,7 +19,14 @@ from rich.progress import track
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Choices, Entity
 from .model.aws import IAMGroup
-from .model.risk import Information, People, Project, Service
+from .model.risk import (
+    AuthenticationMethod,
+    Information,
+    People,
+    Project,
+    Service,
+    ServiceAccess,
+)
 
 log = logging.getLogger(__name__)
 
@@ -234,10 +242,19 @@ def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
     choices: Choices = {}
 
     if model == Project:
-        attribute_models = {
+        attribute_models: Dict[str, Any] = {
             "responsible": People,
             "services": Service,
             "informations": Information,
+            "people": People,
+        }
+    elif model == Service:
+        attribute_models = {
+            "access": ServiceAccess,
+            "responsible": People,
+            "authentication": AuthenticationMethod,
+            "informations": Information,
+            "dependencies": Service,
             "people": People,
         }
 
@@ -248,13 +265,17 @@ def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
 
 
 @lru_cache()
-def _build_attribute_choices(repo: Repository, model: Type[Entity]) -> Dict[str, str]:
+def _build_attribute_choices(repo: Repository, model: Any) -> Dict[str, str]:
     """Create the possible choices of the attributes of the project model."""
-    return {
-        entity.name: str(entity.id_)
-        for entity in repo.search({"state": "active"}, [model])
-        if entity.name is not None
-    }
+    if isinstance(model, type(Entity)):
+        return {
+            entity.name: str(entity.id_)
+            for entity in repo.search({"state": "active"}, [model])
+            if entity.name is not None
+        }
+    elif isinstance(model, EnumMeta):
+        return {attribute: "" for attribute in model}
+    raise ValueError("Model not recognized when extracting possible choices")
 
 
 def next_id(repo: Repository, model: Type[Entity]) -> str:
@@ -269,6 +290,6 @@ def next_id(repo: Repository, model: Type[Entity]) -> str:
 
 
 def add(repo: Repository, entity: Entity) -> None:
-    """Add an entity to the repository"""
+    """Add an entity to the repository."""
     repo.add(entity)
     repo.commit()
