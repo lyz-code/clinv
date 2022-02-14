@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import Generator
 
 import pexpect
 import pytest
@@ -36,9 +37,11 @@ def fixture_runner(config: Config) -> CliRunner:
 
 
 @pytest.fixture(name="repo")
-def repo_(config: Config) -> TinyDBRepository:
+def repo_(config: Config) -> Generator[TinyDBRepository, None, None]:
     """Configure a TinyDBRepository instance"""
-    return TinyDBRepository([Entity], config.database_url)
+    repo = TinyDBRepository([Entity], config.database_url)
+    yield repo
+    repo.close()
 
 
 def test_version(runner: CliRunner) -> None:
@@ -47,7 +50,7 @@ def test_version(runner: CliRunner) -> None:
 
     assert result.exit_code == 0
     assert re.match(
-        fr" *clinv version: {__version__}\n" r" *python version: .*\n *platform: .*",
+        rf" *clinv version: {__version__}\n" r" *python version: .*\n *platform: .*",
         result.stdout,
     )
 
@@ -177,7 +180,9 @@ class TestPrint:
         assert (
             "clinv.entrypoints.cli",
             logging.ERROR,
-            "There are no entities in the repository with id inexistent-id.",
+            "There are no entities of type ASG, EC2, IAMGroup, IAMUser, Information, "
+            "People, Project, RDS, Route53, S3, Service, SecurityGroup, VPC in the "
+            "repository with id inexistent-id.",
         ) in caplog.record_tuples
 
 

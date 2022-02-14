@@ -1,3 +1,14 @@
+# --------- Commitizen -------------
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "1.4.0"
+tag_format = "$version"
+version_files = [
+    "pyproject.toml:version",
+    "src/clinv/version.py",
+]
+
 # --------- Autoimport -------------
 
 [tool.autoimport.common_statements]
@@ -15,16 +26,28 @@
 "PersonFactory" = "from tests.factories import PersonFactory"
 "ProjectFactory" = "from tests.factories import ProjectFactory"
 
-# --------- Poetry -------------
-[tool.poetry]
+# --------- PDM -------------
+
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+dynamic = ["version"]
+authors = [
+    {name = "Lyz", email = "lyz-code-security-advisories@riseup.net"},
+]
+license = {text = "GPL-3.0-only"}
+requires-python = ">=3.7"
+dependencies = [
+  "click>=8.0.3",
+  "goodconf[yaml]>=2.0.1",
+  "boto3>=1.20.24",
+  "repository-orm>==0.7.0",
+  "rich>=10.16.0",
+  "requests>=2.26.0",
+]
 name = "clinv"
-version = "1.4.0"
 description = "DevSecOps command line asset inventory"
-authors = ["Lyz <lyz-code-security-advisories@riseup.net>"]
-license = "GPL-3.0-only"
 readme = "README.md"
-homepage = "https://github.com/lyz-code/clinv"
-documentation = "https://lyz-code.github.io/clinv"
 classifiers=[
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
@@ -40,15 +63,16 @@ classifiers=[
     "Topic :: Utilities",
     "Natural Language :: English",
 ]
-include = ["clinv/py.typed"]
 
-[tool.poetry.urls]
-"Issues" = "https://github.com/lyz-code/clinv/issues"
+[project.urls]
+Issues = "https://github.com/lyz-code/clinv/issues"
+homepage = "https://github.com/lyz-code/clinv"
+documentation = "https://lyz-code.github.io/clinv"
 
-[tool.poetry.scripts]
-autodev = "autodev.entrypoints.cli:cli"
+[project.scripts]
 clinv = "clinv.entrypoints.cli:cli"
 
+<<<<<<< HEAD
 [tool.poetry.dependencies]
 python = ">=3.7, <=3.10"
 click = "^8.0.3"
@@ -130,19 +154,8 @@ coverage = {extras = ["toml"], version = "^6.2"}
 pexpect = "^4.8.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-# --------- Commitizen -------------
-
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "1.4.0"
-tag_format = "$version"
-version_files = [
-    "pyproject.toml:version",
-    "src/clinv/version.py",
-]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
 
 # --------- Black -------------
 
@@ -185,6 +198,11 @@ norecursedirs = [
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "secondary: mark tests that use functionality tested in the same file (deselect with '-m \"not secondary\"')"
+]
+filterwarnings = [
+  "error",
+  # Until https://github.com/ktosiek/pytest-freezegun/issues/35 is merged
+  "ignore::DeprecationWarning:pytest_freezegun.*",
 ]
 
 # --------- Coverage -------------

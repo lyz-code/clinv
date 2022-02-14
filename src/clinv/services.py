@@ -57,6 +57,7 @@ def update_sources(
 
     log.info("Committing changes")
     repo.commit()
+    repo.close()
 
 
 def list_entities(
@@ -186,6 +187,7 @@ def search(
             yield list(set(new_entities) - set(entities))
             entities += new_entities
 
+    repo.close()
     if len(entities) == 0:
         if resource_types is None or len(resource_types) == 0:
             raise EntityNotFoundError(
@@ -223,6 +225,7 @@ def unused(
         if len(unused_entities) == 0:
             break
 
+    repo.close()
     return list(unused_entities)
 
 

@@ -68,7 +68,9 @@ def print_(ctx: Context, resource_id: str) -> None:
         entity: Entity = ctx.obj["repo"].get(resource_id)
     except EntityNotFoundError as error:
         log.error(str(error))
+        ctx.obj["repo"].close()
         sys.exit(1)
+    ctx.obj["repo"].close()
 
     views.print_entity(entity)
 
@@ -90,7 +92,9 @@ def list_(
         )
     except EntityNotFoundError as error:
         log.error(str(error))
+        ctx.obj["repo"].close()
         sys.exit(1)
+    ctx.obj["repo"].close()
 
     views.list_entities(entities)
 
@@ -131,7 +135,9 @@ def search(
                 )
         except EntityNotFoundError as error:
             log.error(str(error))
+            ctx.obj["repo"].close()
             sys.exit(1)
+    ctx.obj["repo"].close()
 
 
 @cli.command(name="unused")
@@ -145,6 +151,7 @@ def unused(
 ) -> None:
     """Search resources that don't belong to a Service or Project."""
     entities = services.unused(ctx.obj["repo"], resource_types)
+    ctx.obj["repo"].close()
 
     views.list_entities(entities)
 

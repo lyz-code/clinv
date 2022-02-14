@@ -1,7 +1,7 @@
 """Store the classes and fixtures used throughout the tests."""
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Generator
 
 import boto3
 import pytest
@@ -18,7 +18,8 @@ from clinv.model.entity import Entity
 def fixture_config(db_tinydb: str) -> Config:
     """Configure the Config object for the tests."""
     # Once https://github.com/lincolnloop/goodconf/issues/10 is solved prepend
-    # the environment variables with CLINV_
+    # the environment variables with the program prefix
+    # to configure it use os.environ["DEBUG"] = 'True'
     os.environ["DATABASE_URL"] = db_tinydb
     os.environ["SOURCES"] = '["risk"]'
     return Config(load=True)
@@ -44,9 +45,13 @@ def db_tinydb_(tmpdir: LocalPath) -> str:
 
 
 @pytest.fixture(name="repo")
-def repo_() -> FakeRepository:
+def repo_() -> Generator[FakeRepository, None, None]:
     """Configure a FakeRepository instance"""
-    return FakeRepository([Entity])
+    repo = FakeRepository([Entity])
+
+    yield repo
+
+    repo.close()
 
 
 @pytest.fixture(name="source")

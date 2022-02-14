@@ -1,14 +1,25 @@
 """Define the configuration of the main program."""
 
 import os
+from enum import Enum
 from typing import List
 
 from goodconf import GoodConf
 
 
-class Config(GoodConf):  # type: ignore
-    """Configure the frontend."""
+class LogLevel(str, Enum):
+    """Define the possible log levels."""
 
+    DEBUG = "debug"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+class Config(GoodConf):  # type: ignore
+    """Define the configuration of the program."""
+
+    log_level: LogLevel = LogLevel.INFO
     database_url: str = "tinydb://~/.local/share/clinv/database.tinydb"
 
     # Where should clinv search for entities for the inventory.

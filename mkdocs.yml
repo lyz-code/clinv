@@ -4,7 +4,6 @@ site_author: Lyz
 site_url: https://lyz-code.github.io/clinv
 nav:
   - Clinv: index.md
-  - Reference: reference.md
   - Contributing: contributing.md
 
 plugins:
