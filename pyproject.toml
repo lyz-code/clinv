@@ -80,6 +80,13 @@ package-dir = "src"
 source-includes = ["tests/"]
 editable-backend = "path"
 
+[tool.pdm.overrides]
+
+# To be removed once https://github.com/flakeheaven/flakeheaven/issues/55 is solved
+# To update to ">=3.10" once a version of pdm greater than 1.12.8 exists
+# "importlib-metadata" = ">=3.10"
+importlib-metadata = "4.11.1"
+
 [tool.pdm.dev-dependencies]
 lint = [
     "yamllint>=1.26.3",
@@ -104,7 +111,9 @@ lint = [
     "pep8-naming>=0.12.1",
     "dlint>=0.12.0",
     "pylint>=2.12.2",
-    "flake8>=3.9.2"]
+    "flake8>=3.9.2",
+    "flakeheaven>=0.11.1",
+]
 test = [
     "pytest>=6.2.5",
     "pytest-cov>=3.0.0",
@@ -216,16 +225,15 @@ exclude_lines = [
 profile = "black"
 src_paths = ["src", "test"]
 
-# --------- Flakehell -------------
+# --------- Flakeheaven -------------
 
-[tool.flakehell]
+[tool.flakeheaven]
 format = "grouped"
 max_line_length = 88
 show_source = true
 docstring-convention = "google"
-extended_default_ignore=[]  # Until https://github.com/flakehell/flakehell/issues/10 is solved
 
-[tool.flakehell.plugins]
+[tool.flakeheaven.plugins]
 flake8-aaa = ["+*"]
 flake8-annotations = [
   "+*",
@@ -260,10 +268,14 @@ pylint = [
   "+*",
   "-C0411", # %s should be placed before %s,
             # see https://github.com/PyCQA/pylint/issues/2175 and https://github.com/PyCQA/pylint/issues/1797
+  "-R0903", # Too few methods warning, but if you define an interface with just one
+            # method that's fine
   "-W1203", # Use %s formatting in logging functions. Deprecated rule in favor of
             # f-strings.
   "-W1201", # Use lazy % formatting in logging functions. Deprecated rule in favor of
             # f-strings.
+  "-W0212", # Access to a protected member of a client class, we need it for the
+            # repository_orm model name
   "-C0301", # Lines too long. Already covered by E501.
 ]
 mccabe = ["+*"]
@@ -276,7 +288,7 @@ pycodestyle = [
 ]
 pyflakes = ["+*"]
 
-[tool.flakehell.exceptions."tests/"]
+[tool.flakeheaven.exceptions."tests/"]
 flake8-docstrings = [
   "-D400", # First line should end with a period
   "-D205"  # 1 blank line required between summary line and description
@@ -287,14 +299,17 @@ flake8-annotations = [
 pylint = [
   "-R0201", # Method could be a function. Raised because the methods of a test class
             # don't use the self object, which is not wrong.
+  "-W0613", # Unused argument in function, but in tests there are fixtures that even
+            # though they are not used in the function directly, they are used to
+            # configure the test.
 ]
 
-[tool.flakehell.exceptions."tests/factories.py"]
+[tool.flakeheaven.exceptions."tests/factories.py"]
 pylint = [
   "-R0903", # Too few methods warning, but is the way to define factoryboy factories.
 ]
 
-[tool.flakehell.exceptions."tests/unit/test_views.py"]
+[tool.flakeheaven.exceptions."tests/unit/test_views.py"]
 pycodestyle = [
   "-E501", # lines too long. As we are testing the output of the terminal, the test is
            # cleaner if we show the actual result without splitting long lines.
