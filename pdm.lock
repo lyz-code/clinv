@@ -140,18 +140,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.3"
+version = "1.21.4"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore==1.24.3",
+    "botocore==1.24.4",
     "jmespath==0.10.0",
     "s3transfer==0.5.1",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.3"
+version = "1.24.4"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -781,7 +781,7 @@ dependencies = [
 
 [[package]]
 name = "mkdocs-git-revision-date-localized-plugin"
-version = "0.12.1"
+version = "1.0.0"
 requires_python = ">=3.6"
 summary = "Mkdocs plugin that enables displaying the localized date of the last git modification of a markdown file."
 dependencies = [
@@ -1541,7 +1541,7 @@ summary = "Makes working with XML feel like you are working with JSON"
 
 [[package]]
 name = "yamlfix"
-version = "0.8.0"
+version = "0.8.1"
 requires_python = ">=3.7"
 summary = "A simple opionated yaml formatter that keeps your comments!"
 dependencies = [
@@ -1660,13 +1660,13 @@ content_hash = "sha256:54690abfcccf9cbdd94ee5e072a8881f5a86dca630c8254e484b841a4
     {file = "bleach-4.1.0-py2.py3-none-any.whl", hash = "sha256:4d2651ab93271d1129ac9cbc679f524565cc8a1b791909c4a51eac4446a15994"},
     {file = "bleach-4.1.0.tar.gz", hash = "sha256:0900d8b37eba61a802ee40ac0061f8c2b5dee29c1927dd1d233e075ebf5a71da"},
 ]
-"boto3 1.21.3" = [
-    {file = "boto3-1.21.3-py3-none-any.whl", hash = "sha256:ab4ab2392f7520c01ce6e40e6df4b5b65a575ee6bd9fb78db0239cb2a06de557"},
-    {file = "boto3-1.21.3.tar.gz", hash = "sha256:aa00024cc1f3d24b2318dae4d5dbaa173c8da8bc6f9d12f0b2e67467ec460989"},
+"boto3 1.21.4" = [
+    {file = "boto3-1.21.4-py3-none-any.whl", hash = "sha256:6ad9a2837fb89eb9084ed545af7f29a5e099db93776f1aafe5c08bc15933704a"},
+    {file = "boto3-1.21.4.tar.gz", hash = "sha256:bbe4f4ddfc13469d306f0ca5fa77441ec37ad50dc270755e93260aeafb06d3d1"},
 ]
-"botocore 1.24.3" = [
-    {file = "botocore-1.24.3-py3-none-any.whl", hash = "sha256:ca33f747c67cd0e109fab9398d39c38c1a2df352c1e1f9823839df8f1db58046"},
-    {file = "botocore-1.24.3.tar.gz", hash = "sha256:979e5c5e826ff115f4903fe9887b191f3809229f694a747f910e1221fe63efc7"},
+"botocore 1.24.4" = [
+    {file = "botocore-1.24.4-py3-none-any.whl", hash = "sha256:692fcad31733674c8faffc65da8ddc8ab4839f407ad8470c103e0e7aed9c7556"},
+    {file = "botocore-1.24.4.tar.gz", hash = "sha256:8e9ae6b718ca318b4aeeee45aa9fad5f52e882a2291d919cfa4b753928223abb"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -2191,9 +2191,9 @@ content_hash = "sha256:54690abfcccf9cbdd94ee5e072a8881f5a86dca630c8254e484b841a4
     {file = "mkdocs_autorefs-0.3.1-py3-none-any.whl", hash = "sha256:f0fd7c115eaafda7fb16bf5ff5d70eda55d7c0599eac64f8b25eacf864312a85"},
     {file = "mkdocs-autorefs-0.3.1.tar.gz", hash = "sha256:12baad29359f468b44d980ed35b713715409097a1d8e3d0ef90962db95205eda"},
 ]
-"mkdocs-git-revision-date-localized-plugin 0.12.1" = [
-    {file = "mkdocs_git_revision_date_localized_plugin-0.12.1-py3-none-any.whl", hash = "sha256:2b05dcaa0700119d92462ada141be1353b1bf90e5e11331ea32ef61a3009c958"},
-    {file = "mkdocs-git-revision-date-localized-plugin-0.12.1.tar.gz", hash = "sha256:29a77224fdee0f125347e32ce18cc6bec0899b92f109399fcdb07ad962b9c2ea"},
+"mkdocs-git-revision-date-localized-plugin 1.0.0" = [
+    {file = "mkdocs_git_revision_date_localized_plugin-1.0.0-py3-none-any.whl", hash = "sha256:15086eb25129347e63da7c109c6f9834a2937a1e1c91fb850be13645e6a21dbe"},
+    {file = "mkdocs-git-revision-date-localized-plugin-1.0.0.tar.gz", hash = "sha256:67ca2ebf19d7571e83c7f887ba4205f56bc45a34e70879f84797ac57e9ef7220"},
 ]
 "mkdocs-htmlproofer-plugin 0.8.0" = [
     {file = "mkdocs_htmlproofer_plugin-0.8.0-py3-none-any.whl", hash = "sha256:914fa007df4182e22440c5d23670eba36392e7f58f99de728f3b1d7cfb4847c6"},
@@ -2745,9 +2745,9 @@ content_hash = "sha256:54690abfcccf9cbdd94ee5e072a8881f5a86dca630c8254e484b841a4
     {file = "xmltodict-0.12.0-py2.py3-none-any.whl", hash = "sha256:8bbcb45cc982f48b2ca8fe7e7827c5d792f217ecf1792626f808bf41c3b86051"},
     {file = "xmltodict-0.12.0.tar.gz", hash = "sha256:50d8c638ed7ecb88d90561beedbf720c9b4e851a9fa6c47ebd64e99d166d8a21"},
 ]
-"yamlfix 0.8.0" = [
-    {file = "yamlfix-0.8.0-py3-none-any.whl", hash = "sha256:66094ed651d598baff809cfe9d0fdce447b70ad844c4319c18913a5ff58721af"},
-    {file = "yamlfix-0.8.0.tar.gz", hash = "sha256:b3d32734506bfbe28c4edea05f593e4a3a8ea4c1ad9b3490e971b0237ab6188d"},
+"yamlfix 0.8.1" = [
+    {file = "yamlfix-0.8.1-py3-none-any.whl", hash = "sha256:0a3c234cd81af453ce9d804f8c985e615f6f4bf3740ef51ed5ef0a7c293bdd36"},
+    {file = "yamlfix-0.8.1.tar.gz", hash = "sha256:e9eca7c7472112d9d2d3a371a8b0e4762837f226dd1298c7ee901605467782b7"},
 ]
 "yamllint 1.26.3" = [
     {file = "yamllint-1.26.3.tar.gz", hash = "sha256:3934dcde484374596d6b52d8db412929a169f6d9e52e20f9ade5bf3523d9b96e"},
