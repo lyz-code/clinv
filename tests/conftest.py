@@ -11,7 +11,6 @@ from repository_orm import FakeRepository
 
 from clinv.adapters.fake import FakeSource
 from clinv.config import Config
-from clinv.model.entity import Entity
 
 
 @pytest.fixture(name="config")
@@ -47,7 +46,7 @@ def db_tinydb_(tmpdir: LocalPath) -> str:
 @pytest.fixture(name="repo")
 def repo_() -> Generator[FakeRepository, None, None]:
     """Configure a FakeRepository instance"""
-    repo = FakeRepository([Entity])
+    repo = FakeRepository()
 
     yield repo
 

@@ -12,7 +12,7 @@ from tests.factories import PersonFactory
 
 from clinv.config import Config
 from clinv.entrypoints.cli import cli
-from clinv.model import Entity, SecurityGroup, SecurityGroupRule
+from clinv.model import SecurityGroup, SecurityGroupRule
 from clinv.model.risk import Project, Service
 from clinv.version import __version__
 
@@ -30,7 +30,7 @@ def fixture_runner(config: Config) -> CliRunner:
 @pytest.fixture(name="repo")
 def repo_(config: Config) -> Generator[TinyDBRepository, None, None]:
     """Configure a TinyDBRepository instance"""
-    repo = TinyDBRepository([Entity], config.database_url)
+    repo = TinyDBRepository(database_url=config.database_url)
     yield repo
     repo.close()
 
