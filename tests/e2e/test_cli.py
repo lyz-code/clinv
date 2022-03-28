@@ -87,7 +87,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(cli, ["update", "peo"])
+        result = runner.invoke(cli, ["update", "per"])
 
         assert result.exit_code == 0
         assert (
@@ -106,7 +106,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(cli, ["update", "peo", "info"])
+        result = runner.invoke(cli, ["update", "per", "info"])
 
         assert result.exit_code == 0
         assert (
@@ -134,7 +134,7 @@ class TestPrint:
         result = runner.invoke(cli, ["print", entity.id_])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entity.id_ in result.stdout
 
     def test_print_can_handle_complex_objects(
@@ -181,7 +181,7 @@ class TestPrint:
             "clinv.entrypoints.cli",
             logging.ERROR,
             "There are no entities of type ASG, EC2, IAMGroup, IAMUser, Information, "
-            "People, Project, RDS, Route53, S3, Service, SecurityGroup, VPC in the "
+            "Person, Project, RDS, Route53, S3, Service, SecurityGroup, VPC in the "
             "repository with id inexistent-id.",
         ) in caplog.record_tuples
 
@@ -206,7 +206,7 @@ class TestList:
         result = runner.invoke(cli, ["list"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
         assert entities[2].id_ not in result.stdout
 
@@ -223,10 +223,10 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(cli, ["list", "peo"])
+        result = runner.invoke(cli, ["list", "per"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
 
     def test_list_returns_entity_information_can_specify_many_types(
@@ -242,10 +242,10 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(cli, ["list", "peo", "info"])
+        result = runner.invoke(cli, ["list", "per", "info"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
 
     def test_list_returns_entity_information_can_show_inactive(
@@ -267,7 +267,7 @@ class TestList:
         result = runner.invoke(cli, ["list", "--inactive"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ not in result.stdout
         assert entities[1].id_ in result.stdout
 
@@ -290,7 +290,7 @@ class TestList:
         result = runner.invoke(cli, ["list", "--all"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
         assert entities[1].id_ in result.stdout
 
@@ -319,14 +319,14 @@ class TestList:
         When: listing is called with the resource type
         Then: A message is shown.
         """
-        result = runner.invoke(cli, ["list", "peo"])
+        result = runner.invoke(cli, ["list", "per"])
 
         assert result.exit_code == 1
         assert (
             "clinv.entrypoints.cli",
             logging.ERROR,
             (
-                "There are no entities of type peo in the repository that match the "
+                "There are no entities of type per in the repository that match the "
                 "criteria."
             ),
         ) in caplog.record_tuples
@@ -353,7 +353,7 @@ class TestSearch:
         result = runner.invoke(cli, ["search", search_regexp])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ not in result.stdout
         assert entities[1].id_ not in result.stdout
         assert entities[2].id_ in result.stdout
@@ -374,10 +374,10 @@ class TestSearch:
         repo.commit()
         search_regexp = "entity_.*"
 
-        result = runner.invoke(cli, ["search", search_regexp, "peo"])
+        result = runner.invoke(cli, ["search", search_regexp, "per"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ not in result.stdout
         assert entities[1].id_ not in result.stdout
         assert entities[2].id_ in result.stdout
@@ -413,8 +413,8 @@ class TestUnused:
         Then: the EC2 resource and the service are returned.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(Service(id_="ser_01", access="public", state="active"))
-        project = repo.add(Project(id_="pro_01", state="active"))
+        service = repo.add(Service(id_="ser_001", state="active"))
+        project = repo.add(Project(id_="pro_001", state="active"))
         repo.commit()
 
         result = runner.invoke(cli, ["unused"])
@@ -434,8 +434,8 @@ class TestUnused:
         Then: the EC2 resource is returned, but not the service.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(Service(id_="ser_01", access="public", state="active"))
-        project = repo.add(Project(id_="pro_01", state="active"))
+        service = repo.add(Service(id_="ser_001", state="active"))
+        project = repo.add(Project(id_="pro_001", state="active"))
         repo.commit()
 
         result = runner.invoke(cli, ["unused", "ec2"])
@@ -461,15 +461,15 @@ class TestAdd:
             define the project data.
         Then: the Project resource is added
         """
-        repo.add(Project(id_="pro_01", state="active"))
-        repo.add(ServiceFactory.build(state="active", id_="ser_01", name="ldap"))
-        repo.add(ServiceFactory.build(state="active", id_="ser_02", name="haproxy"))
+        repo.add(Project(id_="pro_001", state="active"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
         repo.add(
-            ServiceFactory.build(state="active", id_="ser_03", name="monitorization")
+            ServiceFactory.build(state="active", id_="ser_003", name="monitorization")
         )
-        repo.add(PersonFactory.build(state="active", id_="peo_01", name="Alice"))
+        repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
         repo.add(
-            InformationFactory.build(state="active", id_="inf_01", name="user data")
+            InformationFactory.build(state="active", id_="inf_001", name="user data")
         )
         repo.commit()
 
@@ -507,18 +507,20 @@ class TestAdd:
         tui.expect(".*People.*")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
         tui.expect_exact(pexpect.EOF)
+        # If we don't do the expect_exact twice, the status is None instead of 0
+        tui.expect_exact(pexpect.EOF)
 
         assert tui.status == 0
-        project = repo.get("pro_2", [Project])
+        project = repo.get("pro_002", [Project])
         assert project == Project(
-            id_="pro_2",
+            id_="pro_002",
             name="project_2",
             state=EntityState.RUNNING,
             description="description",
-            responsible="peo_01",
+            responsible="per_001",
             aliases=[],
-            services=["ser_02", "ser_01"],
-            informations=["inf_01"],
+            services=["ser_002", "ser_001"],
+            informations=["inf_001"],
             people=[],
         )
 
@@ -535,18 +537,17 @@ class TestAdd:
             define the service data.
         Then: the Service resource is added
         """
-        repo.add(Project(id_="pro_01", state="active"))
-        repo.add(ServiceFactory.build(state="active", id_="ser_01", name="ldap"))
-        repo.add(ServiceFactory.build(state="active", id_="ser_02", name="haproxy"))
-        repo.add(PersonFactory.build(state="active", id_="peo_01", name="Alice"))
+        repo.add(Project(id_="pro_001", state="active"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
+        repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
         repo.add(
-            InformationFactory.build(state="active", id_="inf_01", name="user data")
+            InformationFactory.build(state="active", id_="inf_001", name="user data")
         )
         repo.add(EC2Factory.build(state="active", id_="i-01", name="instance"))
         repo.add(RDSFactory.build(state="active", id_="db-01", name="database"))
         repo.commit()
 
-        __import__("pdb").set_trace()  # XXX BREAKPOINT
         tui = pexpect.spawn("clinv add ser", timeout=5)
         tui.expect(".*Name:.*")
         tui.sendline("new service")
@@ -557,46 +558,64 @@ class TestAdd:
         tui.send("a")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
-        tui.expect(".*Access.*")
-        tui.send("p")
+        tui.expect(".*NetworkAccess.*")
+        tui.send("i")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
         tui.expect(".*Authentication.*")
-        tui.send("p")
+        tui.send("l")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search for user data
+        tui.expect(".*Informations.*")
+        tui.send("u")
+        tui.send("s")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
         # Fuzzy search of haproxy
-        tui.expect(".*Services.*")
+        tui.expect(".*Dependencies.*")
         tui.send("h")
         tui.send("a")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
-        # Fuzzy search of ldap
-        # WARNING: your terminal doesn't support cursor position requests (CPR)
-        tui.expect(".*Services.*")
-        tui.sendline("ldap")
-        # Nothing more to add to services
-        tui.expect(".*Services.*")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
-        tui.expect(".*Informations.*")
-        # Fuzzy search of user data
-        tui.sendline("user data")
-        # Nothing more to add to informations
-        tui.expect(".*Informations.*")
+        # Fuzzy search for database
+        tui.expect(".*Resources.*")
+        tui.send("d")
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
-        tui.expect(".*People.*")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search for admins
+        tui.expect(".*Users.*")
+        tui.send("a")
+        tui.send("d")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Environment.*")
+        tui.send("p")
+        tui.send("r")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect_exact(pexpect.EOF)
         tui.expect_exact(pexpect.EOF)
 
         assert tui.status == 0
-        project = repo.get("pro_2", [Project])
-        assert project == Project(
-            id_="pro_2",
-            name="project_2",
+        project = repo.get("ser_003", [Service])
+        assert project == Service(
+            id_="ser_003",
+            name="new service",
             state=EntityState.RUNNING,
             description="description",
-            responsible="peo_01",
-            aliases=[],
-            services=["ser_02", "ser_01"],
-            informations=["inf_01"],
-            people=[],
+            access="intranet",
+            responsible="per_001",
+            authentication=["ldap"],
+            informations=["inf_001"],
+            dependencies=["ser_002"],
+            resources=["db-01"],
+            users=["admins"],
+            environment="Production",
         )

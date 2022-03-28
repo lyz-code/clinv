@@ -166,13 +166,13 @@ def add(ctx: Context, resource_type: str) -> None:
     """Add resources."""
     prompter = ctx.obj["prompter"]
     repo = ctx.obj["repo"]
+    config = ctx.obj["config"]
 
     model = RESOURCE_TYPES[resource_type]
-    choices = services.build_choices(repo, model)
+    choices = services.build_choices(repo, config, model)
     entity_data = {"id_": services.next_id(repo, model), "state": EntityState.RUNNING}
     resource = prompter.fill(model=model, choices=choices, entity_data=entity_data)
 
-    __import__("pdb").set_trace()  # XXX BREAKPOINT
     services.add(repo, resource)
 
 

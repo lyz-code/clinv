@@ -10,7 +10,7 @@ import operator
 from contextlib import suppress
 from enum import EnumMeta
 from functools import lru_cache
-from typing import Any, Dict, Generator, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Type
 
 from pydantic import ValidationError
 from repository_orm import EntityNotFoundError, Repository
@@ -24,10 +24,13 @@ from .model.risk import (
     AuthenticationMethod,
     Information,
     NetworkAccess,
-    People,
+    Person,
     Project,
     Service,
 )
+
+if TYPE_CHECKING:
+    from .config import Config
 
 log = logging.getLogger(__name__)
 
@@ -112,7 +115,7 @@ def _filter_entities(
         all_: Whether to show active and inactive resources. Default: False
         inactive: Whether to show inactive resources. Default: False
     """
-    criteria = operator.attrgetter("_model_name")
+    criteria = operator.attrgetter("model_name")
     input_entities = sorted(entities, key=criteria)
     entity_groups = {
         sorted_key: list(element)
@@ -236,21 +239,22 @@ def unused(
     return list(unused_entities)
 
 
-def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
+def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Choices:
     """Create the possible choices of the attributes of a model."""
     choices: Choices = {}
 
+    # Build choices from models
     if model == Project:
         attribute_models: Dict[str, Any] = {
-            "responsible": People,
+            "responsible": Person,
             "services": Service,
             "informations": Information,
-            "people": People,
+            "people": Person,
         }
     elif model == Service:
         attribute_models = {
             "access": NetworkAccess,
-            "responsible": People,
+            "responsible": Person,
             "authentication": AuthenticationMethod,
             "informations": Information,
             "dependencies": Service,
@@ -260,6 +264,10 @@ def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
 
     for key, value in attribute_models.items():
         choices[key] = _build_attribute_choices(repo=repo, model=value)
+
+    # Build choices from config
+    if model == Service:
+        choices["users"] = {value: value for value in config.service_users}
 
     return choices
 
@@ -301,7 +309,7 @@ def next_id(repo: Repository, model: Type[Entity]) -> str:
     except ValueError as error:
         raise ValueError(model) from error
     last_id = str(last_entity.id_).split("_")
-    new_id = f"{last_id[0]}_{int(last_id[1]) + 1}"
+    new_id = f"{last_id[0]}_{int(last_id[1]) + 1:03}"
     return new_id
 
 

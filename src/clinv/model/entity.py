@@ -18,6 +18,7 @@ class Environment(str, Enum):
     STAGING = "Staging"
     PRODUCTION = "Production"
     TESTING = "Testing"
+    EPHEMERAL = "Ephemeral"
 
 
 class EntityState(str, Enum):

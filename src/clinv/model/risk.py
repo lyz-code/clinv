@@ -21,25 +21,25 @@ from .entity import Entity, Environment
 class InformationID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^inf_[0-9]+$")
+    regex = re.compile("^inf_[0-9]{3}$")
 
 
 class ServiceID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^ser_[0-9]+$")
+    regex = re.compile("^ser_[0-9]{3}$")
 
 
 class ProjectID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^pro_[0-9]+$")
+    regex = re.compile("^pro_[0-9]{3}$")
 
 
 class PersonID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^peo_[0-9]+$")
+    regex = re.compile("^per_[0-9]{3}$")
 
 
 # -------------------------------
@@ -69,7 +69,7 @@ class Information(Entity):
         return {entity for entity in unused if entity.id_ == self.responsible}
 
 
-class People(Entity):
+class Person(Entity):
     """Represent the people of the team.
 
     Args:
@@ -142,19 +142,9 @@ class Project(Entity):
 class NetworkAccess(str, Enum):
     """Represent possible states of the network access."""
 
-    INTERNET = "internet"
     INTRANET = "intranet"
+    INTERNET = "internet"
     AIRGAP = "airgap"
-
-
-class UserAccess(str, Enum):
-    """Represent possible user access."""
-
-    EVERYONE = "everyone"
-    STAFF = "staff"
-    PARTNERS = "partners"
-    CLIENTS = "clients"
-    ADMINS = "admins"
 
 
 class AuthenticationMethod(str, Enum):
@@ -194,7 +184,7 @@ class Service(Entity):
     informations: List[InformationID] = Field(default_factory=list)
     dependencies: List[ServiceID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)
-    users: List[UserAccess] = Field(default_factory=list)
+    users: List[str] = Field(default_factory=list)
     environment: Optional[Environment] = None
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:

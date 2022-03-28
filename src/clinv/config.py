@@ -28,6 +28,15 @@ class Config(GoodConf):  # type: ignore
     # Level of logging verbosity. One of ['info', 'debug', 'warning'].
     verbose: str = "info"
 
+    # Type of users
+    service_users: List[str] = [
+        "admins",
+        "authenticated_users",
+        "unauthenticated_users",
+        "internal_services",
+        "external_services",
+    ]
+
     class Config:
         """Define the default files to check."""
 

@@ -16,7 +16,7 @@ from .aws import (
     SecurityGroupRule,
 )
 from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityType, EntityUpdate
-from .risk import Information, People, Project, Service
+from .risk import Information, Person, Project, Service
 
 RESOURCE_TYPES = {
     "asg": ASG,
@@ -24,7 +24,7 @@ RESOURCE_TYPES = {
     "iamg": IAMGroup,
     "iamu": IAMUser,
     "info": Information,
-    "peo": People,
+    "per": Person,
     "pro": Project,
     "rds": RDS,
     "r53": Route53,
@@ -54,7 +54,7 @@ __all__ = [
     "Project",
     "Information",
     "Service",
-    "People",
+    "Person",
     "Entity",
     "EntityAttrs",
     "EntityID",

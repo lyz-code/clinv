@@ -77,9 +77,9 @@ class InformationFactory(ModelFactory[Any]):
 
 
 class PersonFactory(ModelFactory[Any]):
-    """Define the factory for the model People."""
+    """Define the factory for the model Person."""
 
-    __model__ = risk.People
+    __model__ = risk.Person
 
 
 class ProjectFactory(ModelFactory[Any]):

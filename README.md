@@ -1,3 +1,6 @@
+**WARNING: the program is still in development and not stable. Use at your own
+risk***
+
 # Clinv
 
 [![Actions Status](https://github.com/lyz-code/clinv/workflows/Tests/badge.svg)](https://github.com/lyz-code/clinv/actions)

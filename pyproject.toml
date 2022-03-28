@@ -203,6 +203,8 @@ filterwarnings = [
   "error",
   # Until https://github.com/ktosiek/pytest-freezegun/issues/35 is merged
   "ignore::DeprecationWarning:pytest_freezegun.*",
+  # Until warning is removed
+  "ignore::UserWarning:repository_orm.*",
 ]
 
 # --------- Coverage -------------
