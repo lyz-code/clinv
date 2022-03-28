@@ -225,11 +225,11 @@ def unused(
     ]
 
     models_to_test = _deduce_models(resource_types, ignore=[Project, IAMGroup])
-    unused_entities = set(
+    unused_entities = {
         entity
         for model in models_to_test
         for entity in repo.search({"state": "active"}, model)
-    )
+    }
 
     for entity in active_entities:
         unused_entities = unused_entities - entity.uses(unused_entities)
