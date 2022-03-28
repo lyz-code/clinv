@@ -18,14 +18,15 @@ from rich.progress import track
 
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Choices, Entity
-from .model.aws import IAMGroup
+from .model.aws import ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53
+from .model.entity import Environment
 from .model.risk import (
     AuthenticationMethod,
     Information,
+    NetworkAccess,
     People,
     Project,
     Service,
-    ServiceAccess,
 )
 
 log = logging.getLogger(__name__)
@@ -93,11 +94,10 @@ def list_entities(
             raise EntityNotFoundError(
                 "There are no entities in the repository that match the criteria."
             )
-        else:
-            raise EntityNotFoundError(
-                f"There are no entities of type {', '.join(resource_types)} in the "
-                "repository that match the criteria."
-            )
+        raise EntityNotFoundError(
+            f"There are no entities of type {', '.join(resource_types)} in the "
+            "repository that match the criteria."
+        )
     return entities
 
 
@@ -201,11 +201,10 @@ def search(
             raise EntityNotFoundError(
                 "There are no entities in the repository that match the criteria."
             )
-        else:
-            raise EntityNotFoundError(
-                f"There are no entities of type {', '.join(resource_types)} in the "
-                "repository that match the criteria."
-            )
+        raise EntityNotFoundError(
+            f"There are no entities of type {', '.join(resource_types)} in the "
+            "repository that match the criteria."
+        )
 
 
 def unused(
@@ -250,12 +249,13 @@ def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
         }
     elif model == Service:
         attribute_models = {
-            "access": ServiceAccess,
+            "access": NetworkAccess,
             "responsible": People,
             "authentication": AuthenticationMethod,
             "informations": Information,
             "dependencies": Service,
-            "people": People,
+            "resources": (ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53),
+            "environment": Environment,
         }
 
     for key, value in attribute_models.items():
@@ -265,16 +265,32 @@ def build_choices(repo: Repository, model: Type[Entity]) -> Choices:
 
 
 @lru_cache()
-def _build_attribute_choices(repo: Repository, model: Any) -> Dict[str, str]:
+def _build_attribute_choices(
+    repo: Repository, model: Any, model_name: bool = False
+) -> Dict[str, str]:
     """Create the possible choices of the attributes of the project model."""
+    choices: Dict[str, str] = {}
+    if isinstance(model, tuple):
+        for item in model:
+            choices.update(_build_attribute_choices(repo, item, model_name=True))
+        return choices
     if isinstance(model, type(Entity)):
-        return {
-            entity.name: str(entity.id_)
-            for entity in repo.search({"state": "active"}, [model])
-            if entity.name is not None
-        }
+        try:
+            for entity in repo.search({"state": "active"}, [model]):
+                if entity.name is None:
+                    continue
+                if model_name:
+                    name = f"{entity.name} ({str(model.__name__)})"
+                else:
+                    name = entity.name
+                choices[name] = str(entity.id_)
+            return choices
+        except EntityNotFoundError:
+            return {}
     elif isinstance(model, EnumMeta):
-        return {attribute: "" for attribute in model}
+        return {  # type: ignore
+            str(attribute.value): str(attribute.value) for attribute in model
+        }
     raise ValueError("Model not recognized when extracting possible choices")
 
 
@@ -282,8 +298,8 @@ def next_id(repo: Repository, model: Type[Entity]) -> str:
     """Return the next id of a model."""
     try:
         last_entity = max(repo.all([model]))
-    except ValueError:
-        raise ValueError(model)
+    except ValueError as error:
+        raise ValueError(model) from error
     last_id = str(last_entity.id_).split("_")
     new_id = f"{last_id[0]}_{int(last_id[1]) + 1}"
     return new_id

@@ -44,7 +44,9 @@ class Entity(BasicEntity):
     state: EntityState
     description: Optional[str] = None
 
-    def uses(self, unused: Set["Entity"]) -> Set["Entity"]:
+    # W0613: We need the unused argument for the entity children
+    # R0201: The children need the self argument
+    def uses(self, unused: Set["Entity"]) -> Set["Entity"]:  # noqa: W0613 R0201
         """Return the used entities by self."""
         return set()
 

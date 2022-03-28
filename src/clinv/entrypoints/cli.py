@@ -172,6 +172,7 @@ def add(ctx: Context, resource_type: str) -> None:
     entity_data = {"id_": services.next_id(repo, model), "state": EntityState.RUNNING}
     resource = prompter.fill(model=model, choices=choices, entity_data=entity_data)
 
+    __import__("pdb").set_trace()  # XXX BREAKPOINT
     services.add(repo, resource)
 
 

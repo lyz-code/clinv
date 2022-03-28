@@ -449,7 +449,7 @@ class TestUnused:
 class TestAdd:
     """Test the command line implementation of the add service."""
 
-    def test_add_creates_project(
+    def test_add_creates_project(  # noqa: AAA01
         self,
         config: Config,
         runner: CliRunner,
@@ -473,7 +473,7 @@ class TestAdd:
         )
         repo.commit()
 
-        tui = pexpect.spawn("clinv add pro", timeout=5)  # noqa: AAA01
+        tui = pexpect.spawn("clinv add pro", timeout=5)
         tui.expect(".*Name:.*")
         tui.sendline("project_2")
         tui.expect(".*Description:.*")
@@ -508,7 +508,7 @@ class TestAdd:
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
         tui.expect_exact(pexpect.EOF)
 
-        # assert tui.status == 0
+        assert tui.status == 0
         project = repo.get("pro_2", [Project])
         assert project == Project(
             id_="pro_2",
@@ -522,7 +522,7 @@ class TestAdd:
             people=[],
         )
 
-    def test_add_creates_service(
+    def test_add_creates_service(  # noqa: AAA01
         self,
         config: Config,
         runner: CliRunner,
@@ -547,7 +547,7 @@ class TestAdd:
         repo.commit()
 
         __import__("pdb").set_trace()  # XXX BREAKPOINT
-        tui = pexpect.spawn("clinv add ser", timeout=5)  # noqa: AAA01
+        tui = pexpect.spawn("clinv add ser", timeout=5)
         tui.expect(".*Name:.*")
         tui.sendline("new service")
         tui.expect(".*Description:.*")
@@ -587,7 +587,7 @@ class TestAdd:
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
         tui.expect_exact(pexpect.EOF)
 
-        # assert tui.status == 0
+        assert tui.status == 0
         project = repo.get("pro_2", [Project])
         assert project == Project(
             id_="pro_2",

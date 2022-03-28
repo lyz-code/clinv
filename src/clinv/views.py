@@ -67,7 +67,9 @@ def add_entities_to_table(table: Table, entities: List[Entity]) -> None:
         table.add_row(str(entity.id_), entity.name, entity._model_name)
 
 
-def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:
+# R0912: too many branches 15/14, we should refactor the function, but I didn't find
+# any clear place to refactor
+def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:  # noqa: R0912
     """Prepare the Entity attributes data to be printed.
 
     Args:
@@ -76,24 +78,21 @@ def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:
     Returns:
         attributes: Dictionary with the attribute description and value
     """
-    # W0212: accessed to a private attribute, but we need it to be that way
-    attrs_list: List[Dict[str, Any]] = [
-        {"_model_name": entity._model_name}  # noqa: W0212
-    ]
+    attrs_list: List[Dict[str, Any]] = [{"_model_name": entity._model_name}]
     for key, value in entity.dict().items():
         key = _snake_to_upper(key)
         if key == "Id ":
             key = "ID"
         if value is None or value == "":
             continue
-        elif isinstance(value, str):
+        if isinstance(value, str):
             attrs_list[0][key] = value
         elif isinstance(value, (bool, int)):
             attrs_list[0][key] = str(value)
         elif isinstance(value, list):
             if len(value) == 0:
                 continue
-            elif isinstance(value[0], (str, int)):
+            if isinstance(value[0], (str, int)):
                 try:
                     attrs_list[0][key] = "\n".join(value)
                 except TypeError:

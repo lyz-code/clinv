@@ -2,7 +2,8 @@
 
 import abc
 import logging
-from typing import Optional, Type
+import re
+from typing import Any, Dict, Optional, Type
 
 from prompt_toolkit.completion import FuzzyWordCompleter
 from pydantic import ValidationError
@@ -67,16 +68,18 @@ class PydanticQuestions(Prompter):
                 default = entity_data[attribute]
             except KeyError:
                 default = None
-            attribute_schema = schema["properties"][attribute]
+            attribute_schema = self._get_attribute_schema(schema, attribute)
+            attribute_type = attribute_schema["type"]
+            attribute_title = attribute_schema["title"]
 
-            if attribute_schema["type"] == "string":
-                question_text = f"{attribute_schema['title']}: "
+            if attribute_type == "string":
+                question_text = f"{attribute_title}: "
                 entity_data[attribute] = self._ask_choice(
                     question_text, attribute, choices, default
                 )
 
-            elif attribute_schema["type"] == "array":
-                question_text = f"{attribute_schema['title']} (Enter to continue): "
+            elif attribute_type == "array":
+                question_text = f"{attribute_title} (Enter to continue): "
                 entity_data[attribute] = []
                 while True:
                     choice = self._ask_choice(question_text, attribute, choices)
@@ -86,10 +89,26 @@ class PydanticQuestions(Prompter):
         try:
             return model(**entity_data)
         except ValidationError as error:
-            log.warn("Error filling up the model")
+            log.warning("Error filling up the model")
             print(error)
-            raise error
             return self.fill(model=model, entity_data=entity_data, choices=choices)
+
+    @staticmethod
+    def _get_attribute_schema(schema: Dict[str, Any], attribute: str) -> Dict[str, Any]:
+        """Get the schema of the attribute."""
+        attribute_schema = schema["properties"][attribute]
+        if "$ref" in attribute_schema:
+            definition = re.sub("#/definitions/", "", attribute_schema["$ref"])
+            attribute_schema = schema["definitions"][definition]
+        elif (
+            "type" in attribute_schema
+            and attribute_schema["type"] == "array"
+            and "$ref" in attribute_schema["items"]
+        ):
+            definition = re.sub("#/definitions/", "", attribute_schema["items"]["$ref"])
+            attribute_schema = schema["definitions"][definition]
+            attribute_schema["type"] = "array"
+        return attribute_schema
 
     def _ask_choice(
         self,
@@ -140,7 +159,7 @@ class PydanticQuestions(Prompter):
                 try:
                     choice = choices[attribute][choice]
                 except KeyError:
-                    log.warn(f"The choice {choice} is not between the valid ones")
+                    log.warning(f"The choice {choice} is not between the valid ones")
                     choice = self._ask_choice(question_text, attribute, choices)
 
         if choice == "q":
