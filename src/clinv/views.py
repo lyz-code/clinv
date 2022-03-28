@@ -64,7 +64,7 @@ def list_entities(entities: List[Entity]) -> None:
 def add_entities_to_table(table: Table, entities: List[Entity]) -> None:
     """Add rows to a list table of entities."""
     for entity in entities:
-        table.add_row(str(entity.id_), entity.name, entity._model_name)
+        table.add_row(str(entity.id_), entity.name, entity.model_name)
 
 
 def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:
@@ -76,10 +76,7 @@ def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:
     Returns:
         attributes: Dictionary with the attribute description and value
     """
-    # W0212: accessed to a private attribute, but we need it to be that way
-    attrs_list: List[Dict[str, Any]] = [
-        {"_model_name": entity._model_name}  # noqa: W0212
-    ]
+    attrs_list: List[Dict[str, Any]] = [{"_model_name": entity.model_name}]
     for key, value in entity.dict().items():
         key = _snake_to_upper(key)
         if key == "Id ":

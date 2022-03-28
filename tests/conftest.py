@@ -5,7 +5,7 @@ from typing import Any, Dict, Generator
 
 import boto3
 import pytest
-from moto import mock_autoscaling, mock_ec2, mock_iam, mock_rds2, mock_route53, mock_s3
+from moto import mock_autoscaling, mock_ec2, mock_iam, mock_rds, mock_route53, mock_s3
 from py._path.local import LocalPath
 from repository_orm import FakeRepository
 
@@ -19,9 +19,12 @@ def fixture_config(db_tinydb: str) -> Config:
     # Once https://github.com/lincolnloop/goodconf/issues/10 is solved prepend
     # the environment variables with the program prefix
     # to configure it use os.environ["DEBUG"] = 'True'
+    os.environ["CLINV_CONFIG_PATH"] = "tests/assets/config.yaml"
     os.environ["DATABASE_URL"] = db_tinydb
     os.environ["SOURCES"] = '["risk"]'
-    return Config(load=True)
+    config = Config()
+    config.load("tests/assets/config.yaml")
+    return config
 
 
 @pytest.fixture(name="db_tinydb")
@@ -46,7 +49,7 @@ def db_tinydb_(tmpdir: LocalPath) -> str:
 @pytest.fixture(name="repo")
 def repo_() -> Generator[FakeRepository, None, None]:
     """Configure a FakeRepository instance"""
-    repo = FakeRepository()
+    repo = FakeRepository(search_exception=False)
 
     yield repo
 
@@ -79,7 +82,7 @@ def ec2_(_aws_credentials: None) -> Any:
 @pytest.fixture(name="rds")
 def rds_(_aws_credentials: None) -> Any:
     """Configure the boto3 RDS client."""
-    with mock_rds2():
+    with mock_rds():
         yield boto3.client("rds", region_name="us-east-1")
 
 

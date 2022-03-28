@@ -91,7 +91,7 @@ class AWSSource(AbstractSource):
         for entity in remaining_entities:
             if type(entity) in resource_models:
                 log.info(
-                    f"Marking '{entity._model_name}' with id '{entity.id_}' and name "
+                    f"Marking '{entity.model_name}' with id '{entity.id_}' and name "
                     f"'{entity.name}' as terminated"
                 )
                 entity.state = EntityState.TERMINATED
