@@ -83,9 +83,7 @@ editable-backend = "path"
 [tool.pdm.overrides]
 
 # To be removed once https://github.com/flakeheaven/flakeheaven/issues/55 is solved
-# To update to ">=3.10" once a version of pdm greater than 1.12.8 exists
-# "importlib-metadata" = ">=3.10"
-importlib-metadata = "4.11.1"
+"importlib-metadata" = ">=3.10"
 
 [tool.pdm.dev-dependencies]
 lint = [
