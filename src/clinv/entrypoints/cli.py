@@ -169,7 +169,7 @@ def unused(
 @click.pass_context
 @click.argument(
     "resource_type",
-    type=click.Choice(["pro", "ser", "peo", "inf"]),
+    type=click.Choice(["pro", "ser", "per", "inf"]),
 )
 def add(ctx: Context, resource_type: str) -> None:
     """Add resources."""
@@ -178,8 +178,11 @@ def add(ctx: Context, resource_type: str) -> None:
     config = ctx.obj["config"]
 
     model = RESOURCE_TYPES[resource_type]
-    choices = services.build_choices(repo, config, model)
-    entity_data = {"id_": services.next_id(repo, model), "state": EntityState.RUNNING}
+    choices = services.build_choices(repo, config, model)  # type: ignore
+    entity_data = {
+        "id_": services.next_id(repo, model),  # type: ignore
+        "state": EntityState.RUNNING,
+    }
     resource = prompter.fill(model=model, choices=choices, entity_data=entity_data)
 
     services.add(repo, resource)

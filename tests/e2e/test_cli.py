@@ -8,21 +8,23 @@ import pexpect
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
-from clinv.config import Config
-from clinv.entrypoints.cli import cli
-from clinv.model import Entity, SecurityGroup, SecurityGroupRule
-from clinv.model.entity import EntityState
-from clinv.model.risk import Project, Service
-from clinv.version import __version__
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
 from prompt_toolkit.keys import Keys
 from repository_orm import Repository, TinyDBRepository
 from tests.factories import (
+    IAMUserFactory,
     InformationFactory,
     PersonFactory,
     RDSFactory,
     ServiceFactory,
 )
+
+from clinv.config import Config
+from clinv.entrypoints.cli import cli
+from clinv.model import SecurityGroup, SecurityGroupRule
+from clinv.model.entity import EntityState
+from clinv.model.risk import Information, Person, Project, Service
+from clinv.version import __version__
 
 from ..factories import EC2Factory
 
@@ -105,7 +107,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(cli, ["update", "per", "info"])
+        result = runner.invoke(cli, ["update", "per", "inf"])
 
         assert result.exit_code == 0
         assert (
@@ -241,7 +243,7 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(cli, ["list", "per", "info"])
+        result = runner.invoke(cli, ["list", "per", "inf"])
 
         assert result.exit_code == 0
         assert "Person" in result.stdout
@@ -413,7 +415,7 @@ class TestUnused:
         """
         entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(
-            Service(id_="ser_001", access="public", state="active")  # type: ignore
+            Service(id_="ser_001", access="internet", state="active")  # type: ignore
         )
         project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
@@ -436,7 +438,7 @@ class TestUnused:
         """
         entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(
-            Service(id_="ser_001", access="public", state="active")  # type: ignore
+            Service(id_="ser_001", access="internet", state="active")  # type: ignore
         )
         project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
@@ -464,7 +466,7 @@ class TestAdd:
             define the project data.
         Then: the Project resource is added
         """
-        repo.add(Project(id_="pro_001", state="active"))
+        repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
         repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
         repo.add(
@@ -514,20 +516,21 @@ class TestAdd:
         tui.expect_exact(pexpect.EOF)
 
         assert tui.status == 0
-        project = repo.get("pro_002", [Project])
+        project = repo.get("pro_002", Project)
         assert project == Project(
-            id_="pro_002",
+            id_="pro_002",  # type: ignore
             name="project_2",
             state=EntityState.RUNNING,
             description="description",
-            responsible="per_001",
+            responsible="per_001",  # type: ignore
             aliases=[],
-            services=["ser_002", "ser_001"],
-            informations=["inf_001"],
+            services=["ser_002", "ser_001"],  # type: ignore
+            informations=["inf_001"],  # type: ignore
             people=[],
         )
 
-    def test_add_creates_service(  # noqa: AAA01
+    # R0915: too many statements, but that's how to define the TUI steps
+    def test_add_creates_service(  # noqa: AAA01, R0915
         self,
         config: Config,
         runner: CliRunner,
@@ -540,7 +543,7 @@ class TestAdd:
             define the service data.
         Then: the Service resource is added
         """
-        repo.add(Project(id_="pro_001", state="active"))
+        repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
         repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
         repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
@@ -607,18 +610,121 @@ class TestAdd:
         tui.expect_exact(pexpect.EOF)
 
         assert tui.status == 0
-        project = repo.get("ser_003", [Service])
-        assert project == Service(
-            id_="ser_003",
+        service = repo.get("ser_003", Service)
+        assert service == Service(
+            id_="ser_003",  # type: ignore
             name="new service",
             state=EntityState.RUNNING,
             description="description",
-            access="intranet",
-            responsible="per_001",
-            authentication=["ldap"],
-            informations=["inf_001"],
-            dependencies=["ser_002"],
+            access="intranet",  # type: ignore
+            responsible="per_001",  # type: ignore
+            authentication=["ldap"],  # type: ignore
+            informations=["inf_001"],  # type: ignore
+            dependencies=["ser_002"],  # type: ignore
             resources=["db-01"],
             users=["admins"],
-            environment="Production",
+            environment="Production",  # type: ignore
         )
+
+    def test_add_creates_information(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with a person
+        When: add is called with the inf argument and the tui interface is used to
+            define the information data.
+        Then: the Information resource is added
+        """
+        repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add inf", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new information")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Responsible:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Personal Data:.*")
+        tui.send("y")
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 0
+        information = repo.get("inf_001", Information)
+        assert information == Information(
+            id_="inf_001",  # type: ignore
+            name="new information",
+            state=EntityState.RUNNING,
+            description="description",
+            responsible="per_001",  # type: ignore
+            personal_data=True,
+        )
+
+    def test_add_creates_person(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with an iam user
+        When: add is called with the per argument and the tui interface is used to
+            define the person data.
+        Then: the Person resource is added
+        """
+        repo.add(IAMUserFactory.build(state="active", id_="iamu-1", name="Alice"))
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add per", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new person")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*IAM User:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Email:.*")
+        tui.sendline("test@test.org")
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 0
+        person = repo.get("per_001", Person)
+        assert person == Person(
+            id_="per_001",  # type: ignore
+            name="new person",
+            state=EntityState.RUNNING,
+            description="description",
+            iam_user="iamu-1",  # type: ignore
+            email="test@test.org",
+        )
+
+    def test_add_cancels_object_building(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: An empty repository
+        When: add is called with the per argument and at the first argument we want to
+            quit using `q`
+        Then: the Person resource is not added
+        """
+        tui = pexpect.spawn("clinv add per", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("q")
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 256
+        assert len(repo.all(Person)) == 0

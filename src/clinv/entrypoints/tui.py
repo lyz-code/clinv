@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Type
 
 from prompt_toolkit.completion import FuzzyWordCompleter
 from pydantic import ValidationError
-from questionary import Style, autocomplete, text
+from questionary import Style, autocomplete, confirm, text
 
 from ..model import Choices
 from ..model.entity import Entity, EntityAttrs
@@ -77,6 +77,8 @@ class PydanticQuestions(Prompter):
                 entity_data[attribute] = self._ask_choice(
                     question_text, attribute, choices, default
                 )
+            elif attribute_type == "boolean":
+                entity_data[attribute] = confirm(f"{attribute_title}: ").unsafe_ask()
 
             elif attribute_type == "array":
                 question_text = f"{attribute_title} (Enter to continue): "
@@ -132,9 +134,9 @@ class PydanticQuestions(Prompter):
 
         if len(attribute_choices) == 0:
             if default is not None:
-                choice = text(question_text, default=default).ask()
+                choice = text(question_text, default=default).unsafe_ask()
             else:
-                choice = text(question_text).ask()
+                choice = text(question_text).unsafe_ask()
         else:
             style = Style(
                 [
@@ -153,7 +155,7 @@ class PydanticQuestions(Prompter):
                 choices=attribute_choices,
                 completer=FuzzyWordCompleter(attribute_choices),
                 style=style,
-            ).ask()
+            ).unsafe_ask()
 
             if choice not in ["q", ""]:
                 try:

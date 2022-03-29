@@ -275,6 +275,14 @@ def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Ch
             "resources": (ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53),
             "environment": Environment,
         }
+    elif model == Information:
+        attribute_models = {
+            "responsible": Person,
+        }
+    elif model == Person:
+        attribute_models = {
+            "iam_user": IAMUser,
+        }
 
     for key, value in attribute_models.items():
         choices[key] = _build_attribute_choices(repo=repo, model=value)
@@ -289,7 +297,7 @@ def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Ch
 @lru_cache()
 def _build_attribute_choices(
     repo: Repository, model: Any, model_name: bool = False
-) -> Dict[str, str]:
+) -> Dict[str, Any]:
     """Create the possible choices of the attributes of the project model."""
     choices: Dict[str, str] = {}
     if isinstance(model, tuple):
@@ -297,19 +305,16 @@ def _build_attribute_choices(
             choices.update(_build_attribute_choices(repo, item, model_name=True))
         return choices
     if isinstance(model, type(Entity)):
-        try:
-            for entity in repo.search({"state": "active"}, [model]):
-                if entity.name is None:
-                    continue
-                if model_name:
-                    name = f"{entity.name} ({str(model.__name__)})"
-                else:
-                    name = entity.name
-                choices[name] = str(entity.id_)
-            return choices
-        except EntityNotFoundError:
-            return {}
-    elif isinstance(model, EnumMeta):
+        for entity in repo.search({"state": "active"}, model):
+            if entity.name is None:
+                continue
+            if model_name:
+                name = f"{entity.name} ({entity.model_name})"
+            else:
+                name = entity.name
+            choices[name] = str(entity.id_)
+        return choices
+    if isinstance(model, EnumMeta):
         return {  # type: ignore
             str(attribute.value): str(attribute.value) for attribute in model
         }
@@ -319,9 +324,9 @@ def _build_attribute_choices(
 def next_id(repo: Repository, model: Type[Entity]) -> str:
     """Return the next id of a model."""
     try:
-        last_entity = max(repo.all([model]))
-    except ValueError as error:
-        raise ValueError(model) from error
+        last_entity = max(repo.all(model))
+    except ValueError:
+        return f"{model.__name__.lower()[:3]}_001"
     last_id = str(last_entity.id_).split("_")
     new_id = f"{last_id[0]}_{int(last_id[1]) + 1:03}"
     return new_id

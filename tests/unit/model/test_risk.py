@@ -25,7 +25,7 @@ def test_service_access_attribute_happy_path(access: str) -> None:
     Then: the model is created without problem.
     """
     result = Service(
-        id_="ser_01",  # type: ignore
+        id_="ser_001",  # type: ignore
         state="active",  # type: ignore
         name="Test Service",
         access=access,  # type: ignore
@@ -42,7 +42,7 @@ def test_service_access_attribute_unhappy_path() -> None:
     """
     with pytest.raises(ValidationError):
         Service(
-            id_="ser_01",  # type: ignore
+            id_="ser_001",  # type: ignore
             state="active",  # type: ignore
             name="Test Service",
             access="inexistent",  # type: ignore

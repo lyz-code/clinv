@@ -15,7 +15,7 @@ from botocore.exceptions import (
 from rich.progress import track
 
 from ..model import RESOURCE_TYPES, aws
-from ..model.entity import EntityAttrs, EntityState, EntityType, EntityUpdate
+from ..model.entity import EntityAttrs, EntityState, EntityT, EntityUpdate
 from .abstract import AbstractSource
 
 log = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class AWSSource(AbstractSource):
     def update(
         self,
         resource_types: Optional[List[str]] = None,
-        active_resources: Optional[List[EntityType]] = None,
+        active_resources: Optional[List[EntityT]] = None,
     ) -> List[EntityUpdate]:
         """Get the latest state of the source entities.
 
@@ -101,7 +101,7 @@ class AWSSource(AbstractSource):
 
         return entity_updates
 
-    def _update_ec2(self, remaining_entities: List[EntityType]) -> List[EntityUpdate]:
+    def _update_ec2(self, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the EC2 instances.
 
         Args:
@@ -183,7 +183,7 @@ class AWSSource(AbstractSource):
                 )
         return entity_updates
 
-    def _update_rds(self, remaining_entities: List[EntityType]) -> List[EntityUpdate]:
+    def _update_rds(self, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the RDS instances.
 
         Args:
@@ -253,7 +253,7 @@ class AWSSource(AbstractSource):
         return entity_updates
 
     @classmethod
-    def _update_s3(cls, remaining_entities: List[EntityType]) -> List[EntityUpdate]:
+    def _update_s3(cls, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the S3 buckets.
 
         Args:
@@ -304,9 +304,7 @@ class AWSSource(AbstractSource):
         return entity_updates
 
     @classmethod
-    def _update_route53(
-        cls, remaining_entities: List[EntityType]
-    ) -> List[EntityUpdate]:
+    def _update_route53(cls, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the Route53 records.
 
         Args:
@@ -367,7 +365,7 @@ class AWSSource(AbstractSource):
                 )
         return entity_updates
 
-    def _update_vpc(self, remaining_entities: List[EntityType]) -> List[EntityUpdate]:
+    def _update_vpc(self, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the VPC resources.
 
         Args:
@@ -418,7 +416,7 @@ class AWSSource(AbstractSource):
                 )
         return entity_updates
 
-    def _update_asg(self, remaining_entities: List[EntityType]) -> List[EntityUpdate]:
+    def _update_asg(self, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the ASG resources.
 
         Args:
@@ -480,7 +478,7 @@ class AWSSource(AbstractSource):
 
         return entity_updates
 
-    def _update_sg(self, remaining_entities: List[EntityType]) -> List[EntityUpdate]:
+    def _update_sg(self, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the Security Group resources.
 
         Args:
@@ -527,9 +525,7 @@ class AWSSource(AbstractSource):
         return entity_updates
 
     @classmethod
-    def _update_iam_users(
-        cls, remaining_entities: List[EntityType]
-    ) -> List[EntityUpdate]:
+    def _update_iam_users(cls, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
         """Fetch the data of the IAM users.
 
         Args:
@@ -564,7 +560,7 @@ class AWSSource(AbstractSource):
 
     @classmethod
     def _update_iam_groups(
-        cls, remaining_entities: List[EntityType]
+        cls, remaining_entities: List[EntityT]
     ) -> List[EntityUpdate]:
         """Fetch the data of the IAM groups.
 
@@ -650,8 +646,8 @@ def build_security_group_rule_data(rule_data: Dict[str, Any]) -> Dict[str, Any]:
 
 def _build_entity_update(
     entity_data: EntityAttrs,
-    entity_model: Type[EntityType],
-    remaining_entities: List[EntityType],
+    entity_model: Type[EntityT],
+    remaining_entities: List[EntityT],
 ) -> EntityUpdate:
     """Create the EntityUpdate object from the entity_data and model.
 

@@ -62,11 +62,23 @@ class Information(Entity):
 
     id_: InformationID
     responsible: Optional[PersonID] = None
-    personal_data: bool = False
+    personal_data: bool = Field(default=False, title="Personal Data")
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities by self."""
         return {entity for entity in unused if entity.id_ == self.responsible}
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "responsible",
+                "personal_data",
+            ]
+        }
 
 
 class Person(Entity):
@@ -82,12 +94,24 @@ class Person(Entity):
     """
 
     id_: PersonID
-    iam_user: Optional[IAMUserID] = None
+    iam_user: Optional[IAMUserID] = Field(default=None, title="IAM User")
     email: Optional[str] = None
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities by self."""
         return {entity for entity in unused if entity.id_ == self.iam_user}
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "iam_user",
+                "email",
+            ]
+        }
 
 
 class Project(Entity):
@@ -154,7 +178,8 @@ class AuthenticationMethod(str, Enum):
     TWOFA_CODE = "2fa code"
     OPEN = "open"
     BASIC_AUTH = "basic auth"
-    USER_PASSWORD = "user and password"
+    # B105: We're not leaking any password
+    USER_PASSWORD = "user and password"  # nosec: B105
     SSL_CERTIFICATE = "ssl client certificate"
     LDAP = "ldap"
     API_KEY = "api key"

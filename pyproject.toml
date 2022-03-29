@@ -361,5 +361,6 @@ module = [
     "botocore.*",
     "goodconf",
     "moto",
+    "pexpect.*"
 ]
 ignore_missing_imports = true

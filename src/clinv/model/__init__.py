@@ -1,6 +1,6 @@
 """Module to store the common business model of all entities."""
 
-from typing import Dict
+from typing import Any, Dict
 
 from .aws import (
     ASG,
@@ -15,7 +15,7 @@ from .aws import (
     SecurityGroup,
     SecurityGroupRule,
 )
-from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityType, EntityUpdate
+from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityT, EntityUpdate
 from .risk import Information, Person, Project, Service
 
 RESOURCE_TYPES = {
@@ -23,7 +23,7 @@ RESOURCE_TYPES = {
     "ec2": EC2,
     "iamg": IAMGroup,
     "iamu": IAMUser,
-    "info": Information,
+    "inf": Information,
     "per": Person,
     "pro": Project,
     "rds": RDS,
@@ -37,7 +37,7 @@ RESOURCE_TYPES = {
 RESOURCE_NAMES = list(RESOURCE_TYPES.keys())
 MODELS = [value for _, value in RESOURCE_TYPES.items()]
 
-Choices = Dict[str, Dict[str, str]]
+Choices = Dict[str, Dict[str, Any]]
 
 __all__ = [
     "EC2",
@@ -58,7 +58,7 @@ __all__ = [
     "Entity",
     "EntityAttrs",
     "EntityID",
-    "EntityType",
+    "EntityT",
     "EntityState",
     "EntityUpdate",
 ]
