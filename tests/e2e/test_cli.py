@@ -199,7 +199,7 @@ class TestList:
         assert result.exit_code == 0
         assert "People" in result.stdout
         assert entities[0].id_ in result.stdout
-        assert entities[2].id_ not in result.stdout
+        assert not re.match(rf"{entities[2].id_} *", result.stdout)
 
     def test_list_returns_entity_information_can_specify_type(
         self, config: Config, runner: CliRunner, repo: Repository
