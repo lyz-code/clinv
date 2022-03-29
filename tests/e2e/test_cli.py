@@ -137,14 +137,14 @@ class TestPrint:
         Then: The data of the associated entity is printed in a separate table
         """
         complex_entity = SecurityGroup(
-            id_="sg-xxxxxx",
+            id_="sg-xxxxxx",  # type: ignore
             name="test security group",
-            state="active",
+            state="active",  # type: ignore
             ingress=[
                 SecurityGroupRule(
-                    protocol="TCP",
+                    protocol="TCP",  # type: ignore
                     ports=[80, 443],
-                    sg_range=["sg-yyyyyy"],
+                    sg_range=["sg-yyyyyy"],  # type: ignore
                 ),
             ],
         )
@@ -404,8 +404,10 @@ class TestUnused:
         Then: the EC2 resource and the service are returned.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(Service(id_="ser_01", access="public", state="active"))
-        project = repo.add(Project(id_="pro_01", state="active"))
+        service = repo.add(
+            Service(id_="ser_01", access="public", state="active")  # type: ignore
+        )
+        project = repo.add(Project(id_="pro_01", state="active"))  # type: ignore
         repo.commit()
 
         result = runner.invoke(cli, ["unused"])
@@ -425,8 +427,10 @@ class TestUnused:
         Then: the EC2 resource is returned, but not the service.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(Service(id_="ser_01", access="public", state="active"))
-        project = repo.add(Project(id_="pro_01", state="active"))
+        service = repo.add(
+            Service(id_="ser_01", access="public", state="active")  # type: ignore
+        )
+        project = repo.add(Project(id_="pro_01", state="active"))  # type: ignore
         repo.commit()
 
         result = runner.invoke(cli, ["unused", "ec2"])

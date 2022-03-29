@@ -44,7 +44,11 @@ class Entity(BasicEntity):
     state: EntityState
     description: Optional[str] = None
 
-    def uses(self, unused: Set["Entity"]) -> Set["Entity"]:
+    # W0613: Unused argument 'unused'. But some of the downstream implementations use
+    # it
+    # R0201: Method could be a function. But some of the downstream implementations use
+    # self
+    def uses(self, unused: Set["Entity"]) -> Set["Entity"]:  # noqa: W0613, R0201
         """Return the used entities by self."""
         return set()
 
@@ -52,13 +56,14 @@ class Entity(BasicEntity):
 Entity.update_forward_refs()
 
 
-EntityType = TypeVar("EntityType", bound=Entity)
+# C0103: until https://github.com/PyCQA/pylint/issues/5981 is fixed
+EntityType = TypeVar("EntityType", bound=Entity)  # noqa: C0103
 
 
 class EntityUpdate(BaseModel):
     """Define the updates of an entity."""
 
-    id_: EntityID
+    id_: EntityID = -1
     model: Type[Entity]
     data: Dict[str, Any]
 

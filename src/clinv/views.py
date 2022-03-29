@@ -67,7 +67,9 @@ def add_entities_to_table(table: Table, entities: List[Entity]) -> None:
         table.add_row(str(entity.id_), entity.name, entity.model_name)
 
 
-def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:
+# R0912: Too many branches 15/12, we should refactor the function when we have some
+# time
+def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:  # noqa: R0912
     """Prepare the Entity attributes data to be printed.
 
     Args:
@@ -83,14 +85,14 @@ def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:
             key = "ID"
         if value is None or value == "":
             continue
-        elif isinstance(value, str):
+        if isinstance(value, str):
             attrs_list[0][key] = value
         elif isinstance(value, (bool, int)):
             attrs_list[0][key] = str(value)
         elif isinstance(value, list):
             if len(value) == 0:
                 continue
-            elif isinstance(value[0], (str, int)):
+            if isinstance(value[0], (str, int)):
                 try:
                     attrs_list[0][key] = "\n".join(value)
                 except TypeError:

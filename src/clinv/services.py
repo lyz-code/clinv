@@ -85,11 +85,10 @@ def list_entities(
             raise EntityNotFoundError(
                 "There are no entities in the repository that match the criteria."
             )
-        else:
-            raise EntityNotFoundError(
-                f"There are no entities of type {', '.join(resource_types)} in the "
-                "repository that match the criteria."
-            )
+        raise EntityNotFoundError(
+            f"There are no entities of type {', '.join(resource_types)} in the "
+            "repository that match the criteria."
+        )
     return entities
 
 
@@ -147,7 +146,9 @@ def _deduce_models(
             with suppress(ValueError):
                 models.remove(model)
 
-    return models
+    # ignore: Suddenly it started returning a type of List[ModelMetaClass] and I don't
+    # know why
+    return models  # type: ignore
 
 
 def search(
@@ -198,11 +199,10 @@ def search(
             raise EntityNotFoundError(
                 "There are no entities in the repository that match the criteria."
             )
-        else:
-            raise EntityNotFoundError(
-                f"There are no entities of type {', '.join(resource_types)} in the "
-                "repository that match the criteria."
-            )
+        raise EntityNotFoundError(
+            f"There are no entities of type {', '.join(resource_types)} in the "
+            "repository that match the criteria."
+        )
 
 
 def unused(
