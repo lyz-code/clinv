@@ -18,6 +18,16 @@ update:
 
 	@echo ""
 
+.PHONY: outdated
+outdated:
+	@echo "-------------------------"
+	@echo "- Outdated dependencies -"
+	@echo "-------------------------"
+
+	pdm update --dry-run --unconstrained
+
+	@echo ""
+
 .PHONY: format
 format:
 	@echo "----------------------"
@@ -35,7 +45,7 @@ lint:
 	@echo "- Testing the lint -"
 	@echo "--------------------"
 
-	pdm run flakehell lint --exclude assets src/ tests/
+	pdm run flakeheaven lint --exclude assets src/ tests/
 	$(isort) --check-only --df
 	$(black) --check --diff
 

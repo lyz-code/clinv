@@ -41,5 +41,6 @@ class FakeSource(AbstractSource):
             entity_data: dictionary with key value to update.
         """
         entity_data["id_"] = entity.id_
-        entity_data["model"] = type(entity)
-        self._entity_updates.append(EntityUpdate(data={**entity.dict(), **entity_data}))
+        self._entity_updates.append(
+            EntityUpdate(data={**entity.dict(), **entity_data}, model=type(entity))
+        )
