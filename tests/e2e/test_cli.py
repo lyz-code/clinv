@@ -8,6 +8,12 @@ import pexpect
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
+from clinv.config import Config
+from clinv.entrypoints.cli import cli
+from clinv.model import Entity, SecurityGroup, SecurityGroupRule
+from clinv.model.entity import EntityState
+from clinv.model.risk import Project, Service
+from clinv.version import __version__
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
 from prompt_toolkit.keys import Keys
 from repository_orm import Repository, TinyDBRepository
@@ -17,13 +23,6 @@ from tests.factories import (
     RDSFactory,
     ServiceFactory,
 )
-
-from clinv.config import Config
-from clinv.entrypoints.cli import cli
-from clinv.model import Entity, SecurityGroup, SecurityGroupRule
-from clinv.model.entity import EntityState
-from clinv.model.risk import Project, Service
-from clinv.version import __version__
 
 from ..factories import EC2Factory
 
@@ -39,7 +38,7 @@ def fixture_runner(config: Config) -> CliRunner:
 @pytest.fixture(name="repo")
 def repo_(config: Config) -> Generator[TinyDBRepository, None, None]:
     """Configure a TinyDBRepository instance"""
-    repo = TinyDBRepository([Entity], config.database_url)
+    repo = TinyDBRepository(database_url=config.database_url, search_exception=False)
     yield repo
     repo.close()
 
@@ -146,14 +145,14 @@ class TestPrint:
         Then: The data of the associated entity is printed in a separate table
         """
         complex_entity = SecurityGroup(
-            id_="sg-xxxxxx",
+            id_="sg-xxxxxx",  # type: ignore
             name="test security group",
-            state="active",
+            state="active",  # type: ignore
             ingress=[
                 SecurityGroupRule(
-                    protocol="TCP",
+                    protocol="TCP",  # type: ignore
                     ports=[80, 443],
-                    sg_range=["sg-yyyyyy"],
+                    sg_range=["sg-yyyyyy"],  # type: ignore
                 ),
             ],
         )
@@ -208,7 +207,7 @@ class TestList:
         assert result.exit_code == 0
         assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
-        assert entities[2].id_ not in result.stdout
+        assert not re.match(rf"{entities[2].id_} *", result.stdout)
 
     def test_list_returns_entity_information_can_specify_type(
         self, config: Config, runner: CliRunner, repo: Repository
@@ -413,8 +412,10 @@ class TestUnused:
         Then: the EC2 resource and the service are returned.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(Service(id_="ser_001", state="active"))
-        project = repo.add(Project(id_="pro_001", state="active"))
+        service = repo.add(
+            Service(id_="ser_001", access="public", state="active")  # type: ignore
+        )
+        project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
 
         result = runner.invoke(cli, ["unused"])
@@ -434,8 +435,10 @@ class TestUnused:
         Then: the EC2 resource is returned, but not the service.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(Service(id_="ser_001", state="active"))
-        project = repo.add(Project(id_="pro_001", state="active"))
+        service = repo.add(
+            Service(id_="ser_001", access="public", state="active")  # type: ignore
+        )
+        project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
 
         result = runner.invoke(cli, ["unused", "ec2"])

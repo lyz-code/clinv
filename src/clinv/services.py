@@ -48,10 +48,9 @@ def update_sources(
         resource_types: Only retrieve the state of these types.
     """
     models = _deduce_models(resource_types)
-    try:
-        active_resources = repo.search({"state": "active"}, models)
-    except EntityNotFoundError:
-        active_resources = []
+    active_resources = [
+        entity for model in models for entity in repo.search({"state": "active"}, model)
+    ]
 
     for source in adapter_sources:
         source_updates = source.update(resource_types, active_resources)
@@ -90,7 +89,9 @@ def list_entities(
         List of entities that match the criteria
     """
     models = _deduce_models(resource_types)
-    entities = _filter_entities(repo.all(models), all_, inactive)
+    entities = _filter_entities(
+        [entity for model in models for entity in repo.all(model)], all_, inactive
+    )
 
     if len(entities) == 0:
         if resource_types is None or len(resource_types) == 0:
@@ -158,7 +159,9 @@ def _deduce_models(
             with suppress(ValueError):
                 models.remove(model)
 
-    return models
+    # ignore: Suddenly it started returning a type of List[ModelMetaClass] and I don't
+    # know why
+    return models  # type: ignore
 
 
 def search(
@@ -191,12 +194,17 @@ def search(
 
     entities: List[Entity] = []
     for attribute in attributes:
-        with suppress(EntityNotFoundError):
-            new_entities = _filter_entities(
-                repo.search({attribute: regexp}, models), all_, inactive
-            )
-            yield list(set(new_entities) - set(entities))
-            entities += new_entities
+        new_entities = _filter_entities(
+            [
+                entity
+                for model in models
+                for entity in repo.search({attribute: regexp}, model)
+            ],
+            all_,
+            inactive,
+        )
+        yield list(set(new_entities) - set(entities))
+        entities += new_entities
 
     repo.close()
     if len(entities) == 0:
@@ -223,12 +231,18 @@ def unused(
     Returns:
         List of unused entities.
     """
-    active_entities = repo.search({"state": "active"}, _deduce_models())
+    active_entities = [
+        entity
+        for model in _deduce_models()
+        for entity in repo.search({"state": "active"}, model)
+    ]
+
     models_to_test = _deduce_models(resource_types, ignore=[Project, IAMGroup])
-    try:
-        unused_entities = set(repo.search({"state": "active"}, models_to_test))
-    except EntityNotFoundError:
-        return []
+    unused_entities = {
+        entity
+        for model in models_to_test
+        for entity in repo.search({"state": "active"}, model)
+    }
 
     for entity in active_entities:
         unused_entities = unused_entities - entity.uses(unused_entities)

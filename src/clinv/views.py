@@ -67,8 +67,8 @@ def add_entities_to_table(table: Table, entities: List[Entity]) -> None:
         table.add_row(str(entity.id_), entity.name, entity.model_name)
 
 
-# R0912: too many branches 15/14, we should refactor the function, but I didn't find
-# any clear place to refactor
+# R0912: Too many branches 15/12, we should refactor the function when we have some
+# time
 def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:  # noqa: R0912
     """Prepare the Entity attributes data to be printed.
 

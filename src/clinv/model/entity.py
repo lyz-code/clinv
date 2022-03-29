@@ -55,13 +55,13 @@ class Entity(BasicEntity):
 Entity.update_forward_refs()
 
 
-EntityType = TypeVar("EntityType", bound=Entity)
+EntityT = TypeVar("EntityT", bound=Entity)
 
 
 class EntityUpdate(BaseModel):
     """Define the updates of an entity."""
 
-    id_: EntityID
+    id_: EntityID = -1
     model: Type[Entity]
     data: Dict[str, Any]
 

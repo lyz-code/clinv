@@ -69,7 +69,7 @@ def test_aws_models_have_validation_of_id_content(
     Then: A validation error is shown
     """
     with pytest.raises(ValidationError):
-        model(id_="wrong_id", state="active", **arguments)
+        model(id_="wrong_id", state="active", **arguments)  # type: ignore
 
 
 @pytest.mark.parametrize(

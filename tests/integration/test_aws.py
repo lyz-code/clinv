@@ -62,7 +62,7 @@ def test_update_creates_ec2_instances_with_minimum_parameters(ec2: Any) -> None:
 
     result = AWSSource().update(["ec2"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.EC2)]
     assert aws.EC2(**entity_data).id_ == instance["InstanceId"]
 
 
@@ -138,7 +138,7 @@ def test_update_creates_ec2_instances_with_maximum_parameters(ec2: Any) -> None:
 
     result = AWSSource().update(["ec2"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.EC2)]
     assert aws.EC2(**entity_data).id_ == instance["InstanceId"]
 
 
@@ -184,7 +184,7 @@ def test_update_creates_rds_instances_with_minimum_parameters(
 
     result = AWSSource().update(["rds"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.RDS)]
     assert aws.RDS(**entity_data).id_ == instance["DbiResourceId"]
 
 
@@ -237,7 +237,7 @@ def test_update_creates_rds_instances_with_maximum_parameters(
 
     result = AWSSource().update(["rds"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.RDS)]
     assert aws.RDS(**entity_data).id_ == instance["DbiResourceId"]
 
 
@@ -261,7 +261,7 @@ def test_update_creates_s3_instances(s3_mock: Any) -> None:
 
     result = AWSSource().update(["s3"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.S3)]
     assert aws.S3(**entity_data).id_ == entity_data["id_"]
 
 
@@ -287,7 +287,7 @@ def test_update_detects_s3_buckets_with_public_permissions(s3_mock: Any) -> None
 
     result = AWSSource().update(["s3"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.S3)]
     assert aws.S3(**entity_data).id_ == entity_data["id_"]
 
 
@@ -336,7 +336,7 @@ def test_update_creates_route53_instances(route53: Any) -> None:
 
     result = AWSSource().update(["r53"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.Route53)]
     assert aws.Route53(**entity_data).id_ == entity_data["id_"]
 
 
@@ -429,7 +429,7 @@ def test_update_creates_route53_private_instances(route53: Any) -> None:
 
     result = AWSSource().update(["r53"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.Route53)]
     assert aws.Route53(**entity_data).id_ == entity_data["id_"]
 
 
@@ -479,7 +479,7 @@ def test_update_creates_route53_alias_instances(route53: Any) -> None:
 
     result = AWSSource().update(["r53"])
 
-    assert result == [EntityUpdate(data=entity_data)]
+    assert result == [EntityUpdate(data=entity_data, model=aws.Route53)]
     assert aws.Route53(**entity_data).id_ == entity_data["id_"]
 
 
@@ -516,7 +516,7 @@ def test_update_creates_vpc_instances(ec2: Any) -> None:
 
     result = AWSSource().update(["vpc"])
 
-    assert EntityUpdate(data=entity_data) in result
+    assert EntityUpdate(data=entity_data, model=aws.VPC) in result
     assert aws.VPC(**entity_data).id_ == entity_data["id_"]
 
 
@@ -561,7 +561,7 @@ def test_update_creates_autoscaling_groups(ec2: Any, autoscaling: Any) -> None:
 
     result = AWSSource().update(["asg"])
 
-    assert EntityUpdate(data=entity_data) in result
+    assert EntityUpdate(data=entity_data, model=aws.ASG) in result
     assert aws.ASG(**entity_data).id_ == entity_data["id_"]
 
 
@@ -595,7 +595,7 @@ def test_update_creates_empty_security_groups(ec2: Any) -> None:
 
     result = AWSSource().update(["sg"])
 
-    assert EntityUpdate(data=entity_data) in result
+    assert EntityUpdate(data=entity_data, model=aws.SecurityGroup) in result
     assert aws.SecurityGroup(**entity_data).id_ == entity_data["id_"]
 
 
@@ -652,7 +652,7 @@ def test_update_creates_security_groups_with_egress_and_ingress_rules(ec2: Any) 
 
     result = AWSSource().update(["sg"])
 
-    assert EntityUpdate(data=entity_data) in result
+    assert EntityUpdate(data=entity_data, model=aws.SecurityGroup) in result
     assert aws.SecurityGroup(**entity_data).id_ == entity_data["id_"]
 
 
@@ -673,7 +673,7 @@ def test_update_creates_iam_users(iam: Any) -> None:
 
     result = AWSSource().update(["iamu"])
 
-    assert EntityUpdate(data=entity_data) in result
+    assert EntityUpdate(data=entity_data, model=aws.IAMUser) in result
     assert aws.IAMUser(**entity_data).id_ == entity_data["id_"]
 
 
@@ -698,7 +698,7 @@ def test_update_creates_iam_groups(iam: Any) -> None:
 
     result = AWSSource().update(["iamg"])
 
-    assert EntityUpdate(data=entity_data) in result
+    assert EntityUpdate(data=entity_data, model=aws.IAMGroup) in result
     assert aws.IAMGroup(**entity_data).id_ == entity_data["id_"]
 
 

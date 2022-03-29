@@ -25,10 +25,10 @@ def test_service_access_attribute_happy_path(access: str) -> None:
     Then: the model is created without problem.
     """
     result = Service(
-        id_="ser_001",
-        state="active",
+        id_="ser_01",  # type: ignore
+        state="active",  # type: ignore
         name="Test Service",
-        access=access,
+        access=access,  # type: ignore
     )
 
     assert result.access == access
@@ -42,10 +42,10 @@ def test_service_access_attribute_unhappy_path() -> None:
     """
     with pytest.raises(ValidationError):
         Service(
-            id_="ser_001",
-            state="active",
+            id_="ser_01",  # type: ignore
+            state="active",  # type: ignore
             name="Test Service",
-            access="inexistent",
+            access="inexistent",  # type: ignore
         )
 
 
@@ -57,7 +57,7 @@ def test_risk_models_have_validation_of_id_content(model: Type[Entity]) -> None:
     Then: A validation error is shown
     """
     with pytest.raises(ValidationError):
-        model(id_="wrong_id", state="active")
+        model(id_="wrong_id", state="active")  # type: ignore
 
 
 @pytest.mark.parametrize(

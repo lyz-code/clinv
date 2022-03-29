@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from contextlib import suppress
 from typing import List, Optional
 
 import click
@@ -12,7 +13,7 @@ from rich.live import Live
 from rich.table import Table
 
 from .. import services, views
-from ..model import MODELS, RESOURCE_NAMES, RESOURCE_TYPES, Entity
+from ..model import MODELS, RESOURCE_NAMES, RESOURCE_TYPES
 from ..model.entity import EntityState
 from ..version import version_info
 from . import load_adapters, load_config, load_logger
@@ -38,7 +39,7 @@ def cli(ctx: Context, config_path: str, verbose: bool) -> None:
     load_logger(verbose)
     config = load_config(config_path)
     ctx.obj["config"] = config
-    ctx.obj["repo"] = load_repository(config.database_url, MODELS)
+    ctx.obj["repo"] = load_repository(config.database_url, search_exception=False)
     ctx.obj["adapters"] = load_adapters(config)
     ctx.obj["prompter"] = PydanticQuestions()
 
@@ -64,15 +65,23 @@ def update(ctx: Context, resource_types: List[str]) -> None:
 @click.argument("resource_id", type=str)
 def print_(ctx: Context, resource_id: str) -> None:
     """Print the information of the resource."""
-    try:
-        entity: Entity = ctx.obj["repo"].get(resource_id)
-    except EntityNotFoundError as error:
-        log.error(str(error))
-        ctx.obj["repo"].close()
-        sys.exit(1)
-    ctx.obj["repo"].close()
+    repo = ctx.obj["repo"]
 
-    views.print_entity(entity)
+    for model in MODELS:
+        with suppress(EntityNotFoundError):
+            entity = repo.get(resource_id, model)
+            repo.close()
+            views.print_entity(entity)
+            break
+
+    if not repo.is_closed:
+        model_names = [model.__name__ for model in MODELS]
+        log.error(
+            f'There are no entities of type {", ".join(model_names)} in the repository '
+            f"with id {resource_id}."
+        )
+        repo.close()
+        sys.exit(1)
 
 
 @cli.command(name="list")

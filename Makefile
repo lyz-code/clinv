@@ -18,6 +18,16 @@ update:
 
 	@echo ""
 
+.PHONY: outdated
+outdated:
+	@echo "-------------------------"
+	@echo "- Outdated dependencies -"
+	@echo "-------------------------"
+
+	pdm update --dry-run --unconstrained
+
+	@echo ""
+
 .PHONY: format
 format:
 	@echo "----------------------"
