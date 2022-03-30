@@ -140,18 +140,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.21.28"
+version = "1.21.29"
 requires_python = ">= 3.6"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.25.0,>=1.24.28",
+    "botocore<1.25.0,>=1.24.29",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.6.0,>=0.5.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.24.28"
+version = "1.24.29"
 requires_python = ">= 3.6"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -208,7 +208,7 @@ summary = "Cross-platform colored terminal text."
 
 [[package]]
 name = "commitizen"
-version = "2.21.2"
+version = "2.23.0"
 requires_python = ">=3.6.2,<4.0.0"
 summary = "Python commitizen client tool"
 dependencies = [
@@ -511,7 +511,7 @@ dependencies = [
 
 [[package]]
 name = "flake8-simplify"
-version = "0.19.0"
+version = "0.19.2"
 requires_python = ">=3.6.1"
 summary = "flake8 plugin which checks for code that can be simplified"
 dependencies = [
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "pydantic-factories"
-version = "1.2.6"
+version = "1.2.7"
 requires_python = ">=3.7,<4.0"
 summary = "Mock data generation for pydantic based models"
 dependencies = [
@@ -1058,7 +1058,7 @@ summary = "Pygments is a syntax highlighting package written in Python."
 
 [[package]]
 name = "pylint"
-version = "2.13.2"
+version = "2.13.3"
 requires_python = ">=3.6.2"
 summary = "python code static checker"
 dependencies = [
@@ -1670,13 +1670,13 @@ content_hash = "sha256:a5bfbfcbfe3423eaa7d17c6797bad72bb6ef49013d3864fc194796cb9
     {file = "bleach-4.1.0-py2.py3-none-any.whl", hash = "sha256:4d2651ab93271d1129ac9cbc679f524565cc8a1b791909c4a51eac4446a15994"},
     {file = "bleach-4.1.0.tar.gz", hash = "sha256:0900d8b37eba61a802ee40ac0061f8c2b5dee29c1927dd1d233e075ebf5a71da"},
 ]
-"boto3 1.21.28" = [
-    {file = "boto3-1.21.28-py3-none-any.whl", hash = "sha256:ca37b9b4ade72f6d4fa2b7bee584dd5b1c7585f07f22ff1edbc9ecc0c4173b1f"},
-    {file = "boto3-1.21.28.tar.gz", hash = "sha256:788aa3281e91413bc201268a251c9d4ca2e9deb3a4af74daea2389cf66e5132e"},
+"boto3 1.21.29" = [
+    {file = "boto3-1.21.29-py3-none-any.whl", hash = "sha256:b7ce3bf013f0f60e40c2676d5a7b620ed927cfad0aa348a606b10e9a0387f249"},
+    {file = "boto3-1.21.29.tar.gz", hash = "sha256:127ebdf58c8825b53f1eff111e08c49ffffeb1f6d7a5665c9907ce8128fe14b1"},
 ]
-"botocore 1.24.28" = [
-    {file = "botocore-1.24.28-py3-none-any.whl", hash = "sha256:03c41d26d1e765380b8175d4b136d3144aa051f17a86eebfdf9a885a5a9a6a72"},
-    {file = "botocore-1.24.28.tar.gz", hash = "sha256:102eb24b44d473adea6bb8728b20fb9547fa5858c3293df7cad67ef17ea736a7"},
+"botocore 1.24.29" = [
+    {file = "botocore-1.24.29-py3-none-any.whl", hash = "sha256:de87907d42682179946ddfa113b9334e3c4258404aef19edd8c92381ff54775c"},
+    {file = "botocore-1.24.29.tar.gz", hash = "sha256:b467d64cd773dc4d49ef31b18a8dded554f284f799720bd12e989fe2138fd5b8"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -1754,9 +1754,9 @@ content_hash = "sha256:a5bfbfcbfe3423eaa7d17c6797bad72bb6ef49013d3864fc194796cb9
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
-"commitizen 2.21.2" = [
-    {file = "commitizen-2.21.2-py3-none-any.whl", hash = "sha256:22e7904880eb435d8ddc92bf481d1ae99ebac775222989bb48b15da03ceb6238"},
-    {file = "commitizen-2.21.2.tar.gz", hash = "sha256:64fda8d9d679d2d3d2422c028cb641602fb672560a5485bee9773259f9c4f07c"},
+"commitizen 2.23.0" = [
+    {file = "commitizen-2.23.0-py3-none-any.whl", hash = "sha256:11497f3733f30f7a5408a9118e031bd53344c996d656550289a83fa3b6d511cc"},
+    {file = "commitizen-2.23.0.tar.gz", hash = "sha256:5685d44ac235e3da0a02592e11c92aeebcf4864e059a6f5a59382207264fb671"},
 ]
 "commonmark 0.9.1" = [
     {file = "commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},
@@ -1951,9 +1951,9 @@ content_hash = "sha256:a5bfbfcbfe3423eaa7d17c6797bad72bb6ef49013d3864fc194796cb9
     {file = "flake8_pytest_style-1.6.0-py3-none-any.whl", hash = "sha256:5fedb371a950e9fe0e0e6bfc854be7d99151271208f34cd2cc517681ece27780"},
     {file = "flake8-pytest-style-1.6.0.tar.gz", hash = "sha256:c1175713e9e11b78cd1a035ed0bca0d1e41d09c4af329a952750b61d4194ddac"},
 ]
-"flake8-simplify 0.19.0" = [
-    {file = "flake8_simplify-0.19.0-py3-none-any.whl", hash = "sha256:89d23cf051f4828bf2f669df57ce455ad73f5ac4a3413cbf89c2f54470e4a28d"},
-    {file = "flake8_simplify-0.19.0.tar.gz", hash = "sha256:b13969a67f9e8aad32efac93d8f59080dbff032110b4b21b65de35be6dbdb416"},
+"flake8-simplify 0.19.2" = [
+    {file = "flake8_simplify-0.19.2-py3-none-any.whl", hash = "sha256:9c1e96ba738f9057a561697d67df7a9058898ac6313a67eda09942255cba6d38"},
+    {file = "flake8_simplify-0.19.2.tar.gz", hash = "sha256:a30ef76bf1c0cb89a52a8a5cee37667688e61a66735e997c08d56cd002f9e3e9"},
 ]
 "flake8-typing-imports 1.12.0" = [
     {file = "flake8_typing_imports-1.12.0-py2.py3-none-any.whl", hash = "sha256:4a072a5f5975caedfbd364fb54755983cae812e2b2f0125f3a71237868971a25"},
@@ -2364,9 +2364,9 @@ content_hash = "sha256:a5bfbfcbfe3423eaa7d17c6797bad72bb6ef49013d3864fc194796cb9
     {file = "pydantic-1.9.0-py3-none-any.whl", hash = "sha256:085ca1de245782e9b46cefcf99deecc67d418737a1fd3f6a4f511344b613a5b3"},
     {file = "pydantic-1.9.0.tar.gz", hash = "sha256:742645059757a56ecd886faf4ed2441b9c0cd406079c2b4bee51bcc3fbcd510a"},
 ]
-"pydantic-factories 1.2.6" = [
-    {file = "pydantic_factories-1.2.6-py3-none-any.whl", hash = "sha256:b8731f6a05a32fc369d55243fa836182e139abd9ad4051424d37c8221d876e98"},
-    {file = "pydantic-factories-1.2.6.tar.gz", hash = "sha256:9707b053b54842fce8af964c0c8a9fcc67ad28c9655cb100e4fdeb23e9bf68c5"},
+"pydantic-factories 1.2.7" = [
+    {file = "pydantic_factories-1.2.7-py3-none-any.whl", hash = "sha256:5b23dc6cfe9c62072ba79b451195603f259df869cf3bcf2ac030245cfe2ee7b4"},
+    {file = "pydantic-factories-1.2.7.tar.gz", hash = "sha256:4215bc0a46db2699d02efd1f37980035836b96edbe715ca61feef57a5792e947"},
 ]
 "pydocstyle 6.1.1" = [
     {file = "pydocstyle-6.1.1-py3-none-any.whl", hash = "sha256:6987826d6775056839940041beef5c08cc7e3d71d63149b48e36727f70144dc4"},
@@ -2380,9 +2380,9 @@ content_hash = "sha256:a5bfbfcbfe3423eaa7d17c6797bad72bb6ef49013d3864fc194796cb9
     {file = "Pygments-2.11.2-py3-none-any.whl", hash = "sha256:44238f1b60a76d78fc8ca0528ee429702aae011c265fe6a8dd8b63049ae41c65"},
     {file = "Pygments-2.11.2.tar.gz", hash = "sha256:4e426f72023d88d03b2fa258de560726ce890ff3b630f88c21cbb8b2503b8c6a"},
 ]
-"pylint 2.13.2" = [
-    {file = "pylint-2.13.2-py3-none-any.whl", hash = "sha256:3cd8eb401c6aa6c66b614d72cf0c54a02d6bf7752aa9890fc41de71030f3c81a"},
-    {file = "pylint-2.13.2.tar.gz", hash = "sha256:0c6dd0e53e6e17f2d0d62660905f3868611e734e9d9b310dc651a4b9f3dc70da"},
+"pylint 2.13.3" = [
+    {file = "pylint-2.13.3-py3-none-any.whl", hash = "sha256:c8837b6ec6440e3490ab8f066054b0645a516a29ca51ce442f16f7004f711a70"},
+    {file = "pylint-2.13.3.tar.gz", hash = "sha256:12ed2520510c40db647e4ec7f747b07e0d669b33ab41479c2a07bb89b92877db"},
 ]
 "pymdown-extensions 9.3" = [
     {file = "pymdown_extensions-9.3-py3-none-any.whl", hash = "sha256:b37461a181c1c8103cfe1660081726a0361a8294cbfda88e5b02cefe976f0546"},
