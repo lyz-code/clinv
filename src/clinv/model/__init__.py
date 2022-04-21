@@ -18,19 +18,20 @@ from .aws import (
 from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityT, EntityUpdate
 from .risk import Information, Person, Project, Service
 
+# Elements are ordered so that the important ones show first when searching
 RESOURCE_TYPES = {
-    "asg": ASG,
+    "ser": Service,
+    "pro": Project,
     "ec2": EC2,
+    "r53": Route53,
+    "rds": RDS,
+    "s3": S3,
+    "asg": ASG,
+    "sg": SecurityGroup,
     "iamg": IAMGroup,
     "iamu": IAMUser,
     "inf": Information,
     "per": Person,
-    "pro": Project,
-    "rds": RDS,
-    "r53": Route53,
-    "s3": S3,
-    "ser": Service,
-    "sg": SecurityGroup,
     "vpc": VPC,
 }
 

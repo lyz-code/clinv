@@ -51,9 +51,16 @@ def update_sources(
     active_resources = [
         entity for model in models for entity in repo.search({"state": "active"}, model)
     ]
+    stopped_resources = [
+        entity
+        for model in models
+        for entity in repo.search({"state": "stopped"}, model)
+    ]
 
     for source in adapter_sources:
-        source_updates = source.update(resource_types, active_resources)
+        source_updates = source.update(
+            resource_types, active_resources + stopped_resources
+        )
         for entity_data in track(source_updates, description="Updating repo data"):
             try:
                 entity = entity_data.model(**entity_data.data)
@@ -193,11 +200,11 @@ def search(
                 attributes.append(attribute)
 
     entities: List[Entity] = []
-    for attribute in attributes:
+    for model in models:
         new_entities = _filter_entities(
             [
                 entity
-                for model in models
+                for attribute in attributes
                 for entity in repo.search({attribute: regexp}, model)
             ],
             all_,
