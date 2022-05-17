@@ -3,7 +3,7 @@
 import abc
 from typing import List, Optional
 
-from ..model.entity import EntityType, EntityUpdate
+from ..model.entity import EntityT, EntityUpdate
 
 
 class AbstractSource(abc.ABC):
@@ -13,7 +13,7 @@ class AbstractSource(abc.ABC):
     def update(
         self,
         resource_types: Optional[List[str]] = None,
-        active_resources: Optional[List[EntityType]] = None,
+        active_resources: Optional[List[EntityT]] = None,
     ) -> List[EntityUpdate]:
         """Get the latest state of the source entities.
 

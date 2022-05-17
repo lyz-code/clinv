@@ -13,9 +13,11 @@ from rich.live import Live
 from rich.table import Table
 
 from .. import services, views
-from ..model import MODELS, RESOURCE_NAMES
+from ..model import MODELS, RESOURCE_NAMES, RESOURCE_TYPES
+from ..model.entity import EntityState
 from ..version import version_info
 from . import load_adapters, load_config, load_logger
+from .tui import PydanticQuestions
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ def cli(ctx: Context, config_path: str, verbose: bool) -> None:
     ctx.obj["config"] = config
     ctx.obj["repo"] = load_repository(config.database_url, search_exception=False)
     ctx.obj["adapters"] = load_adapters(config)
+    ctx.obj["prompter"] = PydanticQuestions()
 
 
 @cli.command()
@@ -160,6 +163,29 @@ def unused(
     ctx.obj["repo"].close()
 
     views.list_entities(entities)
+
+
+@cli.command(name="add")
+@click.pass_context
+@click.argument(
+    "resource_type",
+    type=click.Choice(["pro", "ser", "per", "inf"]),
+)
+def add(ctx: Context, resource_type: str) -> None:
+    """Add resources."""
+    prompter = ctx.obj["prompter"]
+    repo = ctx.obj["repo"]
+    config = ctx.obj["config"]
+
+    model = RESOURCE_TYPES[resource_type]
+    choices = services.build_choices(repo, config, model)  # type: ignore
+    entity_data = {
+        "id_": services.next_id(repo, model),  # type: ignore
+        "state": EntityState.RUNNING,
+    }
+    resource = prompter.fill(model=model, choices=choices, entity_data=entity_data)
+
+    services.add(repo, resource)
 
 
 @cli.command(hidden=True)

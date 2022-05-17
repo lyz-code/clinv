@@ -21,25 +21,25 @@ from .entity import Entity, Environment
 class InformationID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^inf_[0-9]+$")
+    regex = re.compile("^inf_[0-9]{3}$")
 
 
 class ServiceID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^ser_[0-9]+$")
+    regex = re.compile("^ser_[0-9]{3}$")
 
 
 class ProjectID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^pro_[0-9]+$")
+    regex = re.compile("^pro_[0-9]{3}$")
 
 
 class PersonID(ConstrainedStr):
     """Define the resource id format."""
 
-    regex = re.compile("^peo_[0-9]+$")
+    regex = re.compile("^per_[0-9]{3}$")
 
 
 # -------------------------------
@@ -62,14 +62,26 @@ class Information(Entity):
 
     id_: InformationID
     responsible: Optional[PersonID] = None
-    personal_data: bool = False
+    personal_data: bool = Field(default=False, title="Personal Data")
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities by self."""
         return {entity for entity in unused if entity.id_ == self.responsible}
 
+    class Config:
+        """Configure the model."""
 
-class People(Entity):
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "responsible",
+                "personal_data",
+            ]
+        }
+
+
+class Person(Entity):
     """Represent the people of the team.
 
     Args:
@@ -82,12 +94,24 @@ class People(Entity):
     """
 
     id_: PersonID
-    iam_user: Optional[IAMUserID] = None
+    iam_user: Optional[IAMUserID] = Field(default=None, title="IAM User")
     email: Optional[str] = None
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities by self."""
         return {entity for entity in unused if entity.id_ == self.iam_user}
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "iam_user",
+                "email",
+            ]
+        }
 
 
 class Project(Entity):
@@ -123,13 +147,44 @@ class Project(Entity):
             or entity.id_ in self.informations
         }
 
+    class Config:
+        """Configure the model."""
 
-class ServiceAccess(str, Enum):
-    """Represent possible states of the service access."""
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "responsible",
+                "aliases",
+                "services",
+                "informations",
+                "people",
+            ]
+        }
 
-    PUBLIC = "public"
-    INTERNAL = "internal"
-    TBD = "tbd"
+
+class NetworkAccess(str, Enum):
+    """Represent possible states of the network access."""
+
+    INTRANET = "intranet"
+    INTERNET = "internet"
+    AIRGAP = "airgap"
+
+
+class AuthenticationMethod(str, Enum):
+    """Represent possible authentication methods."""
+
+    TWOFA_KEY = "2fa key"
+    TWOFA_CODE = "2fa code"
+    OPEN = "open"
+    BASIC_AUTH = "basic auth"
+    # B105: We're not leaking any password
+    USER_PASSWORD = "user and password"  # nosec: B105
+    SSL_CERTIFICATE = "ssl client certificate"
+    LDAP = "ldap"
+    API_KEY = "api key"
+    SSH_KEYS = "ssh keys"
+    OAUTH = "oauth"
 
 
 class Service(Entity):
@@ -148,9 +203,9 @@ class Service(Entity):
     """
 
     id_: ServiceID
-    access: Optional[ServiceAccess] = None
+    access: Optional[NetworkAccess] = None
     responsible: Optional[PersonID] = None
-    authentication: List[str] = Field(default_factory=list)
+    authentication: List[AuthenticationMethod] = Field(default_factory=list)
     informations: List[InformationID] = Field(default_factory=list)
     dependencies: List[ServiceID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)
@@ -166,4 +221,22 @@ class Service(Entity):
             or entity.id_ in self.dependencies
             or entity.id_ in self.resources
             or entity.id_ in self.informations
+        }
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "responsible",
+                "access",
+                "authentication",
+                "informations",
+                "dependencies",
+                "resources",
+                "users",
+                "environment",
+            ]
         }

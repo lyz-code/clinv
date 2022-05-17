@@ -8,16 +8,29 @@ import itertools
 import logging
 import operator
 from contextlib import suppress
-from typing import Generator, List, Optional, Type
+from enum import EnumMeta
+from functools import lru_cache
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Type
 
 from pydantic import ValidationError
 from repository_orm import EntityNotFoundError, Repository
 from rich.progress import track
 
 from .adapters import AdapterSource
-from .model import MODELS, RESOURCE_TYPES, Entity
-from .model.aws import IAMGroup
-from .model.risk import Project
+from .model import MODELS, RESOURCE_TYPES, Choices, Entity
+from .model.aws import ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53
+from .model.entity import Environment
+from .model.risk import (
+    AuthenticationMethod,
+    Information,
+    NetworkAccess,
+    Person,
+    Project,
+    Service,
+)
+
+if TYPE_CHECKING:
+    from .config import Config
 
 log = logging.getLogger(__name__)
 
@@ -38,9 +51,16 @@ def update_sources(
     active_resources = [
         entity for model in models for entity in repo.search({"state": "active"}, model)
     ]
+    stopped_resources = [
+        entity
+        for model in models
+        for entity in repo.search({"state": "stopped"}, model)
+    ]
 
     for source in adapter_sources:
-        source_updates = source.update(resource_types, active_resources)
+        source_updates = source.update(
+            resource_types, active_resources + stopped_resources
+        )
         for entity_data in track(source_updates, description="Updating repo data"):
             try:
                 entity = entity_data.model(**entity_data.data)
@@ -180,11 +200,11 @@ def search(
                 attributes.append(attribute)
 
     entities: List[Entity] = []
-    for attribute in attributes:
+    for model in models:
         new_entities = _filter_entities(
             [
                 entity
-                for model in models
+                for attribute in attributes
                 for entity in repo.search({attribute: regexp}, model)
             ],
             all_,
@@ -238,3 +258,92 @@ def unused(
 
     repo.close()
     return list(unused_entities)
+
+
+def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Choices:
+    """Create the possible choices of the attributes of a model."""
+    choices: Choices = {}
+
+    # Build choices from models
+    if model == Project:
+        attribute_models: Dict[str, Any] = {
+            "responsible": Person,
+            "services": Service,
+            "informations": Information,
+            "people": Person,
+        }
+    elif model == Service:
+        attribute_models = {
+            "access": NetworkAccess,
+            "responsible": Person,
+            "authentication": AuthenticationMethod,
+            "informations": Information,
+            "dependencies": Service,
+            "resources": (ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53),
+            "environment": Environment,
+        }
+    elif model == Information:
+        attribute_models = {
+            "responsible": Person,
+        }
+    elif model == Person:
+        attribute_models = {
+            "iam_user": IAMUser,
+        }
+
+    for key, value in attribute_models.items():
+        choices[key] = _build_attribute_choices(repo=repo, model=value)
+
+    # Build choices from config
+    if model == Service:
+        choices["users"] = {value: value for value in config.service_users}
+
+    return choices
+
+
+@lru_cache()
+def _build_attribute_choices(
+    repo: Repository,
+    # ANN401: Any is not allowed. This case it's hard to create a typing for model,
+    # and all cases are handled.
+    model: Any,  # noqa: ANN401
+    model_name: bool = False,
+) -> Dict[str, Any]:
+    """Create the possible choices of the attributes of the project model."""
+    choices: Dict[str, str] = {}
+    if isinstance(model, tuple):
+        for item in model:
+            choices.update(_build_attribute_choices(repo, item, model_name=True))
+        return choices
+    if isinstance(model, type(Entity)):
+        for entity in repo.search({"state": "active"}, model):
+            if entity.name is None:
+                continue
+            if model_name:
+                name = f"{entity.name} ({entity.model_name})"
+            else:
+                name = entity.name
+            choices[name] = str(entity.id_)
+        return choices
+    if isinstance(model, EnumMeta):
+        return {  # type: ignore
+            str(attribute.value): str(attribute.value) for attribute in model
+        }
+    raise ValueError("Model not recognized when extracting possible choices")
+
+
+def next_id(repo: Repository, model: Type[Entity]) -> str:
+    """Return the next id of a model."""
+    try:
+        last_entity = max(repo.all(model))
+    except ValueError:
+        return f"{model.__name__.lower()[:3]}_001"
+    last_id = str(last_entity.id_).split("_")
+    new_id = f"{last_id[0]}_{int(last_id[1]) + 1:03}"
+    return new_id
+
+
+def add(repo: Repository, entity: Entity) -> None:
+    """Add an entity to the repository."""
+    repo.add(entity)
+    repo.commit()

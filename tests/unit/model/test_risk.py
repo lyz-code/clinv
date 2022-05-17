@@ -14,10 +14,10 @@ from tests.factories import (
 )
 
 from clinv.model.entity import Entity
-from clinv.model.risk import Information, People, Project, Service
+from clinv.model.risk import Information, Person, Project, Service
 
 
-@pytest.mark.parametrize("access", ["public", "internal"])
+@pytest.mark.parametrize("access", ["internet", "intranet"])
 def test_service_access_attribute_happy_path(access: str) -> None:
     """
     Given: The Service model
@@ -25,7 +25,7 @@ def test_service_access_attribute_happy_path(access: str) -> None:
     Then: the model is created without problem.
     """
     result = Service(
-        id_="ser_01",  # type: ignore
+        id_="ser_001",  # type: ignore
         state="active",  # type: ignore
         name="Test Service",
         access=access,  # type: ignore
@@ -42,14 +42,14 @@ def test_service_access_attribute_unhappy_path() -> None:
     """
     with pytest.raises(ValidationError):
         Service(
-            id_="ser_01",  # type: ignore
+            id_="ser_001",  # type: ignore
             state="active",  # type: ignore
             name="Test Service",
             access="inexistent",  # type: ignore
         )
 
 
-@pytest.mark.parametrize("model", [Service, People, Project, Information])
+@pytest.mark.parametrize("model", [Service, Person, Project, Information])
 def test_risk_models_have_validation_of_id_content(model: Type[Entity]) -> None:
     """
     Given: One entity with a wrong id format.
@@ -64,8 +64,8 @@ def test_risk_models_have_validation_of_id_content(model: Type[Entity]) -> None:
     ("used", "entity"),
     [
         pytest.param(
-            PersonFactory.build(id_="peo_01"),
-            InformationFactory.build(responsible="peo_01"),
+            PersonFactory.build(id_="per_001"),
+            InformationFactory.build(responsible="per_001"),
             id="Information uses Person",
         ),
         pytest.param(
@@ -74,38 +74,38 @@ def test_risk_models_have_validation_of_id_content(model: Type[Entity]) -> None:
             id="Person uses IAM User",
         ),
         pytest.param(
-            PersonFactory.build(id_="peo_01"),
-            ProjectFactory.build(responsible="peo_01"),
+            PersonFactory.build(id_="per_001"),
+            ProjectFactory.build(responsible="per_001"),
             id="Project uses Person as responsible",
         ),
         pytest.param(
-            PersonFactory.build(id_="peo_01"),
-            ProjectFactory.build(people=["peo_01"]),
+            PersonFactory.build(id_="per_001"),
+            ProjectFactory.build(people=["per_001"]),
             id="Project uses Person as project member",
         ),
         pytest.param(
-            ServiceFactory.build(id_="ser_01"),
-            ProjectFactory.build(services=["ser_01"]),
+            ServiceFactory.build(id_="ser_001"),
+            ProjectFactory.build(services=["ser_001"]),
             id="Project uses Service",
         ),
         pytest.param(
-            InformationFactory.build(id_="inf_01"),
-            ProjectFactory.build(informations=["inf_01"]),
+            InformationFactory.build(id_="inf_001"),
+            ProjectFactory.build(informations=["inf_001"]),
             id="Project uses Informations",
         ),
         pytest.param(
-            PersonFactory.build(id_="peo_01"),
-            ServiceFactory.build(responsible="peo_01"),
+            PersonFactory.build(id_="per_001"),
+            ServiceFactory.build(responsible="per_001"),
             id="Service uses Person as responsible",
         ),
         pytest.param(
-            InformationFactory.build(id_="inf_01"),
-            ServiceFactory.build(informations=["inf_01"]),
+            InformationFactory.build(id_="inf_001"),
+            ServiceFactory.build(informations=["inf_001"]),
             id="Service uses Informations",
         ),
         pytest.param(
-            ServiceFactory.build(id_="ser_02"),
-            ServiceFactory.build(dependencies=["ser_02"]),
+            ServiceFactory.build(id_="ser_002"),
+            ServiceFactory.build(dependencies=["ser_002"]),
             id="Service uses Service",
         ),
         pytest.param(

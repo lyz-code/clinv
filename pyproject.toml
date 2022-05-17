@@ -119,6 +119,7 @@ test = [
     "pytest-freezegun>=0.4.2",
     "pydantic-factories>=0.5.0",
     "moto>=2.2.19",
+    "pexpect>=4.8.0",
 ]
 doc = [
     "mkdocs>=1.2.3",
@@ -291,7 +292,8 @@ flake8-docstrings = [
   "-D205"  # 1 blank line required between summary line and description
 ]
 flake8-annotations = [
-  "-ANN001"
+  "-ANN001",
+  "-ANN401", # Dynamically typed expressions (typing.Any) are disallowed
 ]
 pylint = [
   "-R0201", # Method could be a function. Raised because the methods of a test class
@@ -360,5 +362,6 @@ module = [
     "botocore.*",
     "goodconf",
     "moto",
+    "pexpect.*"
 ]
 ignore_missing_imports = true

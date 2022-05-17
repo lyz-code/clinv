@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from ..model import EntityType, EntityUpdate
+from ..model import EntityT, EntityUpdate
 from .abstract import AbstractSource
 
 
@@ -21,7 +21,7 @@ class FakeSource(AbstractSource):
     def update(
         self,
         resource_types: Optional[List[str]] = None,
-        active_resources: Optional[List[EntityType]] = None,
+        active_resources: Optional[List[EntityT]] = None,
     ) -> List[EntityUpdate]:
         """Get the latest state of the source entities.
 
@@ -34,7 +34,7 @@ class FakeSource(AbstractSource):
         """
         return self._entity_updates
 
-    def add_change(self, entity: EntityType, entity_data: Dict[str, Any]) -> None:
+    def add_change(self, entity: EntityT, entity_data: Dict[str, Any]) -> None:
         """Record changes on entities to be returned when calling the update method.
 
         Args:

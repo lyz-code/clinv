@@ -18,6 +18,7 @@ class Environment(str, Enum):
     STAGING = "Staging"
     PRODUCTION = "Production"
     TESTING = "Testing"
+    EPHEMERAL = "Ephemeral"
 
 
 class EntityState(str, Enum):
@@ -44,11 +45,9 @@ class Entity(BasicEntity):
     state: EntityState
     description: Optional[str] = None
 
-    # W0613: Unused argument 'unused'. But some of the downstream implementations use
-    # it
-    # R0201: Method could be a function. But some of the downstream implementations use
-    # self
-    def uses(self, unused: Set["Entity"]) -> Set["Entity"]:  # noqa: W0613, R0201
+    # W0613: We need the unused argument for the entity children
+    # R0201: The children need the self argument
+    def uses(self, unused: Set["Entity"]) -> Set["Entity"]:  # noqa: W0613 R0201
         """Return the used entities by self."""
         return set()
 
@@ -56,8 +55,7 @@ class Entity(BasicEntity):
 Entity.update_forward_refs()
 
 
-# C0103: until https://github.com/PyCQA/pylint/issues/5981 is fixed
-EntityType = TypeVar("EntityType", bound=Entity)  # noqa: C0103
+EntityT = TypeVar("EntityT", bound=Entity)
 
 
 class EntityUpdate(BaseModel):

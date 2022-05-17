@@ -26,7 +26,7 @@ def test_update_sources_creates_new_entity(
     entity = PersonFactory.build()
     source.add_change(entity, entity.dict())
 
-    update_sources(repo, [source], ["peo"])  # act
+    update_sources(repo, [source], ["per"])  # act
 
     repo_entity = repo.get(entity.id_, type(entity))
     assert repo_entity == entity
@@ -49,7 +49,7 @@ def test_update_sources_updates_entity_data(
     # Configure the fake source adapter to show the changes
     source.add_change(entity, {"name": entity.name})
 
-    update_sources(repo, [source], ["peo"])  # act
+    update_sources(repo, [source], ["per"])  # act
 
     repo_entity = repo.get(entity.id_, type(entity))
     assert repo_entity.name == "Changed name"
@@ -159,7 +159,7 @@ class TestUnused:
         """
         entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(
-            ServiceFactory.build(id_="ser_01", state="active", resources=[entity.id_])
+            ServiceFactory.build(id_="ser_001", state="active", resources=[entity.id_])
         )
         repo.add(ProjectFactory.build(state="active", services=[service.id_]))
         repo.commit()

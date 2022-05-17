@@ -4,19 +4,32 @@ import logging
 import re
 from typing import Generator
 
+import pexpect  # noqa: E0401
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
+from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
+from prompt_toolkit.keys import Keys
 from repository_orm import Repository, TinyDBRepository
-from tests.factories import PersonFactory
+from tests.factories import (
+    IAMUserFactory,
+    InformationFactory,
+    PersonFactory,
+    RDSFactory,
+    ServiceFactory,
+)
 
 from clinv.config import Config
 from clinv.entrypoints.cli import cli
 from clinv.model import SecurityGroup, SecurityGroupRule
-from clinv.model.risk import Project, Service
+from clinv.model.entity import EntityState
+from clinv.model.risk import Information, Person, Project, Service
 from clinv.version import __version__
 
 from ..factories import EC2Factory
+
+# E0401: Unable to import pexpect, but the tests run, so it's a pylint error.
+
 
 log = logging.getLogger(__name__)
 
@@ -40,8 +53,8 @@ def test_version(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["--version"])
 
     assert result.exit_code == 0
-    assert re.match(
-        rf" *clinv version: {__version__}\n" r" *python version: .*\n *platform: .*",
+    assert re.search(
+        rf" *clinv: {__version__}\n *Python: .*\n *Platform: .*",
         result.stdout,
     )
 
@@ -78,7 +91,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(cli, ["update", "peo"])
+        result = runner.invoke(cli, ["update", "per"])
 
         assert result.exit_code == 0
         assert (
@@ -97,7 +110,7 @@ class TestUpdate:
         """
         caplog.set_level(logging.DEBUG)
 
-        result = runner.invoke(cli, ["update", "peo", "info"])
+        result = runner.invoke(cli, ["update", "per", "inf"])
 
         assert result.exit_code == 0
         assert (
@@ -125,7 +138,7 @@ class TestPrint:
         result = runner.invoke(cli, ["print", entity.id_])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entity.id_ in result.stdout
 
     def test_print_can_handle_complex_objects(
@@ -171,8 +184,8 @@ class TestPrint:
         assert (
             "clinv.entrypoints.cli",
             logging.ERROR,
-            "There are no entities of type ASG, EC2, IAMGroup, IAMUser, Information, "
-            "People, Project, RDS, Route53, S3, Service, SecurityGroup, VPC in the "
+            "There are no entities of type Service, Project, EC2, Route53, RDS, S3, "
+            "ASG, SecurityGroup, IAMGroup, IAMUser, Information, Person, VPC in the "
             "repository with id inexistent-id.",
         ) in caplog.record_tuples
 
@@ -197,7 +210,7 @@ class TestList:
         result = runner.invoke(cli, ["list"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
         assert not re.match(rf"{entities[2].id_} *", result.stdout)
 
@@ -214,10 +227,10 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(cli, ["list", "peo"])
+        result = runner.invoke(cli, ["list", "per"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
 
     def test_list_returns_entity_information_can_specify_many_types(
@@ -233,10 +246,10 @@ class TestList:
             repo.add(entity)
         repo.commit()
 
-        result = runner.invoke(cli, ["list", "peo", "info"])
+        result = runner.invoke(cli, ["list", "per", "inf"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
 
     def test_list_returns_entity_information_can_show_inactive(
@@ -258,7 +271,7 @@ class TestList:
         result = runner.invoke(cli, ["list", "--inactive"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ not in result.stdout
         assert entities[1].id_ in result.stdout
 
@@ -281,7 +294,7 @@ class TestList:
         result = runner.invoke(cli, ["list", "--all"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ in result.stdout
         assert entities[1].id_ in result.stdout
 
@@ -310,14 +323,14 @@ class TestList:
         When: listing is called with the resource type
         Then: A message is shown.
         """
-        result = runner.invoke(cli, ["list", "peo"])
+        result = runner.invoke(cli, ["list", "per"])
 
         assert result.exit_code == 1
         assert (
             "clinv.entrypoints.cli",
             logging.ERROR,
             (
-                "There are no entities of type peo in the repository that match the "
+                "There are no entities of type per in the repository that match the "
                 "criteria."
             ),
         ) in caplog.record_tuples
@@ -344,7 +357,7 @@ class TestSearch:
         result = runner.invoke(cli, ["search", search_regexp])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ not in result.stdout
         assert entities[1].id_ not in result.stdout
         assert entities[2].id_ in result.stdout
@@ -365,10 +378,10 @@ class TestSearch:
         repo.commit()
         search_regexp = "entity_.*"
 
-        result = runner.invoke(cli, ["search", search_regexp, "peo"])
+        result = runner.invoke(cli, ["search", search_regexp, "per"])
 
         assert result.exit_code == 0
-        assert "People" in result.stdout
+        assert "Person" in result.stdout
         assert entities[0].id_ not in result.stdout
         assert entities[1].id_ not in result.stdout
         assert entities[2].id_ in result.stdout
@@ -405,9 +418,9 @@ class TestUnused:
         """
         entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(
-            Service(id_="ser_01", access="public", state="active")  # type: ignore
+            Service(id_="ser_001", access="internet", state="active")  # type: ignore
         )
-        project = repo.add(Project(id_="pro_01", state="active"))  # type: ignore
+        project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
 
         result = runner.invoke(cli, ["unused"])
@@ -428,9 +441,9 @@ class TestUnused:
         """
         entity = repo.add(EC2Factory.build(state="active"))
         service = repo.add(
-            Service(id_="ser_01", access="public", state="active")  # type: ignore
+            Service(id_="ser_001", access="internet", state="active")  # type: ignore
         )
-        project = repo.add(Project(id_="pro_01", state="active"))  # type: ignore
+        project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
 
         result = runner.invoke(cli, ["unused", "ec2"])
@@ -439,3 +452,282 @@ class TestUnused:
         assert entity.id_ in result.stdout
         assert str(service.id_) not in result.stdout
         assert str(project.id_) not in result.stdout
+
+
+class TestAdd:
+    """Test the command line implementation of the add service."""
+
+    def test_add_creates_project(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with two services, a person, a project and an information
+        When: add is called with the pro argument and the tui interface is used to
+            define the project data.
+        Then: the Project resource is added
+        """
+        repo.add(Project(id_="pro_001", state="active"))  # type: ignore
+        repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
+        repo.add(
+            ServiceFactory.build(state="active", id_="ser_003", name="monitorization")
+        )
+        repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
+        repo.add(
+            InformationFactory.build(state="active", id_="inf_001", name="user data")
+        )
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add pro", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("project_2")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Responsible:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Aliases.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search of haproxy
+        tui.expect(".*Services.*")
+        tui.send("h")
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search of ldap
+        # WARNING: your terminal doesn't support cursor position requests (CPR)
+        tui.expect(".*Services.*")
+        tui.sendline("ldap")
+        # Nothing more to add to services
+        tui.expect(".*Services.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Informations.*")
+        # Fuzzy search of user data
+        tui.sendline("user data")
+        # Nothing more to add to informations
+        tui.expect(".*Informations.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*People.*")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect_exact(pexpect.EOF)
+        # If we don't do the expect_exact twice, the status is None instead of 0
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 0
+        project = repo.get("pro_002", Project)
+        assert project == Project(
+            id_="pro_002",  # type: ignore
+            name="project_2",
+            state=EntityState.RUNNING,
+            description="description",
+            responsible="per_001",  # type: ignore
+            aliases=[],
+            services=["ser_002", "ser_001"],  # type: ignore
+            informations=["inf_001"],  # type: ignore
+            people=[],
+        )
+
+    # R0915: too many statements, but that's how to define the TUI steps
+    def test_add_creates_service(  # noqa: AAA01, R0915
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with two services, a person, a project, an EC2 resource,
+            an RDS resource, and an information
+        When: add is called with the ser argument and the tui interface is used to
+            define the service data.
+        Then: the Service resource is added
+        """
+        repo.add(Project(id_="pro_001", state="active"))  # type: ignore
+        repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
+        repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
+        repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
+        repo.add(
+            InformationFactory.build(state="active", id_="inf_001", name="user data")
+        )
+        repo.add(EC2Factory.build(state="active", id_="i-01", name="instance"))
+        repo.add(RDSFactory.build(state="active", id_="db-01", name="database"))
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add ser", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new service")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Responsible:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*NetworkAccess.*")
+        tui.send("i")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Authentication.*")
+        tui.send("l")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search for user data
+        tui.expect(".*Informations.*")
+        tui.send("u")
+        tui.send("s")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search of haproxy
+        tui.expect(".*Dependencies.*")
+        tui.send("h")
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search for database
+        tui.expect(".*Resources.*")
+        tui.send("d")
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        # Fuzzy search for admins
+        tui.expect(".*Users.*")
+        tui.send("a")
+        tui.send("d")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Environment.*")
+        tui.send("p")
+        tui.send("r")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 0
+        service = repo.get("ser_003", Service)
+        assert service == Service(
+            id_="ser_003",  # type: ignore
+            name="new service",
+            state=EntityState.RUNNING,
+            description="description",
+            access="intranet",  # type: ignore
+            responsible="per_001",  # type: ignore
+            authentication=["ldap"],  # type: ignore
+            informations=["inf_001"],  # type: ignore
+            dependencies=["ser_002"],  # type: ignore
+            resources=["db-01"],
+            users=["admins"],
+            environment="Production",  # type: ignore
+        )
+
+    def test_add_creates_information(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with a person
+        When: add is called with the inf argument and the tui interface is used to
+            define the information data.
+        Then: the Information resource is added
+        """
+        repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add inf", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new information")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Responsible:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Personal Data:.*")
+        tui.send("y")
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 0
+        information = repo.get("inf_001", Information)
+        assert information == Information(
+            id_="inf_001",  # type: ignore
+            name="new information",
+            state=EntityState.RUNNING,
+            description="description",
+            responsible="per_001",  # type: ignore
+            personal_data=True,
+        )
+
+    def test_add_creates_person(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with an iam user
+        When: add is called with the per argument and the tui interface is used to
+            define the person data.
+        Then: the Person resource is added
+        """
+        repo.add(IAMUserFactory.build(state="active", id_="iamu-1", name="Alice"))
+        repo.commit()
+
+        tui = pexpect.spawn("clinv add per", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new person")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*IAM User:.*")
+        # Select the first element shown
+        tui.send("a")
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
+        tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
+        tui.expect(".*Email:.*")
+        tui.sendline("test@test.org")
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 0
+        person = repo.get("per_001", Person)
+        assert person == Person(
+            id_="per_001",  # type: ignore
+            name="new person",
+            state=EntityState.RUNNING,
+            description="description",
+            iam_user="iamu-1",  # type: ignore
+            email="test@test.org",
+        )
+
+    def test_add_cancels_object_building(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: An empty repository
+        When: add is called with the per argument and at the first argument we want to
+            quit using `q`
+        Then: the Person resource is not added
+        """
+        tui = pexpect.spawn("clinv add per", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("q")
+        tui.expect_exact(pexpect.EOF)
+        tui.expect_exact(pexpect.EOF)
+
+        assert tui.status == 256
+        assert len(repo.all(Person)) == 0

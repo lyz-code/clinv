@@ -1,5 +1,7 @@
 """Module to store the common business model of all entities."""
 
+from typing import Any, Dict
+
 from .aws import (
     ASG,
     EC2,
@@ -13,27 +15,30 @@ from .aws import (
     SecurityGroup,
     SecurityGroupRule,
 )
-from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityType, EntityUpdate
-from .risk import Information, People, Project, Service
+from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityT, EntityUpdate
+from .risk import Information, Person, Project, Service
 
+# Elements are ordered so that the important ones show first when searching
 RESOURCE_TYPES = {
-    "asg": ASG,
+    "ser": Service,
+    "pro": Project,
     "ec2": EC2,
+    "r53": Route53,
+    "rds": RDS,
+    "s3": S3,
+    "asg": ASG,
+    "sg": SecurityGroup,
     "iamg": IAMGroup,
     "iamu": IAMUser,
-    "info": Information,
-    "peo": People,
-    "pro": Project,
-    "rds": RDS,
-    "r53": Route53,
-    "s3": S3,
-    "ser": Service,
-    "sg": SecurityGroup,
+    "inf": Information,
+    "per": Person,
     "vpc": VPC,
 }
 
 RESOURCE_NAMES = list(RESOURCE_TYPES.keys())
 MODELS = [value for _, value in RESOURCE_TYPES.items()]
+
+Choices = Dict[str, Dict[str, Any]]
 
 __all__ = [
     "EC2",
@@ -50,11 +55,11 @@ __all__ = [
     "Project",
     "Information",
     "Service",
-    "People",
+    "Person",
     "Entity",
     "EntityAttrs",
     "EntityID",
-    "EntityType",
+    "EntityT",
     "EntityState",
     "EntityUpdate",
 ]

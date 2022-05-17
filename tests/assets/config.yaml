@@ -11,3 +11,11 @@ sources:
 
 # Level of logging verbosity. One of ['info', 'debug', 'warning'].
 verbose: info
+
+# Type of users
+service_users:
+  - admins
+  - authenticated_users
+  - unauthenticated_users
+  - internal_services
+  - external_services
