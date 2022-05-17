@@ -1,3 +1,27 @@
+## 1.5.0 (2022-05-17)
+
+### Fix
+
+- update S3 permissions interface
+- update s3 bucket permissions interface
+- update stopped AWS resources state
+- update pin at importlib-metadata
+- update cruft template
+- upgrade repository-orm
+- rename the People model to Person
+- increase the padding of the risk ids to three digits
+
+### Perf
+
+- switch the order of searching
+
+### Feat
+
+- cli support to add information and person
+- standardize the Service model
+- manage dependencies with pdm instead of poetry
+- mark library warnings as errors
+
 ## 1.4.0 (2022-02-09)
 
 ### Fix
