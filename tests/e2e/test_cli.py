@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Generator
 
-import pexpect
+import pexpect  # noqa: E0401
 import pytest
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
@@ -28,6 +28,9 @@ from clinv.version import __version__
 
 from ..factories import EC2Factory
 
+# E0401: Unable to import pexpect, but the tests run, so it's a pylint error.
+
+
 log = logging.getLogger(__name__)
 
 
@@ -50,8 +53,8 @@ def test_version(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["--version"])
 
     assert result.exit_code == 0
-    assert re.match(
-        rf" *clinv version: {__version__}\n" r" *python version: .*\n *platform: .*",
+    assert re.search(
+        rf" *clinv: {__version__}\n *Python: .*\n *Platform: .*",
         result.stdout,
     )
 
@@ -181,8 +184,8 @@ class TestPrint:
         assert (
             "clinv.entrypoints.cli",
             logging.ERROR,
-            "There are no entities of type ASG, EC2, IAMGroup, IAMUser, Information, "
-            "Person, Project, RDS, Route53, S3, Service, SecurityGroup, VPC in the "
+            "There are no entities of type Service, Project, EC2, Route53, RDS, S3, "
+            "ASG, SecurityGroup, IAMGroup, IAMUser, Information, Person, VPC in the "
             "repository with id inexistent-id.",
         ) in caplog.record_tuples
 

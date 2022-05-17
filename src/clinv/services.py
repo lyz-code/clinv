@@ -303,7 +303,11 @@ def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Ch
 
 @lru_cache()
 def _build_attribute_choices(
-    repo: Repository, model: Any, model_name: bool = False
+    repo: Repository,
+    # ANN401: Any is not allowed. This case it's hard to create a typing for model,
+    # and all cases are handled.
+    model: Any,  # noqa: ANN401
+    model_name: bool = False,
 ) -> Dict[str, Any]:
     """Create the possible choices of the attributes of the project model."""
     choices: Dict[str, str] = {}

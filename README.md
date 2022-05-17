@@ -5,7 +5,7 @@ risk***
 
 [![Actions Status](https://github.com/lyz-code/clinv/workflows/Tests/badge.svg)](https://github.com/lyz-code/clinv/actions)
 [![Actions Status](https://github.com/lyz-code/clinv/workflows/Build/badge.svg)](https://github.com/lyz-code/clinv/actions)
-[![Coverage Status](https://coveralls.io/repos/github/lyz-code/clinv/badge.svg?branch=master)](https://coveralls.io/github/lyz-code/clinv?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/lyz-code/clinv/badge.svg?branch=main)](https://coveralls.io/github/lyz-code/clinv?branch=main)
 
 DevSecOps command line asset inventory
 
