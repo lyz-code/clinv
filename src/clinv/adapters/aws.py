@@ -288,9 +288,9 @@ class AWSSource(AbstractSource):
                         == "http://acs.amazonaws.com/groups/global/AllUsers"
                     ):
                         for permission in grant["Permission"]:
-                            if permission.text == "READ":
+                            if permission == "READ":
                                 entity_data["public_read"] = True
-                            elif permission.text == "WRITE":
+                            elif permission == "WRITE":
                                 entity_data["public_write"] = True
 
             # ignore: I don't know why it's not able to infer the type of the
