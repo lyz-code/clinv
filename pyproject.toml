@@ -38,12 +38,14 @@ authors = [
 license = {text = "GPL-3.0-only"}
 requires-python = ">=3.7"
 dependencies = [
-  "click>=8.0.3",
-  "goodconf[yaml]>=2.0.1",
-  "boto3>=1.20.24",
-  "repository-orm>==0.7.0",
-  "rich>=10.16.0",
-  "requests>=2.26.0",
+    "click>=8.0.3",
+    "goodconf[yaml]>=2.0.1",
+    "boto3>=1.20.24",
+    "repository-orm>==0.7.0",
+    "rich>=10.16.0",
+    "requests>=2.26.0",
+    "prompt-toolkit>=3.0.29",
+    "questionary>=1.10.0",
 ]
 name = "clinv"
 description = "DevSecOps command line asset inventory"
