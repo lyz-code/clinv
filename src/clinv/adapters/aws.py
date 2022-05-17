@@ -287,11 +287,18 @@ class AWSSource(AbstractSource):
                         grant["Grantee"]["URI"]
                         == "http://acs.amazonaws.com/groups/global/AllUsers"
                     ):
-                        for permission in grant["Permission"]:
+                        permissions = grant["Permission"]
+                        if isinstance(permissions, str):
+                            permissions = [permissions]
+                        for permission in permissions:
                             if permission == "READ":
                                 entity_data["public_read"] = True
                             elif permission == "WRITE":
                                 entity_data["public_write"] = True
+                            elif permission == "READ_ACP":
+                                entity_data["public_read"] = False
+                            elif permission == "WRITE_ACP":
+                                entity_data["public_write"] = False
 
             # ignore: I don't know why it's not able to infer the type of the
             # argument 1 of _build_entity_update ¯\(°_o)/¯

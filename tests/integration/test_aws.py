@@ -265,6 +265,14 @@ def test_update_creates_s3_instances(s3_mock: Any) -> None:
     assert aws.S3(**entity_data).id_ == entity_data["id_"]
 
 
+@pytest.mark.skip(
+    """
+    The S3 interface has changed and now it doesn't return a list of objects but a
+    list of strings, moto hasn't yet updated their interface, so the tests fail.
+
+    So we need to skip this until they do.
+    """
+)
 @pytest.mark.secondary()
 def test_update_detects_s3_buckets_with_public_permissions(s3_mock: Any) -> None:
     """
