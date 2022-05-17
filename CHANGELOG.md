@@ -1,3 +1,10 @@
+## 1.5.1 (2022-05-17)
+
+### Fix
+
+- add missing dependencies
+- add missing dependencies
+
 ## 1.5.0 (2022-05-17)
 
 ### Fix
