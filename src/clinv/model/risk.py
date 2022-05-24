@@ -1,13 +1,12 @@
 """Define the Risk management entities."""
 
 import re
-from enum import Enum
 from typing import List, Optional, Set
 
 from pydantic import ConstrainedStr, Field
 
 from .aws import IAMUserID
-from .entity import Entity, Environment
+from .entity import Entity, EntityState, Environment
 
 # -------------------------------
 # --        Resource IDs       --
@@ -40,6 +39,30 @@ class PersonID(ConstrainedStr):
     """Define the resource id format."""
 
     regex = re.compile("^per_[0-9]{3}$")
+
+
+class AuthenticationID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^auth_[0-9]{3}$")
+
+
+class RiskID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^risk_[0-9]{3}$")
+
+
+class SecurityMeasureID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^sec_[0-9]{3}$")
+
+
+class NetworkAccessID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^net_[0-9]{3}$")
 
 
 # -------------------------------
@@ -163,28 +186,42 @@ class Project(Entity):
         }
 
 
-class NetworkAccess(str, Enum):
-    """Represent possible states of the network access."""
+class NetworkAccess(Entity):
+    """Represent the different ways to access a service in network terms."""
 
-    INTRANET = "intranet"
-    INTERNET = "internet"
-    AIRGAP = "airgap"
+    id_: NetworkAccessID
+    security_value: int
+    state: EntityState = EntityState.RUNNING
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "security_value",
+            ]
+        }
 
 
-class AuthenticationMethod(str, Enum):
-    """Represent possible authentication methods."""
+class Authentication(Entity):
+    """Represent the authentication and authorisation mechanisms."""
 
-    TWOFA_KEY = "2fa key"
-    TWOFA_CODE = "2fa code"
-    OPEN = "open"
-    BASIC_AUTH = "basic auth"
-    # B105: We're not leaking any password
-    USER_PASSWORD = "user and password"  # nosec: B105
-    SSL_CERTIFICATE = "ssl client certificate"
-    LDAP = "ldap"
-    API_KEY = "api key"
-    SSH_KEYS = "ssh keys"
-    OAUTH = "oauth"
+    id_: AuthenticationID
+    security_value: int
+    state: EntityState = EntityState.RUNNING
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "security_value",
+            ]
+        }
 
 
 class Service(Entity):
@@ -203,9 +240,9 @@ class Service(Entity):
     """
 
     id_: ServiceID
-    access: Optional[NetworkAccess] = None
+    access: Optional[NetworkAccessID] = None
     responsible: Optional[PersonID] = None
-    authentication: List[AuthenticationMethod] = Field(default_factory=list)
+    authentication: List[AuthenticationID] = Field(default_factory=list)
     informations: List[InformationID] = Field(default_factory=list)
     dependencies: List[ServiceID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)

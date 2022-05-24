@@ -16,7 +16,7 @@ from .aws import (
     SecurityGroupRule,
 )
 from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityT, EntityUpdate
-from .risk import Information, Person, Project, Service
+from .risk import Authentication, Information, NetworkAccess, Person, Project, Service
 
 # Elements are ordered so that the important ones show first when searching
 RESOURCE_TYPES = {
@@ -33,6 +33,8 @@ RESOURCE_TYPES = {
     "inf": Information,
     "per": Person,
     "vpc": VPC,
+    "auth": Authentication,
+    "net": NetworkAccess,
 }
 
 RESOURCE_NAMES = list(RESOURCE_TYPES.keys())
@@ -41,6 +43,8 @@ MODELS = [value for _, value in RESOURCE_TYPES.items()]
 Choices = Dict[str, Dict[str, Any]]
 
 __all__ = [
+    "Authentication",
+    "NetworkAccess",
     "EC2",
     "RDS",
     "S3",

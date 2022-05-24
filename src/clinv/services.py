@@ -21,7 +21,7 @@ from .model import MODELS, RESOURCE_TYPES, Choices, Entity
 from .model.aws import ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53
 from .model.entity import Environment
 from .model.risk import (
-    AuthenticationMethod,
+    Authentication,
     Information,
     NetworkAccess,
     Person,
@@ -276,7 +276,7 @@ def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Ch
         attribute_models = {
             "access": NetworkAccess,
             "responsible": Person,
-            "authentication": AuthenticationMethod,
+            "authentication": Authentication,
             "informations": Information,
             "dependencies": Service,
             "resources": (ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53),
@@ -290,6 +290,8 @@ def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Ch
         attribute_models = {
             "iam_user": IAMUser,
         }
+    else:
+        attribute_models = {}
 
     for key, value in attribute_models.items():
         choices[key] = _build_attribute_choices(repo=repo, model=value)
@@ -337,6 +339,8 @@ def next_id(repo: Repository, model: Type[Entity]) -> str:
     try:
         last_entity = max(repo.all(model))
     except ValueError:
+        if model in [Authentication]:
+            return f"{model.__name__.lower()[:4]}_001"
         return f"{model.__name__.lower()[:3]}_001"
     last_id = str(last_entity.id_).split("_")
     new_id = f"{last_id[0]}_{int(last_id[1]) + 1:03}"

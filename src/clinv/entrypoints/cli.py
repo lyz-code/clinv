@@ -169,7 +169,7 @@ def unused(
 @click.pass_context
 @click.argument(
     "resource_type",
-    type=click.Choice(["pro", "ser", "per", "inf"]),
+    type=click.Choice(["pro", "ser", "per", "inf", "auth", "net", "risk", "sec"]),
 )
 def add(ctx: Context, resource_type: str) -> None:
     """Add resources."""

@@ -92,3 +92,15 @@ class ServiceFactory(ModelFactory[Any]):
     """Define the factory for the model Service."""
 
     __model__ = risk.Service
+
+
+class NetworkAccessFactory(ModelFactory[Any]):
+    """Define the factory for the model Service."""
+
+    __model__ = risk.NetworkAccess
+
+
+class AuthenticationFactory(ModelFactory[Any]):
+    """Define the factory for the model Service."""
+
+    __model__ = risk.Authentication
