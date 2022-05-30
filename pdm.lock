@@ -852,7 +852,7 @@ dependencies = [
 
 [[package]]
 name = "moto"
-version = "3.1.10"
+version = "3.1.11"
 requires_python = ">=3.6"
 summary = "A library that allows your python tests to easily mock out the boto library"
 dependencies = [
@@ -866,7 +866,7 @@ dependencies = [
     "pytz",
     "requests>=2.5",
     "responses>=0.9.0",
-    "werkzeug",
+    "werkzeug>=0.5",
     "xmltodict",
 ]
 
@@ -2193,9 +2193,9 @@ content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333
     {file = "mkdocstrings-0.19.0-py3-none-any.whl", hash = "sha256:3217d510d385c961f69385a670b2677e68e07b5fea4a504d86bf54c006c87c7d"},
     {file = "mkdocstrings-0.19.0.tar.gz", hash = "sha256:efa34a67bad11229d532d89f6836a8a215937548623b64f3698a1df62e01cc3e"},
 ]
-"moto 3.1.10" = [
-    {file = "moto-3.1.10-py3-none-any.whl", hash = "sha256:d69bc53850e3a5fb14ec92beb2b11e94ed967900d3961297a901b0b91b227232"},
-    {file = "moto-3.1.10.tar.gz", hash = "sha256:f3b5f77780ed7a852670b4079931d8cd397983f631de7f9b09b81747a4bd56cd"},
+"moto 3.1.11" = [
+    {file = "moto-3.1.11-py3-none-any.whl", hash = "sha256:67dbd45c6e09e4b3968a8b08f9a5763b15551383ecd3effdbc0c1744e38248dd"},
+    {file = "moto-3.1.11.tar.gz", hash = "sha256:1b0c472f4b7401775a92e63fbcfa26112a00e087b9f6edda12202a39c62c6181"},
 ]
 "mypy 0.960" = [
     {file = "mypy-0.960-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3a3e525cd76c2c4f90f1449fd034ba21fcca68050ff7c8397bb7dd25dd8b8248"},
