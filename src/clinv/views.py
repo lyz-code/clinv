@@ -2,16 +2,18 @@
 
 from contextlib import suppress
 from operator import attrgetter
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from .model import Entity
+if TYPE_CHECKING:
+    from .model import Entity, Service
+    from .model.risk import NetworkAccessID
 
 
-def print_entity(entity: Entity) -> None:
+def print_entity(entity: "Entity") -> None:
     """Print the entity attributes.
 
     Args:
@@ -45,7 +47,7 @@ def print_entity(entity: Entity) -> None:
         console.print(table)
 
 
-def list_entities(entities: List[Entity]) -> None:
+def list_entities(entities: List["Entity"]) -> None:
     """Print the list of entities."""
     table = Table(box=box.MINIMAL_HEAVY_HEAD)
     table.add_column("ID", justify="left", style="green")
@@ -61,7 +63,7 @@ def list_entities(entities: List[Entity]) -> None:
     console.print(table)
 
 
-def add_entities_to_table(table: Table, entities: List[Entity]) -> None:
+def add_entities_to_table(table: Table, entities: List["Entity"]) -> None:
     """Add rows to a list table of entities."""
     for entity in entities:
         table.add_row(str(entity.id_), entity.name, entity.model_name)
@@ -69,7 +71,7 @@ def add_entities_to_table(table: Table, entities: List[Entity]) -> None:
 
 # R0912: Too many branches 15/12, we should refactor the function when we have some
 # time
-def get_data_to_print(entity: Entity) -> List[Dict[str, Any]]:  # noqa: R0912
+def get_data_to_print(entity: "Entity") -> List[Dict[str, Any]]:  # noqa: R0912
     """Prepare the Entity attributes data to be printed.
 
     Args:
@@ -136,3 +138,37 @@ def _snake_to_upper(string: str) -> str:
         string:
     """
     return " ".join([word.capitalize() for word in string.split("_")])
+
+
+def service_risk(
+    services: List["Service"], accesses: Dict["NetworkAccessID", str]
+) -> None:
+    """Print the list of entities."""
+    table = Table(box=box.MINIMAL_HEAVY_HEAD)
+    table.add_column("ID", justify="center", style="green")
+    table.add_column("Name", justify="left", style="magenta")
+    table.add_column("Exposition", justify="center", style="cyan")
+    table.add_column("Risk", justify="center", style="cyan")
+    table.add_column("Protection", justify="center", style="cyan")
+    table.add_column("Security Value", justify="center", style="cyan")
+
+    for service in services:
+
+        if service.access is None:
+            access = ""
+        else:
+            access = accesses[service.access]
+
+        # W0212: Access of a protected attribute of service, but it's a property we
+        # control so there is no problem
+        table.add_row(
+            str(service.id_),
+            service.name,
+            access,
+            str(service._risk),  # noqa: W0212
+            str(service._protection),  # noqa: W0212
+            str(service._security),  # noqa: W0212
+        )
+
+    console = Console()
+    console.print(table)

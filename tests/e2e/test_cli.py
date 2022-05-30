@@ -23,10 +23,24 @@ from clinv.config import Config
 from clinv.entrypoints.cli import cli
 from clinv.model import SecurityGroup, SecurityGroupRule
 from clinv.model.entity import EntityState
-from clinv.model.risk import Information, Person, Project, Service
+from clinv.model.risk import (
+    Authentication,
+    Information,
+    NetworkAccess,
+    Person,
+    Project,
+    Risk,
+    SecurityMeasure,
+    Service,
+)
 from clinv.version import __version__
 
-from ..factories import EC2Factory
+from ..factories import (
+    AuthenticationFactory,
+    EC2Factory,
+    NetworkAccessFactory,
+    ProjectFactory,
+)
 
 # E0401: Unable to import pexpect, but the tests run, so it's a pylint error.
 
@@ -185,8 +199,9 @@ class TestPrint:
             "clinv.entrypoints.cli",
             logging.ERROR,
             "There are no entities of type Service, Project, EC2, Route53, RDS, S3, "
-            "ASG, SecurityGroup, IAMGroup, IAMUser, Information, Person, VPC in the "
-            "repository with id inexistent-id.",
+            "ASG, SecurityGroup, IAMGroup, IAMUser, Information, Person, VPC, "
+            "Authentication, NetworkAccess, Risk, SecurityMeasure in the repository "
+            "with id inexistent-id.",
         ) in caplog.record_tuples
 
 
@@ -417,9 +432,7 @@ class TestUnused:
         Then: the EC2 resource and the service are returned.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(
-            Service(id_="ser_001", access="internet", state="active")  # type: ignore
-        )
+        service = repo.add(Service(id_="ser_001", state="active"))  # type: ignore
         project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
 
@@ -440,9 +453,7 @@ class TestUnused:
         Then: the EC2 resource is returned, but not the service.
         """
         entity = repo.add(EC2Factory.build(state="active"))
-        service = repo.add(
-            Service(id_="ser_001", access="internet", state="active")  # type: ignore
-        )
+        service = repo.add(Service(id_="ser_001", state="active"))  # type: ignore
         project = repo.add(Project(id_="pro_001", state="active"))  # type: ignore
         repo.commit()
 
@@ -546,7 +557,13 @@ class TestAdd:
             define the service data.
         Then: the Service resource is added
         """
-        repo.add(Project(id_="pro_001", state="active"))  # type: ignore
+        repo.add(ProjectFactory.build(id_="pro_001", state="active"))
+        repo.add(
+            NetworkAccessFactory.build(id_="net_001", name="Internet", state="active")
+        )
+        repo.add(
+            AuthenticationFactory.build(id_="auth_001", name="LDAP", state="active")
+        )
         repo.add(ServiceFactory.build(state="active", id_="ser_001", name="ldap"))
         repo.add(ServiceFactory.build(state="active", id_="ser_002", name="haproxy"))
         repo.add(PersonFactory.build(state="active", id_="per_001", name="Alice"))
@@ -567,7 +584,7 @@ class TestAdd:
         tui.send("a")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
-        tui.expect(".*NetworkAccess.*")
+        tui.expect(".*Access.*")
         tui.send("i")
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Tab])
         tui.send(REVERSE_ANSI_SEQUENCES[Keys.Enter])
@@ -619,9 +636,9 @@ class TestAdd:
             name="new service",
             state=EntityState.RUNNING,
             description="description",
-            access="intranet",  # type: ignore
+            access="net_001",  # type: ignore
             responsible="per_001",  # type: ignore
-            authentication=["ldap"],  # type: ignore
+            authentication=["auth_001"],  # type: ignore
             informations=["inf_001"],  # type: ignore
             dependencies=["ser_002"],  # type: ignore
             resources=["db-01"],
@@ -731,3 +748,187 @@ class TestAdd:
 
         assert tui.status == 256
         assert len(repo.all(Person)) == 0
+
+    def test_add_creates_authentication(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A bare repository
+        When: add is called with the auth argument and the tui interface is used to
+            define the authentication data.
+        Then: the Authentication resource is added
+        """
+        tui = pexpect.spawn("clinv add auth", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new authentication")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Security Value:.*")
+        tui.sendline("10")
+        tui.expect_exact(pexpect.EOF)
+
+        tui.expect_exact(pexpect.EOF)  # act
+
+        assert tui.status == 0
+        auth = repo.get("auth_001", Authentication)
+        assert auth == Authentication(
+            id_="auth_001",  # type: ignore
+            name="new authentication",
+            state=EntityState.RUNNING,
+            description="description",
+            security_value=10,
+        )
+
+    def test_add_creates_network_access(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A bare repository
+        When: add is called with the net argument and the tui interface is used to
+            define the network access data.
+        Then: the NetworkAccess resource is added
+        """
+        tui = pexpect.spawn("clinv add net", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new network access")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Security Value:.*")
+        tui.sendline("10")
+        tui.expect_exact(pexpect.EOF)
+
+        tui.expect_exact(pexpect.EOF)  # act
+
+        assert tui.status == 0
+        network_access = repo.get("net_001", NetworkAccess)
+        assert network_access == NetworkAccess(
+            id_="net_001",  # type: ignore
+            name="new network access",
+            state=EntityState.RUNNING,
+            description="description",
+            security_value=10,
+        )
+
+    def test_add_creates_risk(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A bare repository
+        When: add is called with the risk argument and the tui interface is used to
+            define the risk data.
+        Then: the Risk resource is added
+        """
+        tui = pexpect.spawn("clinv add risk", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new risk")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Security Value:.*")
+        tui.sendline("10")
+        tui.expect_exact(pexpect.EOF)
+
+        tui.expect_exact(pexpect.EOF)  # act
+
+        assert tui.status == 0
+        risk = repo.get("risk_001", Risk)
+        assert risk == Risk(
+            id_="risk_001",  # type: ignore
+            name="new risk",
+            state=EntityState.RUNNING,
+            description="description",
+            security_value=10,
+        )
+
+    def test_add_creates_security_measure(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A bare repository
+        When: add is called with the sec argument and the tui interface is used to
+            define the security measure data.
+        Then: the SecurityMeasure resource is added
+        """
+        tui = pexpect.spawn("clinv add sec", timeout=5)
+        tui.expect(".*Name:.*")
+        tui.sendline("new security measure")
+        tui.expect(".*Description:.*")
+        tui.sendline("description")
+        tui.expect(".*Security Value:.*")
+        tui.sendline("10")
+        tui.expect_exact(pexpect.EOF)
+
+        tui.expect_exact(pexpect.EOF)  # act
+
+        assert tui.status == 0
+        security_measure = repo.get("sec_001", SecurityMeasure)
+        assert security_measure == SecurityMeasure(
+            id_="sec_001",  # type: ignore
+            name="new security measure",
+            state=EntityState.RUNNING,
+            description="description",
+            security_value=10,
+        )
+
+
+class TestRisk:
+    """Test the command line implementation of the risk report."""
+
+    def test_prints_report(  # noqa: AAA01
+        self,
+        config: Config,
+        runner: CliRunner,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: A repository with two services one with intranet access and other with
+            internet.
+        When: risk is called.
+        Then: the list with the services is returned.
+        """
+        services = [
+            ServiceFactory.build(
+                id_="ser_001",
+                name="internal",
+                state="active",
+                risks=[],
+                dependencies=[],
+                informations=[],
+                authentication=[],
+                access=None,
+                security_measures=[],
+            ),
+            ServiceFactory.build(
+                id_="ser_002",
+                name="public",
+                state="active",
+                risks=[],
+                informations=[],
+                dependencies=[],
+                authentication=[],
+                access=None,
+                security_measures=[],
+            ),
+        ]
+        repo.add(services)
+        repo.commit()
+
+        result = runner.invoke(cli, ["risk"])
+
+        assert result.exit_code == 0
+        assert re.search(
+            r"ID.*Name.*Exposition.*Risk.*Protection.*Security Value", result.stdout
+        )
+        assert "ser_001" in result.stdout
+        assert "ser_002" in result.stdout

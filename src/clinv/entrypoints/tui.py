@@ -77,9 +77,13 @@ class PydanticQuestions(Prompter):
                 entity_data[attribute] = self._ask_choice(
                     question_text, attribute, choices, default
                 )
+            elif attribute_type == "integer":
+                question_text = f"{attribute_title}: "
+                entity_data[attribute] = int(
+                    self._ask_choice(question_text, attribute, choices, default)
+                )
             elif attribute_type == "boolean":
                 entity_data[attribute] = confirm(f"{attribute_title}: ").unsafe_ask()
-
             elif attribute_type == "array":
                 question_text = f"{attribute_title} (Enter to continue): "
                 entity_data[attribute] = []

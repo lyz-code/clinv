@@ -169,7 +169,7 @@ def unused(
 @click.pass_context
 @click.argument(
     "resource_type",
-    type=click.Choice(["pro", "ser", "per", "inf"]),
+    type=click.Choice(["pro", "ser", "per", "inf", "auth", "net", "risk", "sec"]),
 )
 def add(ctx: Context, resource_type: str) -> None:
     """Add resources."""
@@ -186,6 +186,19 @@ def add(ctx: Context, resource_type: str) -> None:
     resource = prompter.fill(model=model, choices=choices, entity_data=entity_data)
 
     services.add(repo, resource)
+
+
+@cli.command(name="risk")
+@click.pass_context
+def risk(
+    ctx: Context,
+) -> None:
+    """Show an ordered list of services by the security value."""
+    services_ = services.service_risk(ctx.obj["repo"])
+    accesses = services.accesses(ctx.obj["repo"])
+    ctx.obj["repo"].close()
+
+    views.service_risk(services_, accesses)
 
 
 @cli.command(hidden=True)

@@ -1,13 +1,12 @@
 """Define the Risk management entities."""
 
 import re
-from enum import Enum
 from typing import List, Optional, Set
 
-from pydantic import ConstrainedStr, Field
+from pydantic import ConstrainedStr, Field, PrivateAttr
 
 from .aws import IAMUserID
-from .entity import Entity, Environment
+from .entity import Entity, EntityState, Environment
 
 # -------------------------------
 # --        Resource IDs       --
@@ -40,6 +39,30 @@ class PersonID(ConstrainedStr):
     """Define the resource id format."""
 
     regex = re.compile("^per_[0-9]{3}$")
+
+
+class AuthenticationID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^auth_[0-9]{3}$")
+
+
+class RiskID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^risk_[0-9]{3}$")
+
+
+class SecurityMeasureID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^sec_[0-9]{3}$")
+
+
+class NetworkAccessID(ConstrainedStr):
+    """Define the resource id format."""
+
+    regex = re.compile("^net_[0-9]{3}$")
 
 
 # -------------------------------
@@ -163,28 +186,46 @@ class Project(Entity):
         }
 
 
-class NetworkAccess(str, Enum):
-    """Represent possible states of the network access."""
+class RiskEntity(Entity):
+    """Aggregates common attributes of risk entities."""
 
-    INTRANET = "intranet"
-    INTERNET = "internet"
-    AIRGAP = "airgap"
+    security_value: int
+    state: EntityState = EntityState.RUNNING
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "security_value",
+            ]
+        }
 
 
-class AuthenticationMethod(str, Enum):
-    """Represent possible authentication methods."""
+class NetworkAccess(RiskEntity):
+    """Represent the different ways to access a service in network terms."""
 
-    TWOFA_KEY = "2fa key"
-    TWOFA_CODE = "2fa code"
-    OPEN = "open"
-    BASIC_AUTH = "basic auth"
-    # B105: We're not leaking any password
-    USER_PASSWORD = "user and password"  # nosec: B105
-    SSL_CERTIFICATE = "ssl client certificate"
-    LDAP = "ldap"
-    API_KEY = "api key"
-    SSH_KEYS = "ssh keys"
-    OAUTH = "oauth"
+    id_: NetworkAccessID
+
+
+class Authentication(RiskEntity):
+    """Represent the authentication and authorisation mechanisms."""
+
+    id_: AuthenticationID
+
+
+class Risk(RiskEntity):
+    """Represent the security risks a service may have."""
+
+    id_: RiskID
+
+
+class SecurityMeasure(RiskEntity):
+    """Represent the security measures a service may have to protect itself."""
+
+    id_: SecurityMeasureID
 
 
 class Service(Entity):
@@ -200,17 +241,25 @@ class Service(Entity):
         access: Level of exposition of the resource.
         responsible: Person who is legally responsible of the entity.
         informations: Information ids used by the project.
+        _risk: The value of all the risks that apply to the service.
+        _protection: The value of all the security measures applied to the service.
+        _security: Overall security score taking into account risks and protections.
     """
 
     id_: ServiceID
-    access: Optional[NetworkAccess] = None
+    access: Optional[NetworkAccessID] = None
     responsible: Optional[PersonID] = None
-    authentication: List[AuthenticationMethod] = Field(default_factory=list)
+    authentication: List[AuthenticationID] = Field(default_factory=list)
     informations: List[InformationID] = Field(default_factory=list)
     dependencies: List[ServiceID] = Field(default_factory=list)
+    security_measures: List[SecurityMeasureID] = Field(default_factory=list)
+    risks: List[RiskID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)
     users: List[str] = Field(default_factory=list)
     environment: Optional[Environment] = None
+    _risk: int = PrivateAttr()
+    _protection: int = PrivateAttr()
+    _security: int = PrivateAttr()
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities by self."""

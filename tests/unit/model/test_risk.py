@@ -17,8 +17,7 @@ from clinv.model.entity import Entity
 from clinv.model.risk import Information, Person, Project, Service
 
 
-@pytest.mark.parametrize("access", ["internet", "intranet"])
-def test_service_access_attribute_happy_path(access: str) -> None:
+def test_service_access_attribute_happy_path() -> None:
     """
     Given: The Service model
     When: initializing with valid values
@@ -28,10 +27,10 @@ def test_service_access_attribute_happy_path(access: str) -> None:
         id_="ser_001",  # type: ignore
         state="active",  # type: ignore
         name="Test Service",
-        access=access,  # type: ignore
+        access="net_001",  # type: ignore
     )
 
-    assert result.access == access
+    assert result.access == "net_001"
 
 
 def test_service_access_attribute_unhappy_path() -> None:
