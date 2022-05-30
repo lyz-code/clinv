@@ -22,11 +22,18 @@ from .model.aws import ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53
 from .model.entity import Environment
 from .model.risk import (
     Authentication,
+    AuthenticationID,
     Information,
     NetworkAccess,
+    NetworkAccessID,
     Person,
     Project,
+    Risk,
+    RiskID,
+    SecurityMeasure,
+    SecurityMeasureID,
     Service,
+    ServiceID,
 )
 
 if TYPE_CHECKING:
@@ -280,6 +287,8 @@ def build_choices(repo: Repository, config: "Config", model: Type[Entity]) -> Ch
             "informations": Information,
             "dependencies": Service,
             "resources": (ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53),
+            "risks": Risk,
+            "security_measures": SecurityMeasure,
             "environment": Environment,
         }
     elif model == Information:
@@ -339,7 +348,7 @@ def next_id(repo: Repository, model: Type[Entity]) -> str:
     try:
         last_entity = max(repo.all(model))
     except ValueError:
-        if model in [Authentication]:
+        if model in [Authentication, Risk]:
             return f"{model.__name__.lower()[:4]}_001"
         return f"{model.__name__.lower()[:3]}_001"
     last_id = str(last_entity.id_).split("_")
@@ -351,3 +360,89 @@ def add(repo: Repository, entity: Entity) -> None:
     """Add an entity to the repository."""
     repo.add(entity)
     repo.commit()
+
+
+def service_risk(repo: Repository) -> List[Service]:
+    """Calculate the security value of each service."""
+    services = repo.search({"state": "active"}, Service)
+    accesses_ = {
+        access.id_: access.security_value
+        for access in repo.search({"state": "active"}, NetworkAccess)
+    }
+    authentications = {
+        authentication.id_: authentication.security_value
+        for authentication in repo.search({"state": "active"}, Authentication)
+    }
+    security_measures = {
+        measure.id_: measure.security_value
+        for measure in repo.search({"state": "active"}, SecurityMeasure)
+    }
+    risks = {
+        risk.id_: risk.security_value for risk in repo.search({"state": "active"}, Risk)
+    }
+    dependencies = {
+        service.id_: len(
+            [service_ for service_ in services if service.id_ in service_.dependencies]
+        )
+        for service in services
+    }
+
+    # W0212: Access of a protected attribute of service, but it's a property we
+    # control so there is no problem
+    for service in services:
+        service._risk = _calculate_service_risk(  # noqa: W0212
+            service, risks, dependencies
+        )
+        service._protection = _calculate_service_protection(  # noqa: W0212
+            service, security_measures, authentications, accesses_
+        )
+        service._security = service._protection - service._risk  # noqa: W0212
+
+    # Sort output
+    services = sorted(services, key=operator.attrgetter("_security"))
+    return services
+
+
+def _calculate_service_risk(
+    service: Service, risks: Dict[RiskID, int], dependencies: Dict[ServiceID, int]
+) -> int:
+    """Calculate the risk of a service."""
+    information_value = len(service.informations)
+
+    risk_value = 0
+    for risk in service.risks:
+        risk_value += risks[risk]
+
+    dependency_value = dependencies[service.id_]
+    return information_value + risk_value + 2 * dependency_value
+
+
+def _calculate_service_protection(
+    service: Service,
+    security_measures: Dict[SecurityMeasureID, int],
+    authentications: Dict[AuthenticationID, int],
+    accesses_: Dict[NetworkAccessID, int],
+) -> int:
+    """Calculate the risk of a service."""
+    if service.access is None:
+        access_value = 0
+    else:
+        access_value = accesses_[service.access]
+
+    authentication_value = 0
+    for authentication in service.authentication:
+        authentication_value += authentications[authentication]
+
+    security_measures_value = 0
+    for measure in service.security_measures:
+        security_measures_value += security_measures[measure]
+
+    return access_value + authentication_value + security_measures_value
+
+
+def accesses(repo: Repository) -> Dict[NetworkAccessID, str]:
+    """Get the name of the different service accesses."""
+    return {
+        access.id_: str(access.name)
+        for access in repo.search({"state": "active"}, NetworkAccess)
+    }

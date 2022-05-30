@@ -188,6 +188,19 @@ def add(ctx: Context, resource_type: str) -> None:
     services.add(repo, resource)
 
 
+@cli.command(name="risk")
+@click.pass_context
+def risk(
+    ctx: Context,
+) -> None:
+    """Show an ordered list of services by the security value."""
+    services_ = services.service_risk(ctx.obj["repo"])
+    accesses = services.accesses(ctx.obj["repo"])
+    ctx.obj["repo"].close()
+
+    views.service_risk(services_, accesses)
+
+
 @cli.command(hidden=True)
 def null() -> None:
     """Do nothing.

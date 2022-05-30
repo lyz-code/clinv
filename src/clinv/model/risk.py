@@ -3,7 +3,7 @@
 import re
 from typing import List, Optional, Set
 
-from pydantic import ConstrainedStr, Field
+from pydantic import ConstrainedStr, Field, PrivateAttr
 
 from .aws import IAMUserID
 from .entity import Entity, EntityState, Environment
@@ -186,42 +186,46 @@ class Project(Entity):
         }
 
 
-class NetworkAccess(Entity):
+class RiskEntity(Entity):
+    """Aggregates common attributes of risk entities."""
+
+    security_value: int
+    state: EntityState = EntityState.RUNNING
+
+    class Config:
+        """Configure the model."""
+
+        schema_extra = {
+            "tui_fields": [
+                "name",
+                "description",
+                "security_value",
+            ]
+        }
+
+
+class NetworkAccess(RiskEntity):
     """Represent the different ways to access a service in network terms."""
 
     id_: NetworkAccessID
-    security_value: int
-    state: EntityState = EntityState.RUNNING
-
-    class Config:
-        """Configure the model."""
-
-        schema_extra = {
-            "tui_fields": [
-                "name",
-                "description",
-                "security_value",
-            ]
-        }
 
 
-class Authentication(Entity):
+class Authentication(RiskEntity):
     """Represent the authentication and authorisation mechanisms."""
 
     id_: AuthenticationID
-    security_value: int
-    state: EntityState = EntityState.RUNNING
 
-    class Config:
-        """Configure the model."""
 
-        schema_extra = {
-            "tui_fields": [
-                "name",
-                "description",
-                "security_value",
-            ]
-        }
+class Risk(RiskEntity):
+    """Represent the security risks a service may have."""
+
+    id_: RiskID
+
+
+class SecurityMeasure(RiskEntity):
+    """Represent the security measures a service may have to protect itself."""
+
+    id_: SecurityMeasureID
 
 
 class Service(Entity):
@@ -237,6 +241,9 @@ class Service(Entity):
         access: Level of exposition of the resource.
         responsible: Person who is legally responsible of the entity.
         informations: Information ids used by the project.
+        _risk: The value of all the risks that apply to the service.
+        _protection: The value of all the security measures applied to the service.
+        _security: Overall security score taking into account risks and protections.
     """
 
     id_: ServiceID
@@ -245,9 +252,14 @@ class Service(Entity):
     authentication: List[AuthenticationID] = Field(default_factory=list)
     informations: List[InformationID] = Field(default_factory=list)
     dependencies: List[ServiceID] = Field(default_factory=list)
+    security_measures: List[SecurityMeasureID] = Field(default_factory=list)
+    risks: List[RiskID] = Field(default_factory=list)
     resources: List[str] = Field(default_factory=list)
     users: List[str] = Field(default_factory=list)
     environment: Optional[Environment] = None
+    _risk: int = PrivateAttr()
+    _protection: int = PrivateAttr()
+    _security: int = PrivateAttr()
 
     def uses(self, unused: Set[Entity]) -> Set[Entity]:
         """Return the used entities by self."""

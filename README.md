@@ -1,5 +1,5 @@
-**WARNING: the program is still in development and not stable. Use at your own
-risk***
+**WARNING: the program is still in development and not stable even though it's
+on version 1.x.y. Use at your own risk.***
 
 # Clinv
 

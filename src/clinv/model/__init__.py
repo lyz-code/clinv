@@ -16,7 +16,16 @@ from .aws import (
     SecurityGroupRule,
 )
 from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityT, EntityUpdate
-from .risk import Authentication, Information, NetworkAccess, Person, Project, Service
+from .risk import (
+    Authentication,
+    Information,
+    NetworkAccess,
+    Person,
+    Project,
+    Risk,
+    SecurityMeasure,
+    Service,
+)
 
 # Elements are ordered so that the important ones show first when searching
 RESOURCE_TYPES = {
@@ -35,6 +44,8 @@ RESOURCE_TYPES = {
     "vpc": VPC,
     "auth": Authentication,
     "net": NetworkAccess,
+    "risk": Risk,
+    "sec": SecurityMeasure,
 }
 
 RESOURCE_NAMES = list(RESOURCE_TYPES.keys())

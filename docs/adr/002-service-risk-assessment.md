@@ -33,6 +33,7 @@ Build three scores per service:
 For the `risk` we may start with:
 
 * The number of `Information` entities accessed by the service.
+* The number of `Service`s that depend on the current one.
 * A list of common risks.
 
 In the next iteration, we could give the `Information` model a `risk` attribute
@@ -49,7 +50,8 @@ For the `protection` score we may start with:
     services despite the number of security  measures that they've got
     implemented.
 * A list of common security measures, it could be a `str` `Enum` similar to the
-    `NetworkAccess` or the `AuthenticationMethod`.
+    `NetworkAccess` or the `AuthenticationMethod`. Which one of them is the
+    authentication.
 
 ### Security
 
