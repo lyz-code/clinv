@@ -1,3 +1,10 @@
+## 1.6.0 (2022-05-30)
+
+### Feat
+
+- add risk service report
+- Migrate service authentication and access attributes.
+
 ## 1.5.1 (2022-05-17)
 
 ### Fix
