@@ -1,3 +1,9 @@
+## 1.6.1 (2022-06-09)
+
+### Fix
+
+- remove search_exception on repository_orm
+
 ## 1.6.0 (2022-05-30)
 
 ### Feat
