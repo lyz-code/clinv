@@ -57,7 +57,7 @@ def fixture_runner(config: Config) -> CliRunner:
 @pytest.fixture(name="repo")
 def repo_(config: Config) -> Generator[TinyDBRepository, None, None]:
     """Configure a TinyDBRepository instance"""
-    repo = TinyDBRepository(database_url=config.database_url, search_exception=False)
+    repo = TinyDBRepository(database_url=config.database_url)
     yield repo
     repo.close()
 

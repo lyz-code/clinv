@@ -49,7 +49,7 @@ def db_tinydb_(tmpdir: LocalPath) -> str:
 @pytest.fixture(name="repo")
 def repo_() -> Generator[FakeRepository, None, None]:
     """Configure a FakeRepository instance"""
-    repo = FakeRepository(search_exception=False)
+    repo = FakeRepository()
 
     yield repo
 
