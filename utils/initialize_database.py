@@ -20,7 +20,7 @@ except IndexError:
     )
     sys.exit(1)
 
-repo = load_repository(database_url, search_exception=False)
+repo = load_repository(database_url)
 
 network_accesses = [
     NetworkAccess(

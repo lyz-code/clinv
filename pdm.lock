@@ -130,18 +130,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.24.4"
+version = "1.24.5"
 requires_python = ">= 3.7"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.28.0,>=1.27.4",
+    "botocore<1.28.0,>=1.27.5",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.7.0,>=0.6.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.27.4"
+version = "1.27.5"
 requires_python = ">= 3.7"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -149,6 +149,11 @@ dependencies = [
     "python-dateutil<3.0.0,>=2.1",
     "urllib3<1.27,>=1.25.4",
 ]
+
+[[package]]
+name = "cached-property"
+version = "1.5.2"
+summary = "A decorator for caching properties in classes."
 
 [[package]]
 name = "certifi"
@@ -594,6 +599,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "griffe"
+version = "0.20.0"
+requires_python = ">=3.7"
+summary = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
+dependencies = [
+    "cached-property; python_version < \"3.8\"",
+]
+
+[[package]]
 name = "htmlmin"
 version = "0.1.12"
 summary = "An HTML Minifier"
@@ -843,6 +857,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "mkdocstrings-python"
+version = "0.7.0"
+requires_python = ">=3.7"
+summary = "A Python handler for mkdocstrings."
+dependencies = [
+    "griffe>=0.11.1",
+    "mkdocstrings>=0.19",
+]
+
+[[package]]
+name = "mkdocstrings"
+version = "0.19.0"
+extras = ["python"]
+requires_python = ">=3.7"
+summary = "Automatic documentation from sources, for MkDocs."
+dependencies = [
+    "mkdocstrings-python>=0.5.2",
+    "mkdocstrings>=0.18",
+]
+
+[[package]]
 name = "moto"
 version = "3.1.12"
 requires_python = ">=3.6"
@@ -929,7 +964,8 @@ dependencies = [
 
 [[package]]
 name = "pkginfo"
-version = "1.8.2"
+version = "1.8.3"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 summary = "Query metadatdata from sdists / bdists / installed packages."
 
 [[package]]
@@ -1196,7 +1232,7 @@ dependencies = [
 
 [[package]]
 name = "repository-orm"
-version = "1.3.0"
+version = "1.3.1"
 requires_python = ">=3.7"
 summary = "Library to ease the implementation of the repository pattern in python projects."
 dependencies = [
@@ -1541,7 +1577,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333e34a54a"
+content_hash = "sha256:6c720c6c9a7119c932f8e9dfb9227ac8c3bda018787d070d69c79d94b62d9fd7"
 
 [metadata.files]
 "argcomplete 1.12.3" = [
@@ -1620,13 +1656,17 @@ content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333
     {file = "bleach-5.0.0-py3-none-any.whl", hash = "sha256:08a1fe86d253b5c88c92cc3d810fd8048a16d15762e1e5b74d502256e5926aa1"},
     {file = "bleach-5.0.0.tar.gz", hash = "sha256:c6d6cc054bdc9c83b48b8083e236e5f00f238428666d2ce2e083eaa5fd568565"},
 ]
-"boto3 1.24.4" = [
-    {file = "boto3-1.24.4-py3-none-any.whl", hash = "sha256:79b7acf5cf83b34d23a975e400374caaf4711c52266c8717b293f40f3041e0aa"},
-    {file = "boto3-1.24.4.tar.gz", hash = "sha256:8bfb695cbe27d2ee9730ea4e1c894ef1fc255219d3fc7bc804171943ae8d7914"},
+"boto3 1.24.5" = [
+    {file = "boto3-1.24.5-py3-none-any.whl", hash = "sha256:c414013899a63a2d1574e6405fbdc2a8379dae71b7d4defdfdc6682ad75df079"},
+    {file = "boto3-1.24.5.tar.gz", hash = "sha256:7d9f636f4a3327968fec2ba1d556c0d4644917a7f041e8ecc1adf299603093f4"},
 ]
-"botocore 1.27.4" = [
-    {file = "botocore-1.27.4-py3-none-any.whl", hash = "sha256:54ef4b035c51fe8937a61d3017e30e0a47237916143889ecf4eace481220029a"},
-    {file = "botocore-1.27.4.tar.gz", hash = "sha256:866ac4ad7de326cfb6956462cc224eee1ef1c17987c2313c6fecdbe017e753fc"},
+"botocore 1.27.5" = [
+    {file = "botocore-1.27.5-py3-none-any.whl", hash = "sha256:326f3fae882524007edf2c9e352169abe4cb8fb87c148ca559522b99d8dfdc74"},
+    {file = "botocore-1.27.5.tar.gz", hash = "sha256:2cc567c453eca85a7140bd984be4c761fddd938f4fb26e4747655f0849d64f25"},
+]
+"cached-property 1.5.2" = [
+    {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
+    {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
 ]
 "certifi 2022.5.18.1" = [
     {file = "certifi-2022.5.18.1-py3-none-any.whl", hash = "sha256:f1d53542ee8cbedbe2118b5686372fb33c297fcd6379b050cca0ef13a597382a"},
@@ -1935,6 +1975,10 @@ content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333
     {file = "goodconf-2.0.1-py2.py3-none-any.whl", hash = "sha256:a4153d63d5684826dd8275542dcfb4577576ecfe9da3a08ed362c9fb9b8d7338"},
     {file = "goodconf-2.0.1.tar.gz", hash = "sha256:23b7d7841b4e6e615aabecb56497f86c65284570c931f58061e724c8c1b852b3"},
 ]
+"griffe 0.20.0" = [
+    {file = "griffe-0.20.0-py3-none-any.whl", hash = "sha256:899e0c9c09baf22b31de1c969a03edaf0ddf72d0a7183df8de746b6c26ed62f4"},
+    {file = "griffe-0.20.0.tar.gz", hash = "sha256:bf181de6e661c0d2a229c1dc7e90db0def280ee3a89c6829fcc1695baee65f7f"},
+]
 "htmlmin 0.1.12" = [
     {file = "htmlmin-0.1.12.tar.gz", hash = "sha256:50c1ef4630374a5d723900096a961cff426dff46b48f34d194a81bbe14eca178"},
 ]
@@ -2182,6 +2226,10 @@ content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333
     {file = "mkdocstrings-0.19.0-py3-none-any.whl", hash = "sha256:3217d510d385c961f69385a670b2677e68e07b5fea4a504d86bf54c006c87c7d"},
     {file = "mkdocstrings-0.19.0.tar.gz", hash = "sha256:efa34a67bad11229d532d89f6836a8a215937548623b64f3698a1df62e01cc3e"},
 ]
+"mkdocstrings-python 0.7.0" = [
+    {file = "mkdocstrings_python-0.7.0-py3-none-any.whl", hash = "sha256:6964bd92f106766e771ac6cd5bc02643a960602b4d921b95362e31d491e9a6db"},
+    {file = "mkdocstrings-python-0.7.0.tar.gz", hash = "sha256:e54c67890e8bb7dc4604360c8ef5dd214b23b6924de7706f461e3c998d4ea061"},
+]
 "moto 3.1.12" = [
     {file = "moto-3.1.12-py3-none-any.whl", hash = "sha256:726ca7d9f0694c86620a6cf0436b0fd89db1f3cee58b4f3cbb03f7b69b585f90"},
     {file = "moto-3.1.12.tar.gz", hash = "sha256:c6f407715b7babd1ff7796576ba8d873870d9fe6aa4d32664554a6116cc55afb"},
@@ -2243,9 +2291,9 @@ content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333
     {file = "pexpect-4.8.0-py2.py3-none-any.whl", hash = "sha256:0b48a55dcb3c05f3329815901ea4fc1537514d6ba867a152b581d69ae3710937"},
     {file = "pexpect-4.8.0.tar.gz", hash = "sha256:fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c"},
 ]
-"pkginfo 1.8.2" = [
-    {file = "pkginfo-1.8.2-py2.py3-none-any.whl", hash = "sha256:c24c487c6a7f72c66e816ab1796b96ac6c3d14d49338293d2141664330b55ffc"},
-    {file = "pkginfo-1.8.2.tar.gz", hash = "sha256:542e0d0b6750e2e21c20179803e40ab50598d8066d51097a0e382cba9eb02bff"},
+"pkginfo 1.8.3" = [
+    {file = "pkginfo-1.8.3-py2.py3-none-any.whl", hash = "sha256:848865108ec99d4901b2f7e84058b6e7660aae8ae10164e015a6dcf5b242a594"},
+    {file = "pkginfo-1.8.3.tar.gz", hash = "sha256:a84da4318dd86f870a9447a8c98340aa06216bfc6f2b7bdc4b8766984ae1867c"},
 ]
 "platformdirs 2.5.2" = [
     {file = "platformdirs-2.5.2-py3-none-any.whl", hash = "sha256:027d8e83a2d7de06bbac4e5ef7e023c02b863d7ea5d079477e722bb41ab25788"},
@@ -2434,9 +2482,9 @@ content_hash = "sha256:c9e717483c7431681014fd676c8a4dba539950d3dcf6eb93955f3c333
     {file = "readme_renderer-35.0-py3-none-any.whl", hash = "sha256:73b84905d091c31f36e50b4ae05ae2acead661f6a09a9abb4df7d2ddcdb6a698"},
     {file = "readme_renderer-35.0.tar.gz", hash = "sha256:a727999acfc222fc21d82a12ed48c957c4989785e5865807c65a487d21677497"},
 ]
-"repository-orm 1.3.0" = [
-    {file = "repository_orm-1.3.0-py3-none-any.whl", hash = "sha256:8209b82df773c351ce3666aed21703c20b1ae5986e3721b89003a6ad204960ff"},
-    {file = "repository-orm-1.3.0.tar.gz", hash = "sha256:6c690bc5a4514a78069533d9247daccbe6541b910abe43c639197b2b6d1ed38c"},
+"repository-orm 1.3.1" = [
+    {file = "repository_orm-1.3.1-py3-none-any.whl", hash = "sha256:d4eeb440af82eed2547c94271d214f4928aa96b5367b145a6a357be844ffbdbe"},
+    {file = "repository-orm-1.3.1.tar.gz", hash = "sha256:59c42bf7964510e6a90a93eb5569f2a66e0208c2964e9a64b3df4010f85a0d80"},
 ]
 "requests 2.27.1" = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},

@@ -39,7 +39,7 @@ def cli(ctx: Context, config_path: str, verbose: bool) -> None:
     load_logger(verbose)
     config = load_config(config_path)
     ctx.obj["config"] = config
-    ctx.obj["repo"] = load_repository(config.database_url, search_exception=False)
+    ctx.obj["repo"] = load_repository(config.database_url)
     ctx.obj["adapters"] = load_adapters(config)
     ctx.obj["prompter"] = PydanticQuestions()
 
