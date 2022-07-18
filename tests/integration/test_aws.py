@@ -344,7 +344,7 @@ def test_update_creates_route53_instances(route53: Any) -> None:
 
     result = AWSSource().update(["r53"])
 
-    assert result == [EntityUpdate(data=entity_data, model=aws.Route53)]
+    assert EntityUpdate(data=entity_data, model=aws.Route53) in result
     assert aws.Route53(**entity_data).id_ == entity_data["id_"]
 
 
@@ -437,7 +437,7 @@ def test_update_creates_route53_private_instances(route53: Any) -> None:
 
     result = AWSSource().update(["r53"])
 
-    assert result == [EntityUpdate(data=entity_data, model=aws.Route53)]
+    assert EntityUpdate(data=entity_data, model=aws.Route53) in result
     assert aws.Route53(**entity_data).id_ == entity_data["id_"]
 
 
@@ -487,7 +487,7 @@ def test_update_creates_route53_alias_instances(route53: Any) -> None:
 
     result = AWSSource().update(["r53"])
 
-    assert result == [EntityUpdate(data=entity_data, model=aws.Route53)]
+    assert EntityUpdate(data=entity_data, model=aws.Route53) in result
     assert aws.Route53(**entity_data).id_ == entity_data["id_"]
 
 
