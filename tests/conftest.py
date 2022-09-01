@@ -82,6 +82,8 @@ def ec2_(_aws_credentials: None) -> Any:
 @pytest.fixture(name="rds")
 def rds_(_aws_credentials: None) -> Any:
     """Configure the boto3 RDS client."""
+    # Until https://github.com/boto/botocore/issues/2705 is closed
+    os.environ["BOTO_DISABLE_COMMONNAME"] = "true"
     with mock_rds():
         yield boto3.client("rds", region_name="us-east-1")
 
