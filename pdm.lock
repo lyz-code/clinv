@@ -130,18 +130,18 @@ dependencies = [
 
 [[package]]
 name = "boto3"
-version = "1.24.31"
+version = "1.24.89"
 requires_python = ">= 3.7"
 summary = "The AWS SDK for Python"
 dependencies = [
-    "botocore<1.28.0,>=1.27.31",
+    "botocore<1.28.0,>=1.27.89",
     "jmespath<2.0.0,>=0.7.1",
     "s3transfer<0.7.0,>=0.6.0",
 ]
 
 [[package]]
 name = "botocore"
-version = "1.27.31"
+version = "1.27.89"
 requires_python = ">= 3.7"
 summary = "Low-level, data-driven core of boto 3."
 dependencies = [
@@ -299,12 +299,11 @@ summary = "Docutils -- Python Documentation Utilities"
 
 [[package]]
 name = "dparse"
-version = "0.5.1"
+version = "0.6.2"
 requires_python = ">=3.5"
 summary = "A parser for Python dependency files"
 dependencies = [
     "packaging",
-    "pyyaml",
     "toml",
 ]
 
@@ -999,7 +998,7 @@ dependencies = [
 
 [[package]]
 name = "prompt-toolkit"
-version = "3.0.30"
+version = "3.0.31"
 requires_python = ">=3.6.2"
 summary = "Library for building powerful interactive command lines in Python"
 dependencies = [
@@ -1283,7 +1282,7 @@ summary = "Validating URI References per RFC 3986"
 
 [[package]]
 name = "rich"
-version = "12.5.1"
+version = "12.6.0"
 requires_python = ">=3.6.3,<4.0.0"
 summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 dependencies = [
@@ -1328,11 +1327,11 @@ dependencies = [
 
 [[package]]
 name = "safety"
-version = "2.1.0"
+version = "2.3.1"
 summary = "Checks installed dependencies for known vulnerabilities and licenses."
 dependencies = [
     "Click>=8.0.2",
-    "dparse>=0.5.1",
+    "dparse>=0.6.2",
     "packaging>=21.0",
     "requests",
     "ruamel.yaml>=0.17.21",
@@ -1660,13 +1659,13 @@ content_hash = "sha256:38470f542d02baa3d5c91851341658fce55d1d8d2584adf1efcc6bde9
     {url = "https://files.pythonhosted.org/packages/c2/5d/d5d45a38163ede3342d6ac1ca01b5d387329daadf534a25718f9a9ba818c/bleach-5.0.1.tar.gz", hash = "sha256:0d03255c47eb9bd2f26aa9bb7f2107732e7e8fe195ca2f64709fcf3b0a4a085c"},
     {url = "https://files.pythonhosted.org/packages/d4/87/508104336a2bc0c4cfdbdceedc0f44dc72da3abc0460c57e323ddd1b3257/bleach-5.0.1-py3-none-any.whl", hash = "sha256:085f7f33c15bd408dd9b17a4ad77c577db66d76203e5984b1bd59baeee948b2a"},
 ]
-"boto3 1.24.31" = [
-    {url = "https://files.pythonhosted.org/packages/16/b0/22c72880f278732b61439e67fbf65aea8b9e2a77ab3b2cb327ee2234c79c/boto3-1.24.31-py3-none-any.whl", hash = "sha256:d4685e2fe2c436e558a94c7f68f1a6d4a6c7519d2b25a88fdf855d9a928889ad"},
-    {url = "https://files.pythonhosted.org/packages/e0/59/31744ddafe33d6d716f4ad522e7c3d15a74a1d0cd4556b34a36e29868962/boto3-1.24.31.tar.gz", hash = "sha256:de067346942c6d1730b513783385620519b8b2935f5b0ee2e66d565ffb57ce12"},
+"boto3 1.24.89" = [
+    {url = "https://files.pythonhosted.org/packages/97/a0/20dd887905e5056c597c959a0adb452d88aac992418578e18567e2109f23/boto3-1.24.89.tar.gz", hash = "sha256:d0d8ffcdc10821c4562bc7f935cdd840033bbc342ac0e14b6bdd348b3adf4c04"},
+    {url = "https://files.pythonhosted.org/packages/d7/5f/30a665d913e8ba1d04aec3a5326f1fae6e25490ee4543d3f15e18e57c4bb/boto3-1.24.89-py3-none-any.whl", hash = "sha256:346f8f0d101a4261dac146a959df18d024feda6431e1d9d84f94efd24d086cae"},
 ]
-"botocore 1.27.31" = [
-    {url = "https://files.pythonhosted.org/packages/29/b7/4f3e0bd6c82e2d7cb3390a405af27a2da458a7abcbd8315a5d14950fbac1/botocore-1.27.31-py3-none-any.whl", hash = "sha256:cbe87fa791aa4e8c3da64b1ccbaca7f809f6d1fba8d0b1855de2989815ef8736"},
-    {url = "https://files.pythonhosted.org/packages/2a/0b/510886b331aad78d62cadcee155eaed0176e4e238cd9b454ab428e2bd424/botocore-1.27.31.tar.gz", hash = "sha256:b0cc79fb5a37a0e2b6befe86efd027b92101d819f1fdc56cfff39f2eb239f232"},
+"botocore 1.27.89" = [
+    {url = "https://files.pythonhosted.org/packages/28/33/5013ab7409efcbb580bc0420920abd2649337712790a648eb30a897c9fce/botocore-1.27.89-py3-none-any.whl", hash = "sha256:238f1dfdb8d8d017c2aea082609a3764f3161d32745900f41bcdcf290d95a048"},
+    {url = "https://files.pythonhosted.org/packages/bd/cb/af3d2851d43200724720ba4e81af15cbadeaf5b190eedd1b75582296627e/botocore-1.27.89.tar.gz", hash = "sha256:621f5413be8f97712b7e36c1b075a8791d1d1b9971a7ee060cdcdf5e2debf6c1"},
 ]
 "cached-property 1.5.2" = [
     {url = "https://files.pythonhosted.org/packages/48/19/f2090f7dad41e225c7f2326e4cfe6fff49e57dedb5b53636c9551f86b069/cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -1863,9 +1862,9 @@ content_hash = "sha256:38470f542d02baa3d5c91851341658fce55d1d8d2584adf1efcc6bde9
     {url = "https://files.pythonhosted.org/packages/6b/5c/330ea8d383eb2ce973df34d1239b3b21e91cd8c865d21ff82902d952f91f/docutils-0.19.tar.gz", hash = "sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6"},
     {url = "https://files.pythonhosted.org/packages/93/69/e391bd51bc08ed9141ecd899a0ddb61ab6465309f1eb470905c0c8868081/docutils-0.19-py3-none-any.whl", hash = "sha256:5e1de4d849fee02c63b040a4a3fd567f4ab104defd8a5511fbbc24a8a017efbc"},
 ]
-"dparse 0.5.1" = [
-    {url = "https://files.pythonhosted.org/packages/7e/9c/ff5e37350c75056667f2de633fc20ea68720204230d1d67e82226a45419a/dparse-0.5.1-py3-none-any.whl", hash = "sha256:e953a25e44ebb60a5c6efc2add4420c177f1d8404509da88da9729202f306994"},
-    {url = "https://files.pythonhosted.org/packages/a2/09/cfd9b2d31e6be7277c9aa554f07ede0529f945d2b2e63c7d0556a66dfa01/dparse-0.5.1.tar.gz", hash = "sha256:a1b5f169102e1c894f9a7d5ccf6f9402a836a5d24be80a986c7ce9eaed78f367"},
+"dparse 0.6.2" = [
+    {url = "https://files.pythonhosted.org/packages/43/62/559227d7f72319055f6970a87677fb8cb24390e61f6dc33ba416f625b15a/dparse-0.6.2.tar.gz", hash = "sha256:d45255bda21f998bc7ddf2afd5e62505ba6134756ba2d42a84c56b0826614dfe"},
+    {url = "https://files.pythonhosted.org/packages/7e/e3/9e761c7ed18147ea411a74209068cc57a631a7c5d51709941af9b9e52e3e/dparse-0.6.2-py3-none-any.whl", hash = "sha256:8097076f1dd26c377f30d4745e6ec18fef42f3bf493933b842ac5bafad8c345f"},
 ]
 "entrypoints 0.4" = [
     {url = "https://files.pythonhosted.org/packages/35/a8/365059bbcd4572cbc41de17fd5b682be5868b218c3c5479071865cab9078/entrypoints-0.4-py3-none-any.whl", hash = "sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f"},
@@ -2329,9 +2328,9 @@ content_hash = "sha256:38470f542d02baa3d5c91851341658fce55d1d8d2584adf1efcc6bde9
     {url = "https://files.pythonhosted.org/packages/1e/ba/8cf8b88d0e07588818de46877effc9971305541d9421bc6377b06639d135/pre_commit-2.20.0.tar.gz", hash = "sha256:a978dac7bc9ec0bcee55c18a277d553b0f419d259dadb4b9418ff2d00eb43959"},
     {url = "https://files.pythonhosted.org/packages/b2/6c/9ccb5213a3d9fd3f8c0fd69d207951901eaef86b7a1a69bcc478364d3072/pre_commit-2.20.0-py2.py3-none-any.whl", hash = "sha256:51a5ba7c480ae8072ecdb6933df22d2f812dc897d5fe848778116129a681aac7"},
 ]
-"prompt-toolkit 3.0.30" = [
-    {url = "https://files.pythonhosted.org/packages/b0/8f/09a88160539a1164de562809f8b1d0a36dc1f9d8c6473f4b71ebed17b953/prompt_toolkit-3.0.30-py3-none-any.whl", hash = "sha256:d8916d3f62a7b67ab353a952ce4ced6a1d2587dfe9ef8ebc30dd7c386751f289"},
-    {url = "https://files.pythonhosted.org/packages/c5/7e/71693dc21d20464e4cd7c600f2d8fad1159601a42ed55566500272fe69b5/prompt_toolkit-3.0.30.tar.gz", hash = "sha256:859b283c50bde45f5f97829f77a4674d1c1fcd88539364f1b28a37805cfd89c0"},
+"prompt-toolkit 3.0.31" = [
+    {url = "https://files.pythonhosted.org/packages/26/ec/2ebddd1f0584fec4a6d4b5dc57627254070c3db310f00981bc5de03dd5ab/prompt_toolkit-3.0.31-py3-none-any.whl", hash = "sha256:9696f386133df0fc8ca5af4895afe5d78f5fcfe5258111c2a79a1c3e41ffa96d"},
+    {url = "https://files.pythonhosted.org/packages/80/76/c94cf323ca362dd7baca8d8ddf3b5fe1576848bc0156522ad581c04f8446/prompt_toolkit-3.0.31.tar.gz", hash = "sha256:9ada952c9d1787f52ff6d5f3484d0b4df8952787c087edf6a1f7c2cb1ea88148"},
 ]
 "ptyprocess 0.7.0" = [
     {url = "https://files.pythonhosted.org/packages/20/e5/16ff212c1e452235a90aeb09066144d0c5a6a8c0834397e03f5224495c4e/ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
@@ -2531,9 +2530,9 @@ content_hash = "sha256:38470f542d02baa3d5c91851341658fce55d1d8d2584adf1efcc6bde9
     {url = "https://files.pythonhosted.org/packages/85/40/1520d68bfa07ab5a6f065a186815fb6610c86fe957bc065754e47f7b0840/rfc3986-2.0.0.tar.gz", hash = "sha256:97aacf9dbd4bfd829baad6e6309fa6573aaf1be3f6fa735c8ab05e46cecb261c"},
     {url = "https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl", hash = "sha256:50b1502b60e289cb37883f3dfd34532b8873c7de9f49bb546641ce9cbd256ebd"},
 ]
-"rich 12.5.1" = [
-    {url = "https://files.pythonhosted.org/packages/bb/2d/c902484141330ded63c6c40d66a9725f8da5e818770f67241cf429eef825/rich-12.5.1.tar.gz", hash = "sha256:63a5c5ce3673d3d5fbbf23cd87e11ab84b6b451436f1b7f19ec54b6bc36ed7ca"},
-    {url = "https://files.pythonhosted.org/packages/f6/39/4cb526e0d505464376e3c47a812df6e6638363ebe66e6a63618831fe47ad/rich-12.5.1-py3-none-any.whl", hash = "sha256:2eb4e6894cde1e017976d2975ac210ef515d7548bc595ba20e195fb9628acdeb"},
+"rich 12.6.0" = [
+    {url = "https://files.pythonhosted.org/packages/11/23/814edf09ec6470d52022b9e95c23c1bef77f0bc451761e1504ebd09606d3/rich-12.6.0.tar.gz", hash = "sha256:ba3a3775974105c221d31141f2c116f4fd65c5ceb0698657a11e9f295ec93fd0"},
+    {url = "https://files.pythonhosted.org/packages/32/60/81ac2e7d1e3b861ab478a72e3b20fc91c4302acd2274822e493758941829/rich-12.6.0-py3-none-any.whl", hash = "sha256:a4eb26484f2c82589bd9a17c73d32a010b1e29d89f1604cd9bf3a2097b81bb5e"},
 ]
 "ruamel.yaml 0.17.21" = [
     {url = "https://files.pythonhosted.org/packages/46/a9/6ed24832095b692a8cecc323230ce2ec3480015fbfa4b79941bd41b23a3c/ruamel.yaml-0.17.21.tar.gz", hash = "sha256:8b7ce697a2f212752a35c1ac414471dc16c424c9573be4926b56ff3f5d23b7af"},
@@ -2579,9 +2578,9 @@ content_hash = "sha256:38470f542d02baa3d5c91851341658fce55d1d8d2584adf1efcc6bde9
     {url = "https://files.pythonhosted.org/packages/5e/c6/af903b5fab3f9b5b1e883f49a770066314c6dcceb589cf938d48c89556c1/s3transfer-0.6.0-py3-none-any.whl", hash = "sha256:06176b74f3a15f61f1b4f25a1fc29a4429040b7647133a463da8fa5bd28d5ecd"},
     {url = "https://files.pythonhosted.org/packages/e1/eb/e57c93d5cd5edf8c1d124c831ef916601540db70acd96fa21fe60cef1365/s3transfer-0.6.0.tar.gz", hash = "sha256:2ed07d3866f523cc561bf4a00fc5535827981b117dd7876f036b0c1aca42c947"},
 ]
-"safety 2.1.0" = [
-    {url = "https://files.pythonhosted.org/packages/27/5c/3a1755dbdb34973b53d865b090c1f7c07b8be0640672cd9ac2bdf0a4a6d3/safety-2.1.0.tar.gz", hash = "sha256:6211d4bf228694ef262a55e58dd3573650b979861f40a49dc7d534f8f0b339b3"},
-    {url = "https://files.pythonhosted.org/packages/95/af/36f6259f09d886c9dbb9c8a96324682f52c2aff222afee1325213447e3ca/safety-2.1.0-py3-none-any.whl", hash = "sha256:2f8d95cdab74461e53972ad654ce5fee3a3b3bf6b6f139cc595a6011378b28c8"},
+"safety 2.3.1" = [
+    {url = "https://files.pythonhosted.org/packages/3b/8e/f88ca91f2c71e03c53b1a038a8348c5377caf85c04cab1efc0fca7c2d41c/safety-2.3.1-py3-none-any.whl", hash = "sha256:8f098d12b607db2756886280e85c28ece8db1bba4f45fc5f981f4663217bd619"},
+    {url = "https://files.pythonhosted.org/packages/83/19/c3d6d9322811a7723bd5f13c868d8ab67369dcf0b49ccb7beb881ba789e3/safety-2.3.1.tar.gz", hash = "sha256:6e6fcb7d4e8321098cf289f59b65051cafd3467f089c6e57c9f894ae32c23b71"},
 ]
 "secretstorage 3.3.2" = [
     {url = "https://files.pythonhosted.org/packages/54/42/7cf083c31a9739b40ed683fad17460d1db97ecd23c344df25e41fa9e85e2/SecretStorage-3.3.2-py3-none-any.whl", hash = "sha256:755dc845b6ad76dcbcbc07ea3da75ae54bb1ea529eb72d15f83d26499a5df319"},
