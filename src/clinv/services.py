@@ -200,10 +200,13 @@ def search(
     models = _deduce_models(resource_types)
 
     # Attributes to search
-    attributes = []
+    attributes: List[str] = []
     for model in models:
         for attribute in model.schema()["properties"].keys():
-            if attribute not in attributes:
+            # Until https://github.com/lyz-code/repository-orm/issues/15 is
+            # fixed we can't search by the egress and ingress of the
+            # security groups
+            if attribute not in attributes + ["egress", "ingress"]:
                 attributes.append(attribute)
 
     entities: List[Entity] = []
@@ -217,6 +220,7 @@ def search(
             all_,
             inactive,
         )
+
         yield list(set(new_entities) - set(entities))
         entities += new_entities
 

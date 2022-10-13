@@ -7,7 +7,7 @@ import boto3
 import pytest
 from moto import mock_autoscaling, mock_ec2, mock_iam, mock_rds, mock_route53, mock_s3
 from py._path.local import LocalPath
-from repository_orm import FakeRepository
+from repository_orm import FakeRepository, TinyDBRepository
 
 from clinv.adapters.fake import FakeSource
 from clinv.config import Config
@@ -50,6 +50,16 @@ def db_tinydb_(tmpdir: LocalPath) -> str:
 def repo_() -> Generator[FakeRepository, None, None]:
     """Configure a FakeRepository instance"""
     repo = FakeRepository()
+
+    yield repo
+
+    repo.close()
+
+
+@pytest.fixture(name="repo_tinydb")
+def repo_tinydb_(db_tinydb: str) -> Generator[TinyDBRepository, None, None]:
+    """Configure a TinyDBRepository instance"""
+    repo = TinyDBRepository(db_tinydb)
 
     yield repo
 
