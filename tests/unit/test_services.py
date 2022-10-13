@@ -1,12 +1,13 @@
 """Tests the service layer."""
 
 import pytest
-from repository_orm import FakeRepository, Repository
+from repository_orm import EntityNotFoundError, FakeRepository, Repository
 from tests.factories import (
     EC2Factory,
     IAMGroupFactory,
     PersonFactory,
     ProjectFactory,
+    SecurityGroupFactory,
     ServiceFactory,
 )
 
@@ -103,6 +104,25 @@ class TestSearch:
             found_entities += entities
 
         assert found_entities == [entity]
+
+    def test_searching_by_security_groups_does_not_raise_error(
+        self, repo_tinydb: Repository
+    ) -> None:
+        """
+        Given: A security group
+        When: searching for a string
+        Then: it doesn't return an error
+
+        Until https://github.com/lyz-code/repository-orm/issues/15 is fixed we can't
+        search by the egress and ingress of the security groups
+        """
+        repo = repo_tinydb
+        entity = SecurityGroupFactory.build()
+        repo.add(entity)
+        repo.commit()
+
+        with pytest.raises(EntityNotFoundError):
+            list(search(repo, "test", resource_types=["sg"]))
 
 
 class TestUnused:

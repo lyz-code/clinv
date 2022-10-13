@@ -1230,7 +1230,7 @@ dependencies = [
 
 [[package]]
 name = "repository-orm"
-version = "1.3.1"
+version = "1.3.2"
 requires_python = ">=3.7"
 summary = "Library to ease the implementation of the repository pattern in python projects."
 dependencies = [
@@ -2510,9 +2510,9 @@ content_hash = "sha256:38470f542d02baa3d5c91851341658fce55d1d8d2584adf1efcc6bde9
     {url = "https://files.pythonhosted.org/packages/3f/e8/8a6fe77582ae0f2617a57ec239eda638f7b1939b78e303a81b9c91fb0b96/readme_renderer-35.0.tar.gz", hash = "sha256:a727999acfc222fc21d82a12ed48c957c4989785e5865807c65a487d21677497"},
     {url = "https://files.pythonhosted.org/packages/b0/c3/63b1bb5f406a7b223c254a5b34079f205b4f4b365143620fbc1415c98367/readme_renderer-35.0-py3-none-any.whl", hash = "sha256:73b84905d091c31f36e50b4ae05ae2acead661f6a09a9abb4df7d2ddcdb6a698"},
 ]
-"repository-orm 1.3.1" = [
-    {url = "https://files.pythonhosted.org/packages/2e/26/dbeeef679f98646ea6c787e9b68446a3abc31671931c7805874586c782f8/repository-orm-1.3.1.tar.gz", hash = "sha256:59c42bf7964510e6a90a93eb5569f2a66e0208c2964e9a64b3df4010f85a0d80"},
-    {url = "https://files.pythonhosted.org/packages/d4/3f/d0f0404baecedaa0d43a046b72781d7e4998c36591fd9a6982591e2b285d/repository_orm-1.3.1-py3-none-any.whl", hash = "sha256:d4eeb440af82eed2547c94271d214f4928aa96b5367b145a6a357be844ffbdbe"},
+"repository-orm 1.3.2" = [
+    {url = "https://files.pythonhosted.org/packages/0d/21/49c6bf25f5a922aab846c649b2388e5f033f613713da8779b60f8f8b993f/repository_orm-1.3.2-py3-none-any.whl", hash = "sha256:fee0a06ee484349281e7b21669c235b476750b362af9d816ffbd23c917f684ca"},
+    {url = "https://files.pythonhosted.org/packages/6a/af/aee7bc7708233b7f8e7d7429eed3c7c0f963d55a196050b5cbc76de89648/repository-orm-1.3.2.tar.gz", hash = "sha256:54d75ed7c7ba76cb2fe3fd9c0bf64c392a20d09023a0987a941a844ea0406348"},
 ]
 "requests 2.28.1" = [
     {url = "https://files.pythonhosted.org/packages/a5/61/a867851fd5ab77277495a8709ddda0861b28163c4613b011bc00228cc724/requests-2.28.1.tar.gz", hash = "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983"},
