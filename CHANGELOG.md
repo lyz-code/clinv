@@ -1,3 +1,10 @@
+## 1.6.2 (2022-10-13)
+
+### Fix
+
+- don't search in the egress and ingress parts of the security groups
+- don't search in the egress and ingress parts of the security groups
+
 ## 1.6.1 (2022-06-09)
 
 ### Fix
