@@ -132,11 +132,7 @@ def get_data_to_print(entity: "Entity") -> List[Dict[str, Any]]:  # noqa: R0912
 
 
 def _snake_to_upper(string: str) -> str:
-    """Convert a string from snake case to upper case words.
-
-    Args:
-        string:
-    """
+    """Convert a string from snake case to upper case words."""
     return " ".join([word.capitalize() for word in string.split("_")])
 
 

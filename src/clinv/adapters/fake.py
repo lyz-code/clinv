@@ -35,11 +35,7 @@ class FakeSource(AbstractSource):
         return self._entity_updates
 
     def add_change(self, entity: EntityT, entity_data: Dict[str, Any]) -> None:
-        """Record changes on entities to be returned when calling the update method.
-
-        Args:
-            entity_data: dictionary with key value to update.
-        """
+        """Record changes on entities to be returned when calling the update method."""
         entity_data["id_"] = entity.id_
         self._entity_updates.append(
             EntityUpdate(data={**entity.dict(), **entity_data}, model=type(entity))
