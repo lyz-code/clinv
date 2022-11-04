@@ -43,11 +43,7 @@ def load_logger(verbose: bool = False) -> None:  # pragma: no cover
 
 
 def load_config(config_path: str) -> Config:
-    """Configure the Logging logger.
-
-    Args:
-        config_file: Path to the config file
-    """
+    """Configure the Logging logger."""
     config = Config()
     try:
         config.load(os.path.expanduser(config_path))
