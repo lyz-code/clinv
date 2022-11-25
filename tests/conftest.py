@@ -1,12 +1,12 @@
 """Store the classes and fixtures used throughout the tests."""
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Generator
 
 import boto3
 import pytest
 from moto import mock_autoscaling, mock_ec2, mock_iam, mock_rds, mock_route53, mock_s3
-from py._path.local import LocalPath
 from repository_orm import FakeRepository, TinyDBRepository
 
 from clinv.adapters.fake import FakeSource
@@ -28,15 +28,13 @@ def fixture_config(db_tinydb: str) -> Config:
 
 
 @pytest.fixture(name="db_tinydb")
-def db_tinydb_(tmpdir: LocalPath) -> str:
+def db_tinydb_(tmp_path: Path) -> str:
     """Create the TinyDB database url.
 
     Returns:
         database_url: Url used to connect to the database.
     """
-    # ignore: Call of untyped join function in typed environment.
-    # Until they give typing information there is nothing else to do.
-    tinydb_file_path = str(tmpdir.join("tinydb.db"))  # type: ignore
+    tinydb_file_path = str(tmp_path / "tinydb.db")
 
     tinydb_url = f"tinydb:///{tinydb_file_path}"
 
