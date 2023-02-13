@@ -8,6 +8,7 @@ from repository_orm import load_repository
 from clinv.entrypoints import load_logger
 from clinv.model import Authentication, NetworkAccess
 
+
 log = logging.getLogger(__name__)
 load_logger()
 
