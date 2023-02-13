@@ -12,7 +12,6 @@ from questionary import Style, autocomplete, confirm, text
 from ..model import Choices
 from ..model.entity import Entity, EntityAttrs
 
-
 log = logging.getLogger(__name__)
 
 

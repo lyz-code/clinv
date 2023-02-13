@@ -10,7 +10,6 @@ from pydantic import ConstrainedStr, Field
 
 from .entity import Entity, Environment
 
-
 # -------------------------------
 # --        Resource IDs       --
 # -------------------------------

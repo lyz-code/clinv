@@ -4,7 +4,6 @@ import platform
 import sys
 from textwrap import dedent
 
-
 # Do not edit the version manually, let `make bump` do it.
 
 __version__ = "1.6.2"

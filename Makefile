@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := test
 isort = pdm run isort src tests
 black = pdm run black --target-version py39 src tests
+autoimport = pdm run autoimport src tests
 
 .PHONY: install
 install:
@@ -44,9 +45,9 @@ format:
 	@echo "- Formating the code -"
 	@echo "----------------------"
 
+	$(autoimport)
 	$(isort)
 	$(black)
-	autoimport .
 
 	@echo ""
 

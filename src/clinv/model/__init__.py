@@ -27,7 +27,6 @@ from .risk import (
     Service,
 )
 
-
 # Elements are ordered so that the important ones show first when searching
 RESOURCE_TYPES = {
     "ser": Service,

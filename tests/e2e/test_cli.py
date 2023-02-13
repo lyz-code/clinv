@@ -42,7 +42,6 @@ from ..factories import (
     ProjectFactory,
 )
 
-
 # E0401: Unable to import pexpect, but the tests run, so it's a pylint error.
 
 
