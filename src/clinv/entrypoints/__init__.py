@@ -13,6 +13,7 @@ from rich.logging import RichHandler
 from ..adapters import AVAILABLE_SOURCES, AdapterSource
 from ..config import Config
 
+
 log = logging.getLogger(__name__)
 
 

@@ -6,6 +6,7 @@ from pydantic_factories import ModelFactory
 
 from clinv.model import aws, risk
 
+
 # -------------------------------
 # --      AWS Factories
 # -------------------------------

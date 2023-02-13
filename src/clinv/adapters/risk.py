@@ -6,6 +6,7 @@ from typing import List, Optional
 from ..model import EntityT, EntityUpdate
 from .abstract import AbstractSource
 
+
 log = logging.getLogger(__name__)
 
 

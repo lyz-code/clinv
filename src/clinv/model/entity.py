@@ -8,6 +8,7 @@ from pydantic import BaseModel  # noqa: E0611
 from pydantic import root_validator
 from repository_orm import Entity as BasicEntity
 
+
 EntityAttrs = Dict[str, Any]
 EntityID = Union[str, int]
 

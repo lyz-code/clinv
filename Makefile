@@ -5,7 +5,6 @@ black = pdm run black --target-version py39 src tests
 .PHONY: install
 install:
 	pdm install --dev
-	pdm run pre-commit install
 
 .PHONY: update
 update:
@@ -13,7 +12,7 @@ update:
 	@echo "- Updating dependencies -"
 	@echo "-------------------------"
 
-	pdm update --no-sync
+	pdm update --no-sync --update-eager
 	pdm sync --clean
 
 	@echo "\a"
@@ -24,7 +23,7 @@ update-production:
 	@echo "- Updating production dependencies -"
 	@echo "------------------------------------"
 
-	pdm update --production --no-sync
+	pdm update --production --no-sync --update-eager
 	pdm sync --clean
 
 	@echo "\a"
@@ -47,6 +46,7 @@ format:
 
 	$(isort)
 	$(black)
+	autoimport .
 
 	@echo ""
 

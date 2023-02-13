@@ -7,6 +7,7 @@ from .aws import AWSSource
 from .fake import FakeSource
 from .risk import RiskSource
 
+
 AdapterSource = TypeVar("AdapterSource", bound=AbstractSource)
 
 # ignore: AdapterSource is unbound. I still don't know how to fix this

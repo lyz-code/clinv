@@ -39,6 +39,7 @@ from .model.risk import (
 if TYPE_CHECKING:
     from .config import Config
 
+
 log = logging.getLogger(__name__)
 
 

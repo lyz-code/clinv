@@ -8,6 +8,7 @@ from pydantic import ConstrainedStr, Field, PrivateAttr
 from .aws import IAMUserID
 from .entity import Entity, EntityState, Environment
 
+
 # -------------------------------
 # --        Resource IDs       --
 # -------------------------------

@@ -149,7 +149,6 @@ def service_risk(
     table.add_column("Security Value", justify="center", style="cyan")
 
     for service in services:
-
         if service.access is None:
             access = ""
         else:

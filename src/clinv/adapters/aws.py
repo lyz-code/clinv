@@ -18,6 +18,7 @@ from ..model import RESOURCE_TYPES, aws
 from ..model.entity import EntityAttrs, EntityState, EntityT, EntityUpdate
 from .abstract import AbstractSource
 
+
 log = logging.getLogger(__name__)
 
 config = Config(connect_timeout=3, retries={"max_attempts": 0})
