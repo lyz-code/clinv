@@ -117,70 +117,72 @@ class AWSSource(AbstractSource):
         for region in self.regions:
             ec2 = boto3.client("ec2", region_name=region, config=config)
             region_data = ec2.describe_instances()["Reservations"]
-            for instance in region_data:
-                instance = instance["Instances"][0]
-                entity_data = {
-                    "ami": instance["ImageId"],
-                    "id_": instance["InstanceId"],
-                    "region": region,
-                    "size": instance["InstanceType"],
-                    "start_date": instance["LaunchTime"],
-                    "state": instance["State"]["Name"],
-                }
+            for reservation in region_data:
+                for instance in reservation["Instances"]:
+                    entity_data = {
+                        "ami": instance["ImageId"],
+                        "id_": instance["InstanceId"],
+                        "region": region,
+                        "size": instance["InstanceType"],
+                        "start_date": instance["LaunchTime"],
+                        "state": instance["State"]["Name"],
+                    }
 
-                # Correct the state
-                if entity_data["state"] == "running":
-                    entity_data["state"] = "active"
+                    # Correct the state
+                    if entity_data["state"] == "running":
+                        entity_data["state"] = "active"
 
-                # Get the instance name and monitor status
-                with suppress(KeyError):
-                    for tag in instance["Tags"]:
-                        if tag["Key"] == "Name":
-                            entity_data["name"] = tag["Value"]
-                        elif tag["Key"] == "monitor":
-                            entity_data["monitor"] = bool(tag["Value"])
+                    # Get the instance name and monitor status
+                    with suppress(KeyError):
+                        for tag in instance["Tags"]:
+                            if tag["Key"] == "Name":
+                                entity_data["name"] = tag["Value"]
+                            elif tag["Key"] == "monitor":
+                                entity_data["monitor"] = bool(tag["Value"])
 
-                # Get the security groups
-                with suppress(KeyError):
-                    entity_data["security_groups"] = [
-                        security_group["GroupId"]
-                        for security_group in instance["SecurityGroups"]
-                    ]
+                    # Get the security groups
+                    with suppress(KeyError):
+                        entity_data["security_groups"] = [
+                            security_group["GroupId"]
+                            for security_group in instance["SecurityGroups"]
+                        ]
 
-                # Get the instance network information
-                with suppress(KeyError):
-                    entity_data["vpc"] = instance["VpcId"]
-                    entity_data["subnet"] = instance["SubnetId"]
+                    # Get the instance network information
+                    with suppress(KeyError):
+                        entity_data["vpc"] = instance["VpcId"]
+                        entity_data["subnet"] = instance["SubnetId"]
 
-                # Get the private ips
-                with suppress(KeyError):
-                    entity_data["private_ips"] = []
-                    for interface in instance["NetworkInterfaces"]:
-                        for address in interface["PrivateIpAddresses"]:
-                            entity_data["private_ips"].append(
-                                address["PrivateIpAddress"]
-                            )
+                    # Get the private ips
+                    with suppress(KeyError):
+                        entity_data["private_ips"] = []
+                        for interface in instance["NetworkInterfaces"]:
+                            for address in interface["PrivateIpAddresses"]:
+                                entity_data["private_ips"].append(
+                                    address["PrivateIpAddress"]
+                                )
 
-                # Get the public ips
-                with suppress(KeyError):
-                    entity_data["public_ips"] = []
-                    for interface in instance["NetworkInterfaces"]:
-                        for association in interface["PrivateIpAddresses"]:
-                            entity_data["public_ips"].append(
-                                association["Association"]["PublicIp"]
-                            )
+                    # Get the public ips
+                    with suppress(KeyError):
+                        entity_data["public_ips"] = []
+                        for interface in instance["NetworkInterfaces"]:
+                            for association in interface["PrivateIpAddresses"]:
+                                entity_data["public_ips"].append(
+                                    association["Association"]["PublicIp"]
+                                )
 
-                # Get the state transition
-                with suppress(KeyError):
-                    entity_data["state_transition"] = instance["StateTransitionReason"]
+                    # Get the state transition
+                    with suppress(KeyError):
+                        entity_data["state_transition"] = instance[
+                            "StateTransitionReason"
+                        ]
 
-                # ignore: I don't know why it's not able to infer the type of the
-                # argument 1 of _build_entity_update ¯\(°_o)/¯
-                entity_updates.append(
-                    _build_entity_update(  # type: ignore
-                        entity_data, aws.EC2, remaining_entities
+                    # ignore: I don't know why it's not able to infer the type of the
+                    # argument 1 of _build_entity_update ¯\(°_o)/¯
+                    entity_updates.append(
+                        _build_entity_update(  # type: ignore
+                            entity_data, aws.EC2, remaining_entities
+                        )
                     )
-                )
         return entity_updates
 
     def _update_rds(self, remaining_entities: List[EntityT]) -> List[EntityUpdate]:
