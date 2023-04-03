@@ -9,7 +9,7 @@ from pydantic import root_validator
 from repository_orm import Entity as BasicEntity
 
 EntityAttrs = Dict[str, Any]
-EntityID = Union[str, int]
+EntityId = Union[str, int]  # noqa: C0103
 
 
 class Environment(str, Enum):
@@ -61,7 +61,7 @@ EntityT = TypeVar("EntityT", bound=Entity)
 class EntityUpdate(BaseModel):
     """Define the updates of an entity."""
 
-    id_: EntityID = -1
+    id_: EntityId = -1
     model: Type[Entity]
     data: Dict[str, Any]
 

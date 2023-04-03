@@ -15,7 +15,7 @@ from .aws import (
     SecurityGroup,
     SecurityGroupRule,
 )
-from .entity import Entity, EntityAttrs, EntityID, EntityState, EntityT, EntityUpdate
+from .entity import Entity, EntityAttrs, EntityId, EntityState, EntityT, EntityUpdate
 from .risk import (
     Authentication,
     Information,
@@ -73,7 +73,7 @@ __all__ = [
     "Person",
     "Entity",
     "EntityAttrs",
-    "EntityID",
+    "EntityId",
     "EntityT",
     "EntityState",
     "EntityUpdate",
