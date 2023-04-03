@@ -1,3 +1,11 @@
+## 1.6.3 (2023-04-03)
+
+### Fix
+
+- show created resource after we add it
+- stopped resources are shown in the unused report
+- capture all ec2 instances
+
 ## 1.6.2 (2022-10-13)
 
 ### Fix
