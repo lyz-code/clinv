@@ -19,7 +19,7 @@ from rich.progress import track
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Choices, Entity
 from .model.aws import ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53
-from .model.entity import Environment
+from .model.entity import EntityState, Environment
 from .model.risk import (
     Authentication,
     AuthenticationID,
@@ -253,14 +253,16 @@ def unused(
     active_entities = [
         entity
         for model in _deduce_models()
-        for entity in repo.search({"state": "active"}, model)
+        for entity in repo.all(model)
+        if entity.state != EntityState.TERMINATED
     ]
 
     models_to_test = _deduce_models(resource_types, ignore=[Project, IAMGroup])
     unused_entities = {
         entity
         for model in models_to_test
-        for entity in repo.search({"state": "active"}, model)
+        for entity in repo.all(model)
+        if entity.state != EntityState.TERMINATED
     }
 
     for entity in active_entities:

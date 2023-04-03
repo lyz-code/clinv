@@ -187,6 +187,9 @@ def add(ctx: Context, resource_type: str) -> None:
 
     services.add(repo, resource)
 
+    print("Created resource:\n")
+    views.print_entity(resource)
+
 
 @cli.command(name="risk")
 @click.pass_context

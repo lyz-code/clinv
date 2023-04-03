@@ -145,6 +145,23 @@ class TestUnused:
         assert len(result) == 1
         assert result == [service]
 
+    def test_unused_detects_unused_stopped_resources(
+        self,
+        repo: Repository,
+    ) -> None:
+        """
+        Given: One service that is not used by any other resource
+        When: unused is called.
+        Then: the service is returned.
+        """
+        service = repo.add(ServiceFactory.build(state="stopped"))
+        repo.commit()
+
+        result = unused(repo)
+
+        assert len(result) == 1
+        assert result == [service]
+
     @pytest.mark.parametrize(
         "entity",
         [
