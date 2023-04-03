@@ -2,10 +2,12 @@
 
 import logging
 import re
-from typing import Generator
+import sys
+from typing import Any, Generator
 
 import pexpect  # noqa: E0401
 import pytest
+from _pytest.capture import CaptureFixture
 from _pytest.logging import LogCaptureFixture
 from click.testing import CliRunner
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
@@ -473,6 +475,7 @@ class TestAdd:
         config: Config,
         runner: CliRunner,
         repo: Repository,
+        capsys: CaptureFixture[Any],
     ) -> None:
         """
         Given: A repository with two services, a person, a project and an information
@@ -492,7 +495,8 @@ class TestAdd:
         )
         repo.commit()
 
-        tui = pexpect.spawn("clinv add pro", timeout=5)
+        tui = pexpect.spawn("clinv add pro", timeout=5, encoding="utf-8")
+        tui.logfile = sys.stdout
         tui.expect(".*Name:.*")
         tui.sendline("project_2")
         tui.expect(".*Description:.*")
@@ -542,6 +546,8 @@ class TestAdd:
             informations=["inf_001"],  # type: ignore
             people=[],
         )
+        out, _ = capsys.readouterr()
+        assert "pro_002" in out
 
     # R0915: too many statements, but that's how to define the TUI steps
     def test_add_creates_service(  # noqa: AAA01, R0915

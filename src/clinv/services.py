@@ -19,7 +19,7 @@ from rich.progress import track
 from .adapters import AdapterSource
 from .model import MODELS, RESOURCE_TYPES, Choices, Entity
 from .model.aws import ASG, EC2, RDS, S3, IAMGroup, IAMUser, Route53
-from .model.entity import Environment, EntityState
+from .model.entity import EntityState, Environment
 from .model.risk import (
     Authentication,
     AuthenticationID,
