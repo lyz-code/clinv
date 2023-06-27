@@ -216,7 +216,7 @@ filterwarnings = [
   # Until https://github.com/ktosiek/pytest-freezegun/issues/35 is merged
   "ignore::DeprecationWarning:pytest_freezegun.*",
   # Until https://todo.sr.ht/~olly/yoyo/94 is solved
-  "ignore::DeprecationWarning:pkg_resources.*",
+  "ignore::DeprecationWarning:yoyo.*",
 ]
 
 # --------- Coverage -------------
